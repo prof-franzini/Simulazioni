@@ -3,45 +3,44 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Sovrapposizione di onde – mezze sinusoidi opposte</title>
+<title>Sovrapposizione di onde – tema chiaro</title>
 <style>
   :root{
-    --bg:#0b0e13; --panel:#141a22; --ink:#e8eef7; --muted:#9bb0c3;
-    --accent:#5ab0ff; --accent2:#a3ff7a; --sum:#ffd166;
+    --bg:#f6f8fa; --panel:#ffffff; --ink:#1d2a35; --muted:#5c6a75;
+    --accent:#0077cc; --accent2:#00a86b; --sum:#ff7b00;
   }
   *{box-sizing:border-box}
   body{
     margin:0; background:var(--bg); color:var(--ink);
     font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial;
-    line-height:1.35;
-    display:flex; min-height:100dvh; align-items:center; justify-content:center; padding:18px;
+    display:flex; min-height:100dvh; align-items:center; justify-content:center; padding:20px;
   }
   .wrap{
-    width:min(1100px,95vw); display:grid; gap:14px;
+    width:min(1100px,95vw); display:grid; gap:16px;
     grid-template-columns: 1fr 320px;
   }
   .card{
-    background:var(--panel); border:1px solid #202a36; border-radius:14px; padding:14px;
-    box-shadow:0 6px 20px rgba(0,0,0,.25);
+    background:var(--panel); border:1px solid #d1d9e0; border-radius:14px; padding:16px;
+    box-shadow:0 6px 18px rgba(0,0,0,.08);
   }
-  h1{font-size:18px; margin:0 0 8px 0; color:var(--ink)}
-  .controls h2{font-size:14px; margin:8px 0 6px 0; color:var(--muted)}
+  h1{font-size:18px; margin:0 0 8px 0;}
+  .controls h2{font-size:14px; margin:10px 0 6px 0; color:var(--muted)}
   label{display:flex; align-items:center; gap:10px; font-size:13px; color:var(--muted); margin:10px 0 4px}
   input[type="range"]{width:100%}
   .row{display:grid; grid-template-columns:1fr 1fr; gap:10px}
   .btns{display:flex; gap:8px; margin-top:6px}
   button{
     appearance:none; border:none; border-radius:12px; padding:10px 14px; cursor:pointer;
-    font-weight:600; background:var(--accent); color:#041018;
+    font-weight:600; background:var(--accent); color:#fff;
   }
-  button.secondary{background:#2b3645; color:var(--ink)}
+  button.secondary{background:#e5ebf0; color:var(--ink)}
   .legend{display:flex; gap:14px; align-items:center; font-size:13px; color:var(--muted)}
   .dot{width:10px; height:10px; border-radius:50%}
   .l-left{background:var(--accent)}
   .l-right{background:var(--accent2)}
   .l-sum{background:var(--sum)}
   .note{font-size:12px; color:var(--muted)}
-  canvas{width:100%; height:auto; display:block; background:#0f141b; border-radius:10px}
+  canvas{width:100%; height:auto; display:block; background:#fafafa; border-radius:10px}
   .axesNote{font-size:12px; color:var(--muted); margin-top:6px}
   .status{font-size:12px; color:var(--muted);}
 </style>
@@ -56,27 +55,27 @@
         <span class="dot l-sum"></span><span>Somma</span>
       </div>
       <canvas id="cv" width="900" height="360" aria-label="grafico onde"></canvas>
-      <div class="axesNote">Assi senza numerazione; linea orizzontale = y = 0.</div>
+      <div class="axesNote">Assi senza numerazione; linea orizzontale = y = 0</div>
       <div class="status" id="status"></div>
     </div>
 
     <div class="card controls">
-      <h2>Parametri onda sinistra → (propaga verso destra)</h2>
-      <label for="ampL">Ampiezza sinistra (px): <span id="ampLVal"></span></label>
+      <h2>Onda sinistra → (verso destra)</h2>
+      <label for="ampL">Ampiezza: <span id="ampLVal"></span></label>
       <input id="ampL" type="range" min="-120" max="120" step="1" value="60" />
-      <label for="lamL">Lunghezza d'onda sinistra (px): <span id="lamLVal"></span></label>
+      <label for="lamL">Lunghezza d’onda: <span id="lamLVal"></span></label>
       <input id="lamL" type="range" min="80" max="400" step="1" value="220" />
 
-      <h2 style="margin-top:14px">Parametri onda destra ← (propaga verso sinistra)</h2>
-      <label for="ampR">Ampiezza destra (px): <span id="ampRVal"></span></label>
+      <h2 style="margin-top:14px">Onda destra ← (verso sinistra)</h2>
+      <label for="ampR">Ampiezza: <span id="ampRVal"></span></label>
       <input id="ampR" type="range" min="-120" max="120" step="1" value="-60" />
-      <label for="lamR">Lunghezza d'onda destra (px): <span id="lamRVal"></span></label>
+      <label for="lamR">Lunghezza d’onda: <span id="lamRVal"></span></label>
       <input id="lamR" type="range" min="80" max="400" step="1" value="220" />
 
       <div class="row" style="margin-top:8px">
         <div>
           <label for="speed">Velocità (px/s): <span id="speedVal"></span></label>
-          <input id="speed" type="range" min="60" max="600" step="10" value="220" />
+          <input id="speed" type="range" min="30" max="300" step="10" value="180" />
         </div>
         <div>
           <label for="yScale">Scala verticale (%): <span id="yScaleVal"></span></label>
@@ -89,8 +88,8 @@
         <button id="resetBtn" class="secondary">Reset</button>
       </div>
       <p class="note" style="margin-top:6px">
-        Ogni sorgente emette <b>solo mezza sinusoide</b> di lunghezza spaziale pari a <i>λ/2</i>.
-        Il segno dell’ampiezza decide se la mezza onda è positiva (sopra) o negativa (sotto).
+        Ogni sorgente emette solo mezza sinusoide di lunghezza spaziale pari a λ / 2.  
+        Il segno dell’ampiezza decide se la mezza onda è positiva o negativa.
       </p>
     </div>
   </div>
@@ -100,7 +99,6 @@
   const cv = document.getElementById('cv');
   const ctx = cv.getContext('2d');
 
-  // Controls
   const ampL = document.getElementById('ampL');
   const lamL = document.getElementById('lamL');
   const ampR = document.getElementById('ampR');
@@ -119,118 +117,89 @@
   const resetBtn = document.getElementById('resetBtn');
   const statusEl = document.getElementById('status');
 
-  // Visual params
   const COLORS = {
-    axes: '#2b3645',
-    zero: '#2b3645',
-    left: '#5ab0ff',
-    right: '#a3ff7a',
-    sum: '#ffd166'
+    axes: '#ccd3da',
+    left: '#0077cc',
+    right: '#00a86b',
+    sum: '#ff7b00'
   };
 
-  // Simulation state
   const W = cv.width, H = cv.height;
   const midYBase = H * 0.5;
   let midY = midYBase;
-  let raf = null;
-  let running = false;
-  let t0 = 0;
-  let doneL = false, doneR = false;
+  let raf = null, running = false, t0 = 0;
+  let doneL=false, doneR=false;
 
-  // Emission offsets from the borders (px)
-  const x0L = 30;           // where the left pulse starts (from left edge)
-  const x0R = 30;           // from right edge
-  const margin = 6;         // for axis arrows etc.
+  const x0L = 30;
+  const x0R = 30;
+  const margin = 6;
 
-  function fmt(v){ return String(v); }
   function updateLabels(){
-    labels.ampLVal.textContent = fmt(ampL.value);
-    labels.lamLVal.textContent = fmt(lamL.value);
-    labels.ampRVal.textContent = fmt(ampR.value);
-    labels.lamRVal.textContent = fmt(lamR.value);
-    labels.speedVal.textContent = fmt(speed.value);
-    labels.yScaleVal.textContent = fmt(yScale.value + '%');
+    labels.ampLVal.textContent = ampL.value;
+    labels.lamLVal.textContent = lamL.value;
+    labels.ampRVal.textContent = ampR.value;
+    labels.lamRVal.textContent = lamR.value;
+    labels.speedVal.textContent = speed.value;
+    labels.yScaleVal.textContent = yScale.value + '%';
   }
   updateLabels();
 
-  // Draw axes with arrows; no numbers.
   function drawAxes(){
     ctx.save();
     ctx.strokeStyle = COLORS.axes;
     ctx.lineWidth = 1;
-    // x-axis (y=0 line)
     ctx.beginPath();
-    ctx.moveTo(margin, midY); ctx.lineTo(W - margin, midY); ctx.stroke();
-    // Arrow on x-axis
-    ctx.beginPath();
-    ctx.moveTo(W - margin, midY);
-    ctx.lineTo(W - margin - 8, midY - 5);
-    ctx.lineTo(W - margin - 8, midY + 5);
-    ctx.closePath(); ctx.fillStyle = COLORS.axes; ctx.fill();
-
-    // y-axis
-    ctx.beginPath();
-    ctx.moveTo(W * 0.5, margin); ctx.lineTo(W * 0.5, H - margin); ctx.stroke();
-    // Arrow on y-axis (upwards)
+    ctx.moveTo(margin, midY);
+    ctx.lineTo(W - margin, midY);
+    ctx.stroke();
     ctx.beginPath();
     ctx.moveTo(W * 0.5, margin);
-    ctx.lineTo(W * 0.5 - 5, margin + 8);
-    ctx.lineTo(W * 0.5 + 5, margin + 8);
-    ctx.closePath(); ctx.fill();
+    ctx.lineTo(W * 0.5, H - margin);
+    ctx.stroke();
     ctx.restore();
   }
 
-  // Half-sine pulse shape:
-  // For 0 <= s <= Lp: sign*A * sin(pi * s / Lp); else 0
   function halfSinePulse(s, A, Lp){
     if (s < 0 || s > Lp) return 0;
-    const sign = (A === 0) ? 0 : (A > 0 ? 1 : -1);
-    const mag = Math.abs(A);
-    return sign * mag * Math.sin(Math.PI * (s / Lp));
+    const sign = A >= 0 ? 1 : -1;
+    return Math.abs(A) * sign * Math.sin(Math.PI * (s / Lp));
   }
 
-  // Compute y1(x,t) for left pulse (→), y2(x,t) for right pulse (←)
-  function yLeft(x, t, A, lam, v){
-    const Lp = lam * 0.5;
-    // distance traveled by the pulse front from its start offset:
-    // s = (x - x0L) - v*t
-    const s = (x - x0L) - v * t;
-    return halfSinePulse(s, A, Lp);
+  function yLeft(x,t,A,lam,v){
+    const Lp = lam*0.5;
+    const s = (x - x0L) - v*t;
+    return halfSinePulse(s,A,Lp);
   }
-  function yRight(x, t, A, lam, v){
-    const Lp = lam * 0.5;
-    // sR = (W - x - x0R) - v*t  (measures from right edge moving left)
-    const s = (W - x - x0R) - v * t;
-    return halfSinePulse(s, A, Lp);
+  function yRight(x,t,A,lam,v){
+    const Lp = lam*0.5;
+    const s = (W - x - x0R) - v*t;
+    return halfSinePulse(s,A,Lp);
   }
 
-  // Determine if each pulse has completely left the canvas
-  function checkFinished(t, v){
-    const LpL = lamL.valueAsNumber * 0.5;
-    const LpR = lamR.valueAsNumber * 0.5;
-    // Left pulse rear position: x_rear = x0L + v*t - LpL
-    // Finished when x_rear > W
-    doneL = (x0L + v * t - LpL) > W;
-    // Right pulse rear: x_rearR = (W - x0R) - v*t + LpR
-    // Finished when x_rearR < 0  -> (W - x0R) - v*t + LpR < 0
-    doneR = ((W - x0R) - v * t + LpR) < 0;
+  function checkFinished(t,v){
+    const LpL = lamL.valueAsNumber*0.5;
+    const LpR = lamR.valueAsNumber*0.5;
+    doneL = (x0L + v*t - LpL) > W;
+    doneR = ((W - x0R) - v*t + LpR) < 0;
   }
 
-  function clear(){
-    ctx.clearRect(0,0,W,H);
-  }
+  function clear(){ ctx.clearRect(0,0,W,H); }
 
-  function drawCurve(sampleFn, strokeStyle, lineWidth){
+  function drawCurve(sampleFn, color, width, glow=false){
     ctx.save();
-    ctx.strokeStyle = strokeStyle;
-    ctx.lineWidth = lineWidth;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    if(glow){
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 8;
+    }
     ctx.beginPath();
-    const n = W; // one sample per pixel
-    for(let xi=0; xi<n; xi++){
-      const x = xi + 0.5;
-      const y = sampleFn(x);
-      const ypix = midY - y;
-      if (xi===0) ctx.moveTo(x, ypix); else ctx.lineTo(x, ypix);
+    const n=W;
+    for(let i=0;i<n;i++){
+      const x=i+0.5;
+      const y=sampleFn(x);
+      const ypix=midY - y;
+      if(i===0) ctx.moveTo(x,ypix); else ctx.lineTo(x,ypix);
     }
     ctx.stroke();
     ctx.restore();
@@ -239,46 +208,37 @@
   function render(t){
     clear();
     drawAxes();
-
     const v = speed.valueAsNumber;
     const scale = yScale.valueAsNumber / 100;
 
-    // Define sample functions
-    const A1 = ampL.valueAsNumber * scale;
+    const A1 = ampL.valueAsNumber*scale;
     const L1 = lamL.valueAsNumber;
-    const A2 = ampR.valueAsNumber * scale;
+    const A2 = ampR.valueAsNumber*scale;
     const L2 = lamR.valueAsNumber;
 
-    // Individual waves
-    const fLeft  = x => yLeft(x, t, A1, L1, v);
-    const fRight = x => yRight(x, t, A2, L2, v);
-    const fSum   = x => fLeft(x) + fRight(x);
+    const fL = x => yLeft(x,t,A1,L1,v);
+    const fR = x => yRight(x,t,A2,L2,v);
+    const fSum = x => fL(x)+fR(x);
 
-    // Draw in order: individuals thin, sum thick
-    drawCurve(fLeft,  COLORS.left, 1.6);
-    drawCurve(fRight, COLORS.right, 1.6);
-    drawCurve(fSum,   COLORS.sum, 2.4);
+    drawCurve(fL, COLORS.left, 1.5);
+    drawCurve(fR, COLORS.right, 1.5);
+    drawCurve(fSum, COLORS.sum, 3.2, true);
 
-    // Status
     statusEl.textContent = running
-      ? 'In esecuzione… (la scena si resetta quando entrambe le onde sono uscite)'
-      : 'Pronto. Imposta i cursori e premi "Avvia".';
+      ? "Animazione in corso…"
+      : "Pronto. Regola i parametri e premi Avvia.";
   }
 
   function step(ts){
-    if (!running) return;
-    if (!t0) t0 = ts;
-    const t = (ts - t0) / 1000; // seconds
+    if(!running) return;
+    if(!t0) t0 = ts;
+    const t = (ts - t0)/1000;
     const v = speed.valueAsNumber;
-
     render(t);
-    checkFinished(t, v);
-
-    if (doneL && doneR){
-      // Auto reset to initial state
-      running = false;
-      t0 = 0; doneL = doneR = false;
-      startBtn.disabled = false;
+    checkFinished(t,v);
+    if(doneL && doneR){
+      running=false; t0=0; doneL=doneR=false;
+      startBtn.disabled=false;
       render(0);
       return;
     }
@@ -286,31 +246,24 @@
   }
 
   function start(){
-    if (running) return;
-    // If both amplitudes are 0, nothing to show; allow but just render once.
-    running = true;
-    startBtn.disabled = true;
-    t0 = 0; doneL = doneR = false;
+    if(running) return;
+    running=true; startBtn.disabled=true;
+    t0=0; doneL=doneR=false;
     cancelAnimationFrame(raf);
-    raf = requestAnimationFrame(step);
+    raf=requestAnimationFrame(step);
   }
-
   function reset(){
-    running = false;
-    t0 = 0; doneL = doneR = false;
-    startBtn.disabled = false;
+    running=false; t0=0; doneL=doneR=false;
+    startBtn.disabled=false;
     cancelAnimationFrame(raf);
     render(0);
   }
 
-  // Wire up UI
-  [ampL, lamL, ampR, lamR, speed, yScale].forEach(inp=>{
-    inp.addEventListener('input', ()=>{ updateLabels(); if(!running) render(0); });
+  [ampL,lamL,ampR,lamR,speed,yScale].forEach(inp=>{
+    inp.addEventListener('input',()=>{updateLabels(); if(!running) render(0);});
   });
-  startBtn.addEventListener('click', start);
-  resetBtn.addEventListener('click', reset);
-
-  // First frame
+  startBtn.addEventListener('click',start);
+  resetBtn.addEventListener('click',reset);
   render(0);
 })();
 </script>
