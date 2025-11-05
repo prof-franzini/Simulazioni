@@ -142,14 +142,16 @@ function beginClip(p, panel){
 function endClip(p){p.drawingContext.restore();}
 
 // === Coordinate panoramica con pan/zoom ===
-function worldToScreenLeft(xm, ym) {
+// === Coordinate panoramica con pan/zoom (SINISTRA) ===
+function worldToScreenLeft(xm, ym){
   const marginL = 40;
   const pyGround = leftPanel.y + Math.round(leftPanel.h * 0.7);
   const px = leftPanel.x + marginL + Math.round((xm - leftPanX) * ppmLeft);
-  // PanY sposta la "telecamera" intera (quindi si applica al disegno complessivo)
-  const py = pyGround - Math.round((ym - groundY) * ppmLeft) - Math.round(leftPanY * ppmLeft);
+  // PAN verticale: quando leftPanY aumenta (freccia SU), tutta la scena va GIÙ
+  const py = pyGround - Math.round((ym - groundY - leftPanY) * ppmLeft);
   return { x: px, y: py, ground: pyGround };
 }
+
 
 function worldToScreenRight(xm,ym){
   const cx=rightPanel.x+rightPanel.w/2;
@@ -198,69 +200,46 @@ function drawGround(p,py,X,Wp){
 }
 function drawProjectile(p,px,py){p.noStroke();p.fill(255,165,0,200);p.circle(px,py,14);p.fill(255,200,80,120);p.circle(px,py,26);}
 
-function drawLeft(p) {
-  const X = leftPanel.x, Y = leftPanel.y, Wp = leftPanel.w, Hp = leftPanel.h;
+function drawLeft(p){
+  const X=leftPanel.x, Y=leftPanel.y, Wp=leftPanel.w, Hp=leftPanel.h;
   p.push();
   p.noStroke(); p.fill('#fff'); p.rect(X, Y, Wp, Hp, 10);
   beginClip(p, leftPanel);
 
-  // Trasla tutto il contenuto secondo la posizione della "telecamera" verticale
-  p.push();
-  p.translate(0, leftPanY * ppmLeft);  // telecamera su/giù
-  drawSkyGrad(p, X, Y - 200, Wp, Hp + 400);
+  drawSkyGrad(p, X, Y, Wp, Hp);
 
-  // montagne fisse (sono nello "sfondo", si muovono con la telecamera)
-  p.fill(getCSS('--mountainFar'));
-  p.beginShape(); p.vertex(X, Y + Hp);
-  for (const h of hillsFar) {
-    const s = worldToScreenLeft(h.x, h.y + 8);
-    p.vertex(s.x, s.y);
-  }
-  p.vertex(X + Wp, Y + Hp); p.endShape();
+  p.fill(getCSS('--mountainFar')); p.beginShape(); p.vertex(X, Y+Hp);
+  for (const h of hillsFar){ const s = worldToScreenLeft(h.x, h.y+8); p.vertex(s.x, s.y); }
+  p.vertex(X+Wp, Y+Hp); p.endShape();
 
-  p.fill(getCSS('--mountainNear'));
-  p.beginShape(); p.vertex(X, Y + Hp);
-  for (const h of hillsNear) {
-    const s = worldToScreenLeft(h.x, h.y + 4);
-    p.vertex(s.x, s.y);
-  }
-  p.vertex(X + Wp, Y + Hp); p.endShape();
+  p.fill(getCSS('--mountainNear')); p.beginShape(); p.vertex(X, Y+Hp);
+  for (const h of hillsNear){ const s = worldToScreenLeft(h.x, h.y+4); p.vertex(s.x, s.y); }
+  p.vertex(X+Wp, Y+Hp); p.endShape();
 
   const gLine = worldToScreenLeft(0, groundY).ground;
   drawGround(p, gLine, X, Wp);
   drawCannonPanorama(p, gLine);
 
-  // traiettorie e proiettili
-  for (const poly of shots) {
-    p.noFill(); p.stroke(getCSS('--trail')); p.strokeWeight(2.2);
-    p.beginShape();
-    for (const pt of poly) {
-      const s = worldToScreenLeft(pt.x, pt.y);
-      p.vertex(s.x, s.y);
-    }
+  // scie
+  for (const poly of shots){
+    p.noFill(); p.stroke(getCSS('--trail')); p.strokeWeight(2.2); p.beginShape();
+    for (const pt of poly){ const s = worldToScreenLeft(pt.x, pt.y); p.vertex(s.x, s.y); }
     p.endShape();
   }
 
-  if (currentTrail.length) {
+  if (currentTrail.length){
     p.noFill(); p.stroke('#ff7f11'); p.strokeWeight(2.2); p.beginShape();
-    for (const pt of currentTrail) {
-      const s = worldToScreenLeft(pt.x, pt.y);
-      p.vertex(s.x, s.y);
-    }
+    for (const pt of currentTrail){ const s = worldToScreenLeft(pt.x, pt.y); p.vertex(s.x, s.y); }
     p.endShape();
   }
 
-  if (proj) {
-    const s = worldToScreenLeft(proj.x, proj.y);
-    drawProjectile(p, s.x, s.y);
-  }
+  if (proj){ const s = worldToScreenLeft(proj.x, proj.y); drawProjectile(p, s.x, s.y); }
 
-  p.pop(); // fine traslazione telecamera
   endClip(p);
-
-  p.fill('#0b253a'); p.noStroke(); p.textSize(13); p.text('Panoramica', X + 10, Y + 18);
+  p.fill('#0b253a'); p.noStroke(); p.textSize(13); p.text('Panoramica', X+10, Y+18);
   p.pop();
 }
+
 
 function drawCannonPanorama(p,groundLine){
   const base=worldToScreenLeft(0,groundY);
@@ -342,8 +321,9 @@ window.addEventListener('keydown',e=>{
   const step=PAN_STEP_M;
   if(e.key==='ArrowLeft'){leftPanX-=step;layoutPanels();e.preventDefault();}
   if(e.key==='ArrowRight'){leftPanX+=step;layoutPanels();e.preventDefault();}
-  if(e.key==='ArrowUp'){leftPanY+=step*ppmLeft/10;layoutPanels();e.preventDefault();}
-  if(e.key==='ArrowDown'){leftPanY-=step*ppmLeft/10;layoutPanels();e.preventDefault();}
+if (e.key === 'ArrowUp')   { leftPanY += PAN_STEP_M; layoutPanels(); e.preventDefault(); }
+if (e.key === 'ArrowDown') { leftPanY -= PAN_STEP_M; layoutPanels(); e.preventDefault(); }
+
 });
 </script>
 </body>
