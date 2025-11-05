@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Simulazioni di Fisica – Prof. Lorenzo</title>
+  <style>
+    :root {
+      --bg: #f7f9fc;
+      --card: #ffffff;
+      --accent: #0072B2;
+      --accent-light: #e6f3ff;
+      --text: #1a1a1a;
+      --muted: #555;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 900px;
+      background: var(--card);
+      padding: 2rem 3rem;
+      border-radius: 20px;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 0.3rem;
+      color: var(--accent);
+    }
+
+    h2 {
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--muted);
+      margin-bottom: 2rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 1.2rem;
+      margin-top: 1.5rem;
+    }
+
+    .card {
+      background: var(--accent-light);
+      border: 2px solid var(--accent);
+      border-radius: 14px;
+      padding: 1.5rem;
+      transition: transform 0.15s ease, box-shadow 0.2s ease;
+      text-decoration: none;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 4px 16px rgba(0, 114, 178, 0.2);
+    }
+
+    .card span {
+      display: block;
+      margin-top: 0.8rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    footer {
+      margin-top: 2.5rem;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    @media (max-width: 600px) {
+      body { padding: 1rem; }
+      .container { padding: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Simulazioni di Fisica</h1>
+    <h2>Classe 2ª Daviè – Prof. Lorenzo</h2>
+
+    <p>Benvenuti nel portale delle simulazioni interattive!<br>
+    Clicca su un argomento per aprire la simulazione corrispondente.</p>
+
+    <div class="grid">
+      <a class="card" href="moto_armonico.html" target="_blank">
+        🌀
+        <span>Moto armonico</span>
+      </a>
+      <a class="card" href="moto_parabolico.html" target="_blank">
+        🎯
+        <span>Moto parabolico</span>
+      </a>
+      <a class="card" href="pendolo.html" target="_blank">
+        ⏱️
+        <span>Pendolo</span>
+      </a>
+      <a class="card" href="forze.html" target="_blank">
+        💪
+        <span>Forze e traiettorie</span>
+      </a>
+    </div>
+
+    <footer>
+      <p>Realizzato per uso didattico – © Prof. Lorenzo, 2025</p>
+    </footer>
+  </div>
+</body>
+</html>
