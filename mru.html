@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>MRU — Scena invernale con grafico spazio-tempo</title>
+<title>Moto Rettilineo Uniforme (MRU)</title>
 <style>
 :root {
   --bg1: #e9eef5;
@@ -171,20 +171,61 @@ function drawScene(dt){
   const sky=ctx.createLinearGradient(0,0,0,h*0.6);
   sky.addColorStop(0,'#cfe3ff');sky.addColorStop(1,'#f2f7ff');
   ctx.fillStyle=sky;ctx.fillRect(0,0,w,h);
-// Montagne grigio chiaro (ai lati, valle centrale)
+// Montagne multilivello generate da funzioni seno composte
 const horizon = h * 0.58;
-ctx.fillStyle = '#d1d5db';
-ctx.beginPath();
-ctx.moveTo(0, h);              // angolo in basso sinistra
-ctx.lineTo(0, horizon + 30);   // inizio salita sinistra
-ctx.lineTo(w * 0.2, horizon - 80);  // cima sinistra
-ctx.lineTo(w * 0.4, horizon + 10);  // discesa verso centro
-ctx.lineTo(w * 0.6, horizon + 10);  // risalita centro-destra
-ctx.lineTo(w * 0.8, horizon - 80);  // cima destra
-ctx.lineTo(w, horizon + 30);        // discesa destra
-ctx.lineTo(w, h);                   // angolo in basso destra
-ctx.closePath();
-ctx.fill();
+
+// Funzione per creare un profilo montuoso realistico
+function mountainProfile(amplitudes, freqs, offsetY, step) {
+  const points = [];
+  for (let x = 0; x <= w; x += step) {
+    let y = horizon + offsetY;
+    for (let i = 0; i < amplitudes.length; i++) {
+      y -= Math.sin(x * freqs[i]) * amplitudes[i] +20;
+    }
+    points.push({x, y});
+  }
+  return points;
+}
+
+// Funzione ausiliaria per disegnare uno strato
+function drawMountain(amplitudes, freqs, offsetY, color, step = 15) {
+  const p = mountainProfile(amplitudes, freqs, offsetY, step);
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(0, h);
+  for (const pt of p) ctx.lineTo(pt.x, pt.y);
+  ctx.lineTo(w, h);
+  ctx.closePath();
+  ctx.fill();
+}
+
+// Strato lontano (toni azzurro-grigio chiaro, profilo morbido)
+drawMountain(
+  [16, 8, 5],           // ampiezze
+  [0.4, 2, 1], // frequenze
+  -20,                  // spostamento verticale
+  '#e2e8f0'             // colore
+);
+
+// Strato intermedio (più contrastato)
+drawMountain(
+  [5, 4, 10],
+  [0.3, 2, 10],
+  0,
+  '#cbd5e1'
+);
+
+// Strato vicino (più spigoloso e scuro)
+drawMountain(
+  [3, 5, 5],
+  [0.5, 2, 3],
+  30,
+  '#9ca3af'
+);
+
+
+
+
 
   // Terreno innevato
   ctx.fillStyle='#f8fafc';
