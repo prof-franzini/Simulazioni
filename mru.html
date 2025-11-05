@@ -5,36 +5,105 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>MRU — Strada cartoon con assi cartesiani e reset dinamico</title>
 <style>
-  :root{ --bg1:#e9eef5; --bg2:#dbe6f3; --panel:#ffffff; --ink:#0f172a; --blue:#2563eb; }
+  :root {
+    --bg1:#e9eef5; --bg2:#dbe6f3; --panel:#ffffff; --ink:#0f172a; --blue:#2563eb;
+  }
   *{box-sizing:border-box}
-  body{margin:0; font-family:Inter,system-ui,Roboto,sans-serif; background:linear-gradient(180deg,var(--bg1),var(--bg2)); color:var(--ink); padding:1rem; overflow:hidden;}
+  body {
+    margin:0;
+    font-family:Inter,system-ui,Roboto,sans-serif;
+    background:linear-gradient(180deg,var(--bg1),var(--bg2));
+    color:var(--ink);
+    padding:1rem;
+    overflow:hidden;
+  }
   header{text-align:center;margin-bottom:8px}
   h1{margin:0;font-size:1.6rem}
   .layout{display:grid;gap:1rem;grid-template-columns:1fr;}
   @media(min-width:980px){.layout{grid-template-columns:1.2fr .8fr}}
-  .card{background:var(--panel);border-radius:16px;box-shadow:0 10px 30px rgba(15,23,42,.08);padding:12px;position:relative}
+  .card{
+    background:var(--panel);
+    border-radius:16px;
+    box-shadow:0 10px 30px rgba(15,23,42,.08);
+    padding:12px;
+    position:relative;
+  }
   canvas{width:100%;height:100%;display:block;border-radius:12px}
   .scene{aspect-ratio:16/9}
   .graph{aspect-ratio:16/9}
-  .controls{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:.8rem;margin-top:.6rem}
-  .ctrl{background:var(--panel);padding:.65rem .9rem;border-radius:12px;box-shadow:0 6px 16px rgba(15,23,42,.06);display:flex;align-items:center;gap:.5rem}
+  .controls{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    align-items:center;
+    gap:.8rem;
+    margin-top:.6rem
+  }
+  .ctrl{
+    background:var(--panel);
+    padding:.65rem .9rem;
+    border-radius:12px;
+    box-shadow:0 6px 16px rgba(15,23,42,.06);
+    display:flex;
+    align-items:center;
+    gap:.5rem
+  }
   input[type=range]{width:260px}
-  .btn{border:0;background:var(--blue);color:#fff;padding:.6rem .9rem;border-radius:10px;font-weight:700;cursor:pointer}
+  .btn{
+    border:0;background:var(--blue);color:#fff;
+    padding:.6rem .9rem;border-radius:10px;
+    font-weight:700;cursor:pointer
+  }
   .btn.secondary{background:#0f172a}
-  .kpi-line{display:flex;justify-content:center;align-items:center;gap:1rem;margin-top:.6rem}
-  .pill{background:#0ea5e9;color:#fff;padding:.35rem .7rem;border-radius:999px;font-weight:700;display:inline-block}
-  #overlayMsg{position:fixed;inset:0;display:none;justify-content:center;align-items:center;background:rgba(0,0,0,0.4);z-index:1000;}
-  #overlayMsg h2{background:#fff;padding:1rem 2rem;border-radius:12px;font-size:1.8rem;color:#0f172a;box-shadow:0 6px 16px rgba(0,0,0,0.25);}
+  .kpi-line{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:1rem;
+    margin-top:.6rem;
+    flex-wrap:wrap;
+  }
+  .pill{
+    background:#0ea5e9;
+    color:#fff;
+    padding:.35rem .7rem;
+    border-radius:999px;
+    font-weight:700;
+  }
+  #overlayMsg{
+    position:fixed;
+    inset:0;
+    display:none;
+    justify-content:center;
+    align-items:center;
+    background:rgba(0,0,0,0.35);
+    z-index:1000;
+    pointer-events:none; /* <-- permette click sul reset */
+  }
+  #overlayMsg h2{
+    background:#fff;
+    padding:1rem 2rem;
+    border-radius:12px;
+    font-size:1.8rem;
+    color:#0f172a;
+    box-shadow:0 6px 16px rgba(0,0,0,0.25);
+  }
 </style>
 </head>
 <body>
 <header><h1>MRU — Strada cartoon con assi cartesiani</h1></header>
+
 <div id="overlayMsg"><h2>🚩 Hai raggiunto la destinazione!</h2></div>
+
 <section class="layout">
   <div class="card">
     <canvas id="scene" class="scene"></canvas>
     <div class="controls">
-      <div class="ctrl"><label for="vel">Velocità (m/s)</label><input id="vel" type="range" min="-40" max="40" step="1" value="18"><strong id="velVal">18</strong></div>
+      <div class="ctrl">
+        <label for="vel">Velocità (m/s)</label>
+        <input id="vel" type="range" min="-40" max="40" step="1" value="18">
+        <strong id="velVal">18</strong>
+      </div>
       <button id="pp" class="btn">Pausa</button>
       <button id="reset" class="btn secondary">Reset</button>
     </div>
@@ -44,10 +113,12 @@
       <span class="pill" id="kpiV">v = 18 m/s</span>
     </div>
   </div>
+
   <div class="card">
     <canvas id="graph" class="graph"></canvas>
   </div>
 </section>
+
 <script>
 (function(){
   const scene=document.getElementById('scene');
@@ -63,53 +134,192 @@
   const kpiV=document.getElementById('kpiV');
   const overlay=document.getElementById('overlayMsg');
 
-  let v=Number(velR.value);let t=0;let s=0;let playing=true;let arrived=false;
-  const points=[];const MAX_T=120;const MIN_S=-500,MAX_S=500;
+  let v=Number(velR.value);
+  let t=0,s=0;
+  let playing=true,arrived=false;
+  const points=[];
+  const MAX_T=120,MIN_S=-500,MAX_S=500;
 
-  velR.addEventListener('input',()=>{v=Number(velR.value);velVal.textContent=v;kpiV.textContent=`v = ${v} m/s`;});
-  btnPP.addEventListener('click',()=>{if(arrived)return;playing=!playing;btnPP.textContent=playing?'Pausa':'Riprendi';});
-  btnReset.addEventListener('click',()=>{t=0;s=0;points.length=0;arrived=false;overlay.style.display='none';playing=true;btnPP.textContent='Pausa';});
+  velR.addEventListener('input',()=>{
+    v=Number(velR.value);
+    velVal.textContent=v;
+    kpiV.textContent=`v = ${v} m/s`;
+  });
+  btnPP.addEventListener('click',()=>{
+    if(arrived)return;
+    playing=!playing;
+    btnPP.textContent=playing?'Pausa':'Riprendi';
+  });
+  btnReset.addEventListener('click',()=>{
+    t=0;s=0;points.length=0;arrived=false;
+    overlay.style.display='none';
+    playing=true;
+    btnPP.textContent='Pausa';
+  });
 
-  function resize(canvas){const w=canvas.clientWidth,h=canvas.clientHeight,dpr=devicePixelRatio||1;if(canvas.width!==w*dpr||canvas.height!==h*dpr){canvas.width=w*dpr;canvas.height=h*dpr;const c=canvas.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);}}
-  const ro=new ResizeObserver(()=>{resize(scene);resize(graph);});ro.observe(scene);ro.observe(graph);
+  function resize(canvas){
+    const w=canvas.clientWidth,h=canvas.clientHeight;
+    const dpr=devicePixelRatio||1;
+    if(canvas.width!==w*dpr||canvas.height!==h*dpr){
+      canvas.width=w*dpr;canvas.height=h*dpr;
+      const c=canvas.getContext('2d');
+      c.setTransform(dpr,0,0,dpr,0,0);
+    }
+  }
+  const ro=new ResizeObserver(()=>{resize(scene);resize(graph);});
+  ro.observe(scene);ro.observe(graph);
 
-  // === SCENA ===
-  let laneOffset=0;const pxPerMeter=6;const dashLen=36,dashGap=44;
-  function drawScene(dt){const w=scene.clientWidth,h=scene.clientHeight;ctx.clearRect(0,0,w,h);
-    const sky=ctx.createLinearGradient(0,0,0,h*0.6);sky.addColorStop(0,'#cfe3ff');sky.addColorStop(1,'#f2f7ff');ctx.fillStyle=sky;ctx.fillRect(0,0,w,h);
-    const horizon=h*0.58;const cx=w/2;const roadTopW=w*0.1,roadBotW=w*0.9;
-    ctx.fillStyle='#3b414a';ctx.beginPath();ctx.moveTo(cx-roadTopW/2,horizon);ctx.lineTo(cx+roadTopW/2,horizon);ctx.lineTo(cx+roadBotW/2,h);ctx.lineTo(cx-roadBotW/2,h);ctx.closePath();ctx.fill();
-    ctx.strokeStyle='#e5e7eb';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(cx-roadTopW/2,horizon);ctx.lineTo(cx-roadBotW/2,h);ctx.moveTo(cx+roadTopW/2,horizon);ctx.lineTo(cx+roadBotW/2,h);ctx.stroke();
+  // ===== STRADA =====
+  let laneOffset=0;
+  const pxPerMeter=6;const dashLen=36,dashGap=44;
+  function drawScene(dt){
+    const w=scene.clientWidth,h=scene.clientHeight;
+    ctx.clearRect(0,0,w,h);
+    const sky=ctx.createLinearGradient(0,0,0,h*0.6);
+    sky.addColorStop(0,'#cfe3ff');sky.addColorStop(1,'#f2f7ff');
+    ctx.fillStyle=sky;ctx.fillRect(0,0,w,h);
+    const horizon=h*0.58;const cx=w/2;
+    const roadTopW=w*0.1,roadBotW=w*0.9;
+    ctx.fillStyle='#3b414a';
+    ctx.beginPath();
+    ctx.moveTo(cx-roadTopW/2,horizon);
+    ctx.lineTo(cx+roadTopW/2,horizon);
+    ctx.lineTo(cx+roadBotW/2,h);
+    ctx.lineTo(cx-roadBotW/2,h);
+    ctx.closePath();ctx.fill();
+    ctx.strokeStyle='#e5e7eb';ctx.lineWidth=4;
+    ctx.beginPath();
+    ctx.moveTo(cx-roadTopW/2,horizon);
+    ctx.lineTo(cx-roadBotW/2,h);
+    ctx.moveTo(cx+roadTopW/2,horizon);
+    ctx.lineTo(cx+roadBotW/2,h);
+    ctx.stroke();
     laneOffset=(laneOffset+(v*dt*pxPerMeter))%(dashLen+dashGap);
-    for(let i=0;i<24;i++){const p=i/24;const y1=horizon+p*(h-horizon);const y2=horizon+(p+dashLen/(h-horizon))*(h-horizon);const yShift=(laneOffset%(dashLen+dashGap))*((1-p)*0.25+0.75);const yy1=y1+yShift;const yy2=y2+yShift;if(yy1>h)continue;ctx.strokeStyle='#fff';ctx.lineWidth=Math.max(2,((roadTopW+(roadBotW-roadTopW)*p)*0.01));ctx.beginPath();ctx.moveTo(cx,yy1);ctx.lineTo(cx,yy2);ctx.stroke();}
-    const front=v<0;const carX=cx,carY=h*0.8,carW=150,carH=60;ctx.fillStyle='rgba(0,0,0,.25)';ctx.beginPath();ctx.ellipse(carX,carY+carH*0.55,carW*0.55,carH*0.35,0,0,Math.PI*2);ctx.fill();ctx.save();ctx.translate(carX,carY);if(front)ctx.scale(-1,1);
-    ctx.fillStyle='#2563eb';ctx.beginPath();ctx.roundRect(-carW/2,-carH/2,carW,carH,14);ctx.fill();ctx.fillStyle='#1e40af';ctx.beginPath();ctx.roundRect(-carW/2,-carH*0.85,carW,carH*0.45,14);ctx.fill();ctx.fillStyle='#93c5fd';ctx.beginPath();ctx.roundRect(-carW/2+10,-carH*0.75,carW-20,carH*0.38,10);ctx.fill();ctx.strokeStyle='rgba(255,255,255,.6)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,-carH*0.72);ctx.lineTo(0,-carH*0.37);ctx.stroke();
-    if(front){ctx.fillStyle='#0f172a';ctx.fillRect(-carW*0.22,carH*0.02,carW*0.44,7);ctx.fillStyle='#fde68a';ctx.fillRect(-carW/2+12,-4,18,12);ctx.fillRect(carW/2-30,-4,18,12);}else{ctx.fillStyle='#e2e8f0';ctx.fillRect(-20,6,40,8);ctx.fillStyle='#ef4444';ctx.fillRect(-carW/2+12,carH*0.1,18,12);ctx.fillRect(carW/2-30,carH*0.1,18,12);}ctx.restore();}
+    for(let i=0;i<24;i++){
+      const p=i/24;
+      const y1=horizon+p*(h-horizon);
+      const y2=horizon+(p+dashLen/(h-horizon))*(h-horizon);
+      const yShift=(laneOffset%(dashLen+dashGap))*((1-p)*0.25+0.75);
+      const yy1=y1+yShift,yy2=y2+yShift;
+      if(yy1>h)continue;
+      ctx.strokeStyle='#fff';ctx.lineWidth=Math.max(2,((roadTopW+(roadBotW-roadTopW)*p)*0.01));
+      ctx.beginPath();ctx.moveTo(cx,yy1);ctx.lineTo(cx,yy2);ctx.stroke();
+    }
+    // AUTO
+    const front=v<0;
+    const carX=cx,carY=h*0.8,carW=150,carH=60;
+    ctx.fillStyle='rgba(0,0,0,.25)';
+    ctx.beginPath();
+    ctx.ellipse(carX,carY+carH*0.55,carW*0.55,carH*0.35,0,0,Math.PI*2);
+    ctx.fill();
+    ctx.save();ctx.translate(carX,carY);
+    if(front)ctx.scale(-1,1);
+    ctx.fillStyle='#2563eb';
+    ctx.beginPath();ctx.roundRect(-carW/2,-carH/2,carW,carH,14);ctx.fill();
+    ctx.fillStyle='#1e40af';
+    ctx.beginPath();ctx.roundRect(-carW/2,-carH*0.85,carW,carH*0.45,14);ctx.fill();
+    ctx.fillStyle='#93c5fd';
+    ctx.beginPath();ctx.roundRect(-carW/2+10,-carH*0.75,carW-20,carH*0.38,10);ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.6)';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(0,-carH*0.72);ctx.lineTo(0,-carH*0.37);ctx.stroke();
+    if(front){
+      ctx.fillStyle='#0f172a';ctx.fillRect(-carW*0.22,carH*0.02,carW*0.44,7);
+      ctx.fillStyle='#fde68a';
+      ctx.fillRect(-carW/2+12,-4,18,12);ctx.fillRect(carW/2-30,-4,18,12);
+    } else {
+      ctx.fillStyle='#e2e8f0';ctx.fillRect(-20,6,40,8);
+      ctx.fillStyle='#ef4444';
+      ctx.fillRect(-carW/2+12,carH*0.1,18,12);
+      ctx.fillRect(carW/2-30,carH*0.1,18,12);
+    }
+    ctx.restore();
+  }
 
-  // === GRAFICO ===
+  // ===== GRAFICO =====
   const padL=48,padR=16,padT=16,padB=40;
-  function drawGraph(){const w=graph.clientWidth,h=graph.clientHeight;gtx.clearRect(0,0,w,h);const innerW=w-(padL+padR),innerH=h-(padT+padB);
-    gtx.fillStyle='#fff';gtx.fillRect(0,0,w,h);
-    gtx.strokeStyle='#cbd5e1';gtx.lineWidth=1.5;gtx.strokeRect(padL,padT,innerW,innerH);
-    const timeWindow=t>MAX_T?[t-MAX_T,t]:[0,MAX_T];const tMin=timeWindow[0],tMax=timeWindow[1];
-    const sMin=MIN_S,sMax=MAX_S;const tx=(tt)=>padL+((tt-tMin)/(tMax-tMin))*innerW;const sy=(ss)=>h-padB-((ss-sMin)/(sMax-sMin))*innerH;
-    // griglia e assi
-    gtx.strokeStyle='#e5e7eb';gtx.lineWidth=1;gtx.setLineDash([4,4]);for(let ss=-500;ss<=500;ss+=100){const y=sy(ss);gtx.beginPath();gtx.moveTo(padL,y);gtx.lineTo(w-padR,y);gtx.stroke();}
-    for(let ttick=Math.ceil(tMin/10)*10;ttick<=tMax;ttick+=10){const x=tx(ttick);gtx.beginPath();gtx.moveTo(x,padT);gtx.lineTo(x,h-padB);gtx.stroke();}
-    gtx.setLineDash([]);
-    // assi principali
-    gtx.strokeStyle='#94a3b8';gtx.lineWidth=2;gtx.beginPath();gtx.moveTo(padL,sy(0));gtx.lineTo(w-padR,sy(0));gtx.moveTo(padL,h-padB);gtx.lineTo(padL,padT);gtx.stroke();
-    gtx.fillStyle='#0f172a';gtx.font='12px Inter, sans-serif';gtx.fillText('Tempo (s)',w/2-30,h-8);gtx.save();gtx.translate(20,h/2+30);gtx.rotate(-Math.PI/2);gtx.fillText('Spazio (m)',0,0);gtx.restore();
-    gtx.fillStyle='#334155';gtx.font='11px Inter, sans-serif';for(let ss=-500;ss<=500;ss+=100){const y=sy(ss);gtx.fillText(ss,8,y+4);}for(let ttick=Math.ceil(tMin/10)*10;ttick<=tMax;ttick+=20){const x=tx(ttick);gtx.fillText(ttick,x-10,h-22);}
-    gtx.strokeStyle='#2563eb';gtx.lineWidth=2;gtx.beginPath();let moved=false;for(const p of points){if(p.t<tMin||p.t>tMax)continue;const X=tx(p.t),Y=sy(p.s);if(!moved){gtx.moveTo(X,Y);moved=true;}else{gtx.lineTo(X,Y);}}if(moved)gtx.stroke();
-    const Xc=t>MAX_T?padL+innerW/2:tx(t);const Yc=sy(s);gtx.fillStyle='#2563eb';gtx.beginPath();gtx.arc(Xc,Yc,5,0,Math.PI*2);gtx.fill();}
+  function drawGraph(){
+    const w=graph.clientWidth,h=graph.clientHeight;
+    gtx.clearRect(0,0,w,h);
+    const innerW=w-(padL+padR),innerH=h-(padT+padB);
+    gtx.fillStyle='#fff';
+    gtx.fillRect(0,0,w,h);
+    gtx.strokeStyle='#cbd5e1';
+    gtx.lineWidth=1.5;
+    gtx.strokeRect(padL,padT,innerW,innerH);
 
-  // === LOOP ===
-  let last=performance.now();function frame(now){resize(scene);resize(graph);const dt=(now-last)/1000;last=now;if(!playing){requestAnimationFrame(frame);return;}
-    if(!arrived){t+=dt;s+=v*dt;if(s>MAX_S){s=MAX_S;arrived=true;overlay.style.display='flex';playing=false;}if(s<MIN_S){s=MIN_S;arrived=true;overlay.style.display='flex';playing=false;}}
-    if(points.length===0||t-points[points.length-1].t>=0.02){points.push({t,s});if(points.length>12000)points.splice(0,2000);}
-    kpiT.textContent=`t = ${t.toFixed(1)} s`;kpiS.textContent=`s = ${s.toFixed(1)} m`;kpiV.textContent=`v = ${v.toFixed(1)} m/s`;
-    drawScene(dt);drawGraph();requestAnimationFrame(frame);}
+    const timeWindow=t>MAX_T?[t-MAX_T,t]:[0,MAX_T];
+    const tMin=timeWindow[0],tMax=timeWindow[1];
+    const sMin=MIN_S,sMax=MAX_S;
+    const tx=(tt)=>padL+((tt-tMin)/(tMax-tMin))*innerW;
+    const sy=(ss)=>h-padB-((ss-sMin)/(sMax-sMin))*innerH;
+
+    // Griglia
+    gtx.strokeStyle='#e5e7eb';gtx.lineWidth=1;gtx.setLineDash([4,4]);
+    for(let ss=-500;ss<=500;ss+=100){
+      const y=sy(ss);
+      gtx.beginPath();gtx.moveTo(padL,y);gtx.lineTo(w-padR,y);gtx.stroke();
+    }
+    for(let ttick=Math.ceil(tMin/10)*10;ttick<=tMax;ttick+=10){
+      const x=tx(ttick);
+      gtx.beginPath();gtx.moveTo(x,padT);gtx.lineTo(x,h-padB);gtx.stroke();
+    }
+    gtx.setLineDash([]);
+    // Assi principali
+    gtx.strokeStyle='#94a3b8';gtx.lineWidth=2;
+    gtx.beginPath();
+    gtx.moveTo(padL,sy(0));gtx.lineTo(w-padR,sy(0));
+    gtx.moveTo(padL,h-padB);gtx.lineTo(padL,padT);
+    gtx.stroke();
+    // Etichette
+    gtx.fillStyle='#0f172a';gtx.font='12px Inter,sans-serif';
+    gtx.fillText('Tempo (s)',w/2-30,h-8);
+    gtx.save();gtx.translate(20,h/2+30);
+    gtx.rotate(-Math.PI/2);gtx.fillText('Spazio (m)',0,0);gtx.restore();
+    // Numeri tacche
+    gtx.fillStyle='#334155';gtx.font='11px Inter,sans-serif';
+    for(let ss=-500;ss<=500;ss+=100){const y=sy(ss);gtx.fillText(ss,8,y+4);}
+    for(let ttick=Math.ceil(tMin/10)*10;ttick<=tMax;ttick+=20){
+      const x=tx(ttick);gtx.fillText(ttick,x-10,h-22);
+    }
+    // Curva
+    gtx.strokeStyle='#2563eb';gtx.lineWidth=2;
+    gtx.beginPath();let moved=false;
+    for(const p of points){
+      if(p.t<tMin||p.t>tMax)continue;
+      const X=tx(p.t),Y=sy(p.s);
+      if(!moved){gtx.moveTo(X,Y);moved=true;}
+      else{gtx.lineTo(X,Y);}
+    }
+    if(moved)gtx.stroke();
+    // Punto
+    const Xc=t>MAX_T?padL+innerW/2:tx(t);
+    const Yc=sy(s);
+    gtx.fillStyle='#2563eb';
+    gtx.beginPath();gtx.arc(Xc,Yc,5,0,Math.PI*2);gtx.fill();
+  }
+
+  // ===== LOOP =====
+  let last=performance.now();
+  function frame(now){
+    resize(scene);resize(graph);
+    const dt=(now-last)/1000;
+    last=now;
+    if(!playing){requestAnimationFrame(frame);return;}
+    if(!arrived){
+      t+=dt;s+=v*dt;
+      if(s>MAX_S){s=MAX_S;arrived=true;overlay.style.display='flex';playing=false;}
+      if(s<MIN_S){s=MIN_S;arrived=true;overlay.style.display='flex';playing=false;}
+    }
+    if(points.length===0||t-points[points.length-1].t>=0.02){
+      points.push({t,s});
+      if(points.length>12000)points.splice(0,2000);
+    }
+    kpiT.textContent=`t = ${t.toFixed(1)} s`;
+    kpiS.textContent=`s = ${s.toFixed(1)} m`;
+    kpiV.textContent=`v = ${v.toFixed(1)} m/s`;
+    drawScene(dt);drawGraph();
+    requestAnimationFrame(frame);
+  }
   requestAnimationFrame(frame);
 })();
 </script>
