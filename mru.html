@@ -83,6 +83,83 @@ input[type=range] { width: 260px; }
   box-shadow: 0 6px 16px rgba(0,0,0,0.25);
 }
 </style>
+  /* ======== VERSIONE MOBILE (smartphone) ======== */
+@media (max-width: 768px) {
+  body {
+    padding: 0.5rem;
+    overflow-y: auto; /* scrollabile */
+  }
+
+  header h1 {
+    font-size: 1.3rem;
+  }
+
+  .layout {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .card {
+    padding: 8px;
+    border-radius: 12px;
+  }
+
+  /* Impila grafico e scena in verticale */
+  .card:nth-child(1) {
+    order: 2; /* Scena sotto */
+  }
+  .card:nth-child(2) {
+    order: 1; /* Grafico sopra */
+  }
+
+  /* Riduci l’altezza delle aree grafiche */
+  .scene,
+  .graph {
+    aspect-ratio: auto;
+    height: 220px;
+  }
+
+  /* Migliora accessibilità dei controlli */
+  .controls {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .ctrl {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    text-align: center;
+  }
+
+  input[type=range] {
+    width: 100%;
+  }
+
+  .btn {
+    width: 100%;
+    padding: 0.8rem;
+    font-size: 1rem;
+  }
+
+  .kpi-line {
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .pill {
+    font-size: 0.9rem;
+    padding: 0.4rem 0.7rem;
+  }
+
+  /* Overlay più leggibile su mobile */
+  #overlayMsg h2 {
+    font-size: 1.4rem;
+    text-align: center;
+    padding: 0.8rem 1rem;
+  }
+}
+
 </head>
 <body>
 <header><h1>Moto Rettilineo Uniforme (MRU)</h1></header>
