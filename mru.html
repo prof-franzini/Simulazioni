@@ -5,30 +5,88 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>MRU — Scena invernale con grafico spazio-tempo</title>
 <style>
-:root{--bg1:#e9eef5;--bg2:#dbe6f3;--panel:#ffffff;--ink:#0f172a;--blue:#2563eb;}
-*{box-sizing:border-box}
-body{margin:0;font-family:Inter,system-ui,Roboto,sans-serif;background:linear-gradient(180deg,var(--bg1),var(--bg2));color:var(--ink);padding:1rem;overflow:hidden;}
-header{text-align:center;margin-bottom:8px}
-h1{margin:0;font-size:1.6rem}
-.layout{display:grid;gap:1rem;grid-template-columns:1fr;}
-@media(min-width:980px){.layout{grid-template-columns:1.2fr .8fr}}
-.card{background:var(--panel);border-radius:16px;box-shadow:0 10px 30px rgba(15,23,42,.08);padding:12px;position:relative}
-canvas{width:100%;height:100%;display:block;border-radius:12px}
-.scene{aspect-ratio:16/9}
-.graph{aspect-ratio:16/9}
-.controls{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:.8rem;margin-top:.6rem}
-.ctrl{background:var(--panel);padding:.65rem .9rem;border-radius:12px;box-shadow:0 6px 16px rgba(15,23,42,.06);display:flex;align-items:center;gap:.5rem}
-input[type=range]{width:260px}
-.btn{border:0;background:var(--blue);color:#fff;padding:.6rem .9rem;border-radius:10px;font-weight:700;cursor:pointer}
-.btn.secondary{background:#0f172a}
-.kpi-line{display:flex;justify-content:center;align-items:center;gap:1rem;margin-top:.6rem;flex-wrap:wrap}
-.pill{background:#0ea5e9;color:#fff;padding:.35rem .7rem;border-radius:999px;font-weight:700}
-#overlayMsg{position:fixed;inset:0;display:none;justify-content:center;align-items:center;background:rgba(0,0,0,0.35);z-index:1000;pointer-events:none}
-#overlayMsg h2{background:#fff;padding:1rem 2rem;border-radius:12px;font-size:1.8rem;color:#0f172a;box-shadow:0 6px 16px rgba(0,0,0,0.25)}
+:root {
+  --bg1: #e9eef5;
+  --bg2: #dbe6f3;
+  --panel: #ffffff;
+  --ink: #0f172a;
+  --blue: #2563eb;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: Inter, system-ui, Roboto, sans-serif;
+  background: linear-gradient(180deg, var(--bg1), var(--bg2));
+  color: var(--ink);
+  padding: 1rem;
+  overflow: hidden;
+}
+header { text-align: center; margin-bottom: 8px; }
+h1 { margin: 0; font-size: 1.6rem; }
+.layout { display: grid; gap: 1rem; grid-template-columns: 1fr; }
+@media (min-width: 980px) {
+  .layout { grid-template-columns: 1.2fr .8fr; }
+}
+.card {
+  background: var(--panel);
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(15,23,42,.08);
+  padding: 12px;
+  position: relative;
+}
+canvas { width: 100%; height: 100%; display: block; border-radius: 12px; }
+.scene { aspect-ratio: 16/9; }
+.graph { aspect-ratio: 16/9; }
+.controls {
+  display: flex; flex-wrap: wrap;
+  justify-content: center; align-items: center;
+  gap: .8rem; margin-top: .6rem;
+}
+.ctrl {
+  background: var(--panel);
+  padding: .65rem .9rem;
+  border-radius: 12px;
+  box-shadow: 0 6px 16px rgba(15,23,42,.06);
+  display: flex; align-items: center; gap: .5rem;
+}
+input[type=range] { width: 260px; }
+.btn {
+  border: 0; background: var(--blue); color: #fff;
+  padding: .6rem .9rem; border-radius: 10px;
+  font-weight: 700; cursor: pointer;
+}
+.btn.secondary { background: #0f172a; }
+.kpi-line {
+  display: flex; justify-content: center; align-items: center;
+  gap: 1rem; margin-top: .6rem; flex-wrap: wrap;
+}
+.pill {
+  background: #0ea5e9;
+  color: #fff;
+  padding: .35rem .7rem;
+  border-radius: 999px;
+  font-weight: 700;
+}
+#overlayMsg {
+  position: fixed; inset: 0;
+  display: none; justify-content: center; align-items: center;
+  background: rgba(0,0,0,0.35);
+  z-index: 1000;
+  pointer-events: none; /* Reset cliccabile */
+}
+#overlayMsg h2 {
+  background: #fff;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  font-size: 1.8rem;
+  color: #0f172a;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+}
 </style>
 </head>
 <body>
 <header><h1>MRU — Scena invernale con grafico spazio-tempo</h1></header>
+
 <div id="overlayMsg"><h2>🚩 Hai raggiunto la destinazione!</h2></div>
 
 <section class="layout">
@@ -75,12 +133,34 @@ let playing=true,arrived=false;
 const points=[];
 const MAX_T=120,MIN_S=-500,MAX_S=500;
 
-velR.addEventListener('input',()=>{v=Number(velR.value);velVal.textContent=v;kpiV.textContent=`v = ${v} m/s`;});
-btnPP.addEventListener('click',()=>{if(arrived)return;playing=!playing;btnPP.textContent=playing?'Pausa':'Riprendi';});
-btnReset.addEventListener('click',()=>{t=0;s=0;points.length=0;arrived=false;overlay.style.display='none';playing=true;btnPP.textContent='Pausa';});
+velR.addEventListener('input',()=>{
+  v=Math.trunc(Number(velR.value));
+  velVal.textContent=v;
+  kpiV.textContent=`v = ${v} m/s`;
+});
+btnPP.addEventListener('click',()=>{
+  if(arrived)return;
+  playing=!playing;
+  btnPP.textContent=playing?'Pausa':'Riprendi';
+});
+btnReset.addEventListener('click',()=>{
+  t=0;s=0;points.length=0;
+  arrived=false;
+  overlay.style.display='none';
+  playing=true;
+  btnPP.textContent='Pausa';
+});
 
-function resize(c){const w=c.clientWidth,h=c.clientHeight,dpr=devicePixelRatio||1;if(c.width!==w*dpr||c.height!==h*dpr){c.width=w*dpr;c.height=h*dpr;const ct=c.getContext('2d');ct.setTransform(dpr,0,0,dpr,0,0);}}
-const ro=new ResizeObserver(()=>{resize(scene);resize(graph);});ro.observe(scene);ro.observe(graph);
+function resize(c){
+  const w=c.clientWidth,h=c.clientHeight,dpr=devicePixelRatio||1;
+  if(c.width!==w*dpr||c.height!==h*dpr){
+    c.width=w*dpr;c.height=h*dpr;
+    const ct=c.getContext('2d');
+    ct.setTransform(dpr,0,0,dpr,0,0);
+  }
+}
+const ro=new ResizeObserver(()=>{resize(scene);resize(graph);});
+ro.observe(scene);ro.observe(graph);
 
 // ======= SCENA =======
 let laneOffset=0;const pxPerMeter=6;const dashLen=36,dashGap=44;
@@ -91,7 +171,7 @@ function drawScene(dt){
   const sky=ctx.createLinearGradient(0,0,0,h*0.6);
   sky.addColorStop(0,'#cfe3ff');sky.addColorStop(1,'#f2f7ff');
   ctx.fillStyle=sky;ctx.fillRect(0,0,w,h);
-  // Montagne grigio chiaro (valle)
+  // Montagne grigio chiaro
   const horizon=h*0.58;ctx.fillStyle='#d1d5db';
   ctx.beginPath();
   ctx.moveTo(0,horizon);
@@ -104,8 +184,10 @@ function drawScene(dt){
   ctx.lineTo(w,h);ctx.lineTo(0,h);ctx.closePath();ctx.fill();
   // Terreno innevato
   ctx.fillStyle='#f8fafc';
-  ctx.beginPath();ctx.moveTo(0,horizon);ctx.lineTo(w,horizon);ctx.lineTo(w,h);ctx.lineTo(0,h);ctx.closePath();ctx.fill();
-  // Strada prospettica
+  ctx.beginPath();
+  ctx.moveTo(0,horizon);ctx.lineTo(w,horizon);
+  ctx.lineTo(w,h);ctx.lineTo(0,h);ctx.closePath();ctx.fill();
+  // Strada
   const cx=w/2;const roadTopW=w*0.1,roadBotW=w*0.9;
   ctx.fillStyle='#3b414a';
   ctx.beginPath();
@@ -116,22 +198,23 @@ function drawScene(dt){
   ctx.closePath();ctx.fill();
   ctx.strokeStyle='#e5e7eb';ctx.lineWidth=4;
   ctx.beginPath();
-  ctx.moveTo(cx-roadTopW/2,horizon);ctx.lineTo(cx-roadBotW/2,h);
-  ctx.moveTo(cx+roadTopW/2,horizon);ctx.lineTo(cx+roadBotW/2,h);
+  ctx.moveTo(cx-roadTopW/2,horizon);
+  ctx.lineTo(cx-roadBotW/2,h);
+  ctx.moveTo(cx+roadTopW/2,horizon);
+  ctx.lineTo(cx+roadBotW/2,h);
   ctx.stroke();
-  // Linea centrale con clamp all'orizzonte (nessuna uscita sopra)
+  // Linea centrale corretta
   laneOffset=(laneOffset+(v*dt*pxPerMeter))%(dashLen+dashGap);
-  const dir = v>=0?1:-1;
+  const dir=v>=0?1:-1;
   for(let i=0;i<24;i++){
     const p=i/24;
     let y1=horizon+p*(h-horizon);
     let y2=horizon+(p+dashLen/(h-horizon))*(h-horizon);
     const shift=(laneOffset%(dashLen+dashGap))*((1-p)*0.25+0.75)*dir;
-    y1+=shift; y2+=shift;
-    // Evita che superi l'orizzonte quando v<0
-    if(y2 < horizon) continue;
-    y1 = Math.max(y1, horizon);
-    if(y1>h) continue;
+    y1+=shift;y2+=shift;
+    if(y2<horizon)continue;
+    y1=Math.max(y1,horizon);
+    if(y1>h)continue;
     ctx.strokeStyle='#fff';
     ctx.lineWidth=Math.max(2,((roadTopW+(roadBotW-roadTopW)*p)*0.01));
     ctx.beginPath();ctx.moveTo(cx,y1);ctx.lineTo(cx,Math.min(y2,h));ctx.stroke();
@@ -139,30 +222,46 @@ function drawScene(dt){
   // Auto
   const front=v<0;const carX=cx,carY=h*0.8,carW=150,carH=60;
   ctx.fillStyle='rgba(0,0,0,.25)';
-  ctx.beginPath();ctx.ellipse(carX,carY+carH*0.55,carW*0.55,carH*0.35,0,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(carX,carY+carH*0.55,carW*0.55,carH*0.35,0,0,Math.PI*2);
+  ctx.fill();
   ctx.save();ctx.translate(carX,carY);if(front)ctx.scale(-1,1);
-  ctx.fillStyle='#2563eb';ctx.beginPath();ctx.roundRect(-carW/2,-carH/2,carW,carH,14);ctx.fill();
-  ctx.fillStyle='#1e40af';ctx.beginPath();ctx.roundRect(-carW/2,-carH*0.85,carW,carH*0.45,14);ctx.fill();
-  ctx.fillStyle='#93c5fd';ctx.beginPath();ctx.roundRect(-carW/2+10,-carH*0.75,carW-20,carH*0.38,10);ctx.fill();
-  ctx.strokeStyle='rgba(255,255,255,.6)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,-carH*0.72);ctx.lineTo(0,-carH*0.37);ctx.stroke();
+  ctx.fillStyle='#2563eb';
+  ctx.beginPath();ctx.roundRect(-carW/2,-carH/2,carW,carH,14);ctx.fill();
+  ctx.fillStyle='#1e40af';
+  ctx.beginPath();ctx.roundRect(-carW/2,-carH*0.85,carW,carH*0.45,14);ctx.fill();
+  ctx.fillStyle='#93c5fd';
+  ctx.beginPath();ctx.roundRect(-carW/2+10,-carH*0.75,carW-20,carH*0.38,10);ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.6)';
+  ctx.lineWidth=2;ctx.beginPath();
+  ctx.moveTo(0,-carH*0.72);ctx.lineTo(0,-carH*0.37);ctx.stroke();
   if(front){
-    ctx.fillStyle='#0f172a';ctx.fillRect(-carW*0.22,carH*0.02,carW*0.44,7);
-    ctx.fillStyle='#fde68a';ctx.fillRect(-carW/2+12,-4,18,12);ctx.fillRect(carW/2-30,-4,18,12);
+    ctx.fillStyle='#0f172a';
+    ctx.fillRect(-carW*0.22,carH*0.02,carW*0.44,7);
+    ctx.fillStyle='#fde68a';
+    ctx.fillRect(-carW/2+12,-4,18,12);
+    ctx.fillRect(carW/2-30,-4,18,12);
   } else {
-    ctx.fillStyle='#e2e8f0';ctx.fillRect(-20,6,40,8);
-    ctx.fillStyle='#ef4444';ctx.fillRect(-carW/2+12,carH*0.1,18,12);ctx.fillRect(carW/2-30,carH*0.1,18,12);
+    ctx.fillStyle='#e2e8f0';
+    ctx.fillRect(-20,6,40,8);
+    ctx.fillStyle='#ef4444';
+    ctx.fillRect(-carW/2+12,carH*0.1,18,12);
+    ctx.fillRect(carW/2-30,carH*0.1,18,12);
   }
   ctx.restore();
 }
 
 // ======= GRAFICO =======
-const padL=58,padR=16,padT=16,padB=40;
+const padL=65,padR=16,padT=16,padB=40;
 function drawGraph(){
   const w=graph.clientWidth,h=graph.clientHeight;
   gtx.clearRect(0,0,w,h);
   const innerW=w-(padL+padR),innerH=h-(padT+padB);
-  gtx.fillStyle='#fff';gtx.fillRect(0,0,w,h);
-  gtx.strokeStyle='#cbd5e1';gtx.lineWidth=1.5;gtx.strokeRect(padL,padT,innerW,innerH);
+  gtx.fillStyle='#fff';
+  gtx.fillRect(0,0,w,h);
+  gtx.strokeStyle='#cbd5e1';
+  gtx.lineWidth=1.5;
+  gtx.strokeRect(padL,padT,innerW,innerH);
   const timeWindow=t>MAX_T?[t-MAX_T,t]:[0,MAX_T];
   const tMin=timeWindow[0],tMax=timeWindow[1];
   const sMin=MIN_S,sMax=MAX_S;
@@ -170,28 +269,55 @@ function drawGraph(){
   const sy=(ss)=>h-padB-((ss-sMin)/(sMax-sMin))*innerH;
   // Griglia
   gtx.strokeStyle='#e5e7eb';gtx.lineWidth=1;gtx.setLineDash([4,4]);
-  for(let ss=-500;ss<=500;ss+=100){const y=sy(ss);gtx.beginPath();gtx.moveTo(padL,y);gtx.lineTo(w-padR,y);gtx.stroke();}
-  for(let tt=Math.ceil(tMin/10)*10;tt<=tMax;tt+=10){const x=tx(tt);gtx.beginPath();gtx.moveTo(x,padT);gtx.lineTo(x,h-padB);gtx.stroke();}
+  for(let ss=-500;ss<=500;ss+=100){
+    const y=sy(ss);
+    gtx.beginPath();gtx.moveTo(padL,y);gtx.lineTo(w-padR,y);gtx.stroke();
+  }
+  for(let tt=Math.ceil(tMin/10)*10;tt<=tMax;tt+=10){
+    const x=tx(tt);
+    gtx.beginPath();gtx.moveTo(x,padT);gtx.lineTo(x,h-padB);gtx.stroke();
+  }
   gtx.setLineDash([]);
   // Assi
   gtx.strokeStyle='#94a3b8';gtx.lineWidth=2;
-  gtx.beginPath();gtx.moveTo(padL,sy(0));gtx.lineTo(w-padR,sy(0));gtx.moveTo(padL,h-padB);gtx.lineTo(padL,padT);gtx.stroke();
-  // Etichette (sposta "Spazio (m)" più a sinistra)
+  gtx.beginPath();
+  gtx.moveTo(padL,sy(0));
+  gtx.lineTo(w-padR,sy(0));
+  gtx.moveTo(padL,h-padB);
+  gtx.lineTo(padL,padT);
+  gtx.stroke();
+  // Etichette
   gtx.fillStyle='#0f172a';gtx.font='12px Inter,sans-serif';
   gtx.fillText('Tempo (s)',w/2-30,h-8);
-  gtx.save();gtx.translate(6,h/2+30);gtx.rotate(-Math.PI/2);gtx.fillText('Spazio (m)',0,0);gtx.restore();
+  gtx.save();gtx.translate(3,h/2+30);
+  gtx.rotate(-Math.PI/2);
+  gtx.fillText('Spazio (m)',0,0);
+  gtx.restore();
   // Numeri
   gtx.fillStyle='#334155';gtx.font='11px Inter,sans-serif';
-  for(let ss=-500;ss<=500;ss+=100){const y=sy(ss);gtx.fillText(ss,26,y+4);} // numeri più a destra per evitare sovrapposizione
-  for(let tt=Math.ceil(tMin/10)*10;tt<=tMax;tt+=20){const x=tx(tt);gtx.fillText(tt,x-10,h-22);}
-  // Curva
-  gtx.strokeStyle='#2563eb';gtx.lineWidth=2;gtx.beginPath();let moved=false;
-  for(const p of points){if(p.t<tMin||p.t>tMax)continue;const X=tx(p.t),Y=sy(p.s);if(!moved){gtx.moveTo(X,Y);moved=true;}else{gtx.lineTo(X,Y);}}if(moved)gtx.stroke();
-  // Punto (pallino)
-  let Xc=tx(t);
-  if(t>MAX_T) Xc=w-padR-5; // resta all'estremo destro dopo 120 s
+  for(let ss=-500;ss<=500;ss+=100){
+    const y=sy(ss);
+    gtx.fillText(ss,28,y+4);
+  }
+  for(let tt=Math.ceil(tMin/10)*10;tt<=tMax;tt+=20){
+    const x=tx(tt);
+    gtx.fillText(tt,x-10,h-22);
+  }
+  // Curva e pallino
+  gtx.strokeStyle='#2563eb';gtx.lineWidth=2;
+  gtx.beginPath();let moved=false;
+  for(const p of points){
+    if(p.t<tMin||p.t>tMax)continue;
+    const X=tx(p.t),Y=sy(p.s);
+    if(!moved){gtx.moveTo(X,Y);moved=true;}else{gtx.lineTo(X,Y);}
+  }
+  if(moved)gtx.stroke();
+  let Xc=Math.min(tx(t),w-padR-5);
   const Yc=sy(s);
-  gtx.fillStyle='#2563eb';gtx.beginPath();gtx.arc(Xc,Yc,5,0,Math.PI*2);gtx.fill();
+  gtx.fillStyle='#2563eb';
+  gtx.beginPath();
+  gtx.arc(Xc,Yc,5,0,Math.PI*2);
+  gtx.fill();
 }
 
 // ======= LOOP =======
@@ -205,11 +331,13 @@ function frame(now){
     if(s>MAX_S){s=MAX_S;arrived=true;overlay.style.display='flex';playing=false;}
     if(s<MIN_S){s=MIN_S;arrived=true;overlay.style.display='flex';playing=false;}
   }
-  if(points.length===0||t-points[points.length-1].t>=0.02){points.push({t,s});if(points.length>12000)points.splice(0,2000);} 
-  // KPI senza decimali
-  kpiT.textContent=`t = ${Math.round(t)} s`;
-  kpiS.textContent=`s = ${Math.round(s)} m`;
-  kpiV.textContent=`v = ${Math.round(v)} m/s`;
+  if(points.length===0||t-points[points.length-1].t>=0.02){
+    points.push({t,s});
+    if(points.length>12000)points.splice(0,2000);
+  }
+  kpiT.textContent=`t = ${Math.trunc(t)} s`;
+  kpiS.textContent=`s = ${Math.trunc(s)} m`;
+  kpiV.textContent=`v = ${Math.trunc(v)} m/s`;
   drawScene(dt);drawGraph();
   requestAnimationFrame(frame);
 }
