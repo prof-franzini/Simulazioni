@@ -3,157 +3,231 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>MRU — Visuale Dinamica (Davanti/Dietro)</title>
+<title>MRU — Visuale Dinamica (Davanti/Dietro) + Grafico integrato</title>
 <style>
-  body { font-family: 'Inter', sans-serif; background: linear-gradient(180deg,#e9eef5,#dbe6f3); margin:0; padding:1rem; display:flex; flex-direction:column; align-items:center; }
-  canvas { background:white; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,0.1); margin:10px; }
-  .controls { background:white; padding:1rem 2rem; border-radius:1rem; box-shadow:0 2px 10px rgba(0,0,0,0.1); text-align:center; }
-  input[type=range] { width:200px; }
-  button { margin-left:10px; padding:0.4rem 0.8rem; border:none; border-radius:8px; background:#2563eb; color:white; cursor:pointer; }
-  button:hover { background:#1e3a8a; }
+  :root{
+    --bg1:#e9eef5; --bg2:#dbe6f3; --panel:#ffffff; --ink:#0f172a; --muted:#64748b; --blue:#2563eb; --orange:#f97316;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:linear-gradient(180deg,var(--bg1),var(--bg2)); color:var(--ink); padding:1rem;}
+  header{display:flex; justify-content:space-between; align-items:center; gap:1rem; margin-bottom:8px}
+  h1{margin:0; font-size:clamp(1.1rem,1.6rem,2rem)}
+  .layout{display:grid; gap:1rem; grid-template-columns:1fr;}
+  @media (min-width: 980px){.layout{grid-template-columns: 1.2fr .8fr}}
+  .card{background:var(--panel); border-radius:16px; box-shadow:0 10px 30px rgba(15,23,42,.08); padding:12px}
+  canvas{width:100%; height:100%; display:block; border-radius:12px}
+  .scene{aspect-ratio:16/9}
+  .graph{aspect-ratio:16/9}
+  .controls{display:flex; flex-wrap:wrap; gap:.8rem; align-items:center; margin-top:.6rem}
+  .ctrl{background:var(--panel); padding:.65rem .9rem; border-radius:12px; box-shadow:0 6px 16px rgba(15,23,42,.06); display:flex; align-items:center; gap:.5rem}
+  input[type=range]{width:220px}
+  .btn{border:0; background:var(--blue); color:#fff; padding:.6rem .9rem; border-radius:10px; font-weight:700; cursor:pointer}
+  .btn.secondary{background:#0f172a}
+  .pill{background:#0ea5e9; color:#fff; padding:.35rem .7rem; border-radius:999px; font-weight:700; display:inline-block; margin-right:.4rem}
+  .legend{position:absolute; right:.6rem; top:.6rem; background:rgba(255,255,255,.85); padding:.35rem .6rem; border-radius:8px; font-size:.8rem; box-shadow:0 2px 8px rgba(0,0,0,.08)}
 </style>
 </head>
 <body>
-<h1>Simulazione MRU — Visuale dinamica</h1>
-<canvas id="scene" width="600" height="300"></canvas>
-<canvas id="graph" width="600" height="300"></canvas>
-<div class="controls">
-  <label>Velocità (m/s): <input type="range" id="vel" min="-40" max="40" value="20"> <span id="velVal">20</span></label>
-  <button id="reset">Reset</button>
-</div>
+  <header>
+    <h1>MRU — Visuale dinamica (dietro ↔︎ davanti) e grafico s–t corretto</h1>
+    <div style="font-size:.9rem;color:#334155">La vista cambia con il segno di v. Il grafico integra v nel tempo (storia conservata).</div>
+  </header>
+
+  <section class="layout">
+    <div class="card" style="position:relative">
+      <div class="legend">v > 0: vista da dietro • v < 0: vista da davanti • freccia arancione ∝ |v|</div>
+      <canvas id="scene" class="scene"></canvas>
+      <div class="controls">
+        <div class="ctrl"><label for="vel">Velocità (m/s)</label><input id="vel" type="range" min="-40" max="40" step="1" value="18"><strong id="velVal">18</strong></div>
+        <div class="ctrl"><label for="times">Tempo ×</label><input id="times" type="range" min="0.25" max="4" step="0.25" value="1"><strong id="timeMul">1.00</strong></div>
+        <button id="pp" class="btn">Pausa</button>
+        <button id="reset" class="btn secondary">Reset</button>
+        <span class="pill" id="kpiT">t = 0.0 s</span>
+        <span class="pill" id="kpiS">s = 0.0 m</span>
+        <span class="pill" id="kpiV">v = 18 m/s</span>
+      </div>
+    </div>
+
+    <div class="card" style="position:relative">
+      <div class="legend">Grafico s–t integrato (la pendenza istantanea è v). Cambia v e la storia si conserva.</div>
+      <canvas id="graph" class="graph"></canvas>
+    </div>
+  </section>
 
 <script>
-const scene = document.getElementById('scene');
-const ctx = scene.getContext('2d');
-const graph = document.getElementById('graph');
-const gtx = graph.getContext('2d');
+(function(){
+  // DOM
+  const scene = document.getElementById('scene');
+  const graph = document.getElementById('graph');
+  const ctx = scene.getContext('2d');
+  const gtx = graph.getContext('2d');
+  const velR = document.getElementById('vel');
+  const velVal = document.getElementById('velVal');
+  const timesR = document.getElementById('times');
+  const timeMulEl = document.getElementById('timeMul');
+  const btnPP = document.getElementById('pp');
+  const btnReset = document.getElementById('reset');
+  const kpiT = document.getElementById('kpiT');
+  const kpiS = document.getElementById('kpiS');
+  const kpiV = document.getElementById('kpiV');
 
-const velSlider = document.getElementById('vel');
-const velVal = document.getElementById('velVal');
-const resetBtn = document.getElementById('reset');
+  // State (INTEGRAZIONE CORRETTA)
+  let v = Number(velR.value); // m/s
+  let t = 0;                  // s
+  let s = 0;                  // m, posizione accumulata (si conserva quando cambia v)
+  let playing = true;
+  let timeMul = Number(timesR.value);
 
-let v = parseFloat(velSlider.value);
-let s = 0; // posizione
-let t = 0; // tempo
-let lastTime = null;
-let graphPoints = [];
-let dir = 1; // 1 = avanti, -1 = indietro
+  // History for graph (storia completa)
+  const points = []; // {t, s}
+  const maxSecondsShown = 20;
 
-velSlider.addEventListener('input', () => {
-  const newV = parseFloat(velSlider.value);
-  // Mantieni lo spazio accumulato, cambia solo la velocità
-  v = newV;
-  dir = v >= 0 ? 1 : -1;
-  velVal.textContent = v;
-});
+  // Scene params
+  const pxPerMeter = 6; // per parallax
+  const dashLen = 30, dashGap = 40; let dashOffset = 0; // scorrimento segnaletica
 
-resetBtn.addEventListener('click', () => {
-  s = 0; t = 0; graphPoints = [];
-});
+  // Responsive sizing (pixel density aware)
+  function resize(canvas){
+    const w = canvas.clientWidth, h = canvas.clientHeight; const dpr = devicePixelRatio || 1;
+    if(canvas.width !== Math.floor(w*dpr) || canvas.height !== Math.floor(h*dpr)){
+      canvas.width = Math.floor(w*dpr); canvas.height = Math.floor(h*dpr);
+      const c = canvas.getContext('2d'); c.setTransform(dpr,0,0,dpr,0,0);
+    }
+  }
+  const ro = new ResizeObserver(()=>{ resize(scene); resize(graph); });
+  ro.observe(scene); ro.observe(graph);
 
-function drawScene() {
-  ctx.clearRect(0, 0, scene.width, scene.height);
+  // UI bindings — IMPORTANT: NON si resetta s o t quando cambia v
+  velR.addEventListener('input', ()=>{ v = Number(velR.value); velVal.textContent = v.toFixed(0); kpiV.textContent = `v = ${v.toFixed(0)} m/s`; });
+  timesR.addEventListener('input', ()=>{ timeMul = Number(timesR.value); timeMulEl.textContent = timeMul.toFixed(2); });
+  btnPP.addEventListener('click', ()=>{ playing = !playing; btnPP.textContent = playing ? 'Pausa' : 'Riprendi'; });
+  btnReset.addEventListener('click', ()=>{ t=0; s=0; points.length=0; dashOffset=0; kpiT.textContent='t = 0.0 s'; kpiS.textContent='s = 0.0 m'; });
 
-  // Sfondo e strada
-  const w = scene.width, h = scene.height;
-  ctx.fillStyle = '#bcd1e6';
-  ctx.fillRect(0, 0, w, h);
-  ctx.fillStyle = '#3b414a';
-  ctx.beginPath();
-  ctx.moveTo(w/2 - 120, h*0.55);
-  ctx.lineTo(w/2 + 120, h*0.55);
-  ctx.lineTo(w, h);
-  ctx.lineTo(0, h);
-  ctx.closePath();
-  ctx.fill();
+  // === SCENA ===
+  function drawScene(dt){
+    const w = scene.clientWidth, h = scene.clientHeight; ctx.clearRect(0,0,w,h);
 
-  // Auto vista da dietro o davanti
-  const carY = h * 0.75;
-  const carW = 120, carH = 40;
-  const isFront = v < 0;
+    // cielo
+    const sky = ctx.createLinearGradient(0,0,0,h*0.6); sky.addColorStop(0,'#cfe3ff'); sky.addColorStop(1,'#f2f7ff'); ctx.fillStyle=sky; ctx.fillRect(0,0,w,h);
+    // colline
+    ctx.fillStyle = '#bcd1e6'; ctx.beginPath(); ctx.moveTo(0,h*0.55); for(let x=0;x<=w;x+=40){ ctx.lineTo(x, h*0.55 + Math.sin(x*0.008)*12); } ctx.lineTo(w,0); ctx.lineTo(0,0); ctx.closePath(); ctx.fill();
+    // strada prospettica
+    const horizon = h*0.62; const roadTopW = w*0.25, roadBotW = w*0.92; const cx=w/2;
+    ctx.fillStyle = '#3b414a'; ctx.beginPath(); ctx.moveTo(cx-roadTopW/2,horizon); ctx.lineTo(cx+roadTopW/2,horizon); ctx.lineTo(cx+roadBotW/2,h); ctx.lineTo(cx-roadBotW/2,h); ctx.closePath(); ctx.fill();
+    // bordi
+    ctx.strokeStyle = '#e5e7eb'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(cx-roadTopW/2,horizon); ctx.lineTo(cx-roadBotW/2,h); ctx.moveTo(cx+roadTopW/2,horizon); ctx.lineTo(cx+roadBotW/2,h); ctx.stroke();
 
-  ctx.save();
-  ctx.translate(w/2, carY);
-  if (isFront) ctx.scale(-1, 1); // ribalta visuale
+    // linea tratteggiata centrale — scorre in funzione del segno di v
+    dashOffset = (dashOffset + (v * timeMul) * dt * pxPerMeter) % (dashLen + dashGap);
+    const steps = 22;
+    for(let i=0;i<steps;i++){
+      const p = i/steps; const y1 = horizon + p*(h-horizon); const y2 = horizon + (p + dashLen/(h-horizon))*(h-horizon);
+      const yShift = (dashOffset % (dashLen+dashGap)) * ((1-p)*0.25 + 0.75);
+      const yy1 = y1 + yShift; const yy2 = y2 + yShift; if(yy1>h) continue;
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = Math.max(2, ((roadTopW+(roadBotW-roadTopW)*p)*0.01));
+      ctx.beginPath(); ctx.moveTo(cx,yy1); ctx.lineTo(cx,yy2); ctx.stroke();
+    }
 
-  // Corpo
-  ctx.fillStyle = '#2563eb';
-  ctx.beginPath();
-  ctx.roundRect(-carW/2, -carH/2, carW, carH, 10);
-  ctx.fill();
+    // auto: vista posteriore se v>0, anteriore se v<0
+    const carX = cx, carY = h*0.78, carW = 120, carH = 42; const frontView = v < 0;
+    // ombra
+    ctx.fillStyle='rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(carX, carY+carH*0.6, carW*0.55, carH*0.35, 0, 0, Math.PI*2); ctx.fill();
+    // carrozzeria
+    ctx.fillStyle = '#2563eb'; ctx.strokeStyle='#0f172a'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.roundRect(carX-carW/2, carY-carH/2, carW, carH, 10); ctx.fill(); ctx.stroke();
+    // parabrezza / lunotto
+    ctx.fillStyle = frontView ? '#93c5fd' : '#93c5fd';
+    const glassW = carW*0.42, glassH = carH*0.33; ctx.beginPath(); ctx.roundRect(carX-glassW/2, carY-carH*0.45, glassW, glassH, 6); ctx.fill();
+    // dettagli frontali o posteriori
+    if(frontView){
+      // griglia
+      ctx.fillStyle = '#0f172a'; ctx.fillRect(carX-carW*0.18, carY+carH*0.05, carW*0.36, 6);
+      // fari bianchi
+      ctx.fillStyle = '#fde68a'; ctx.fillRect(carX-carW/2+8, carY-6, 14, 10); ctx.fillRect(carX+carW/2-22, carY-6, 14, 10);
+    } else {
+      // targa
+      ctx.fillStyle = '#e2e8f0'; ctx.fillRect(carX-18, carY+carH*0.05, 36, 8);
+      // luci rosse posteriori
+      ctx.fillStyle = '#ef4444'; ctx.fillRect(carX-carW/2+8, carY+carH*0.15, 14, 10); ctx.fillRect(carX+carW/2-22, carY+carH*0.15, 14, 10);
+    }
 
-  // Finestrino
-  ctx.fillStyle = '#93c5fd';
-  ctx.fillRect(-carW*0.2, -carH*0.4, carW*0.4, carH*0.25);
+    // freccia velocità (direzione e modulo)
+    const arrowLen = Math.max(10, Math.min(160, Math.abs(v)*3)) * Math.sign(v||1);
+    ctx.strokeStyle = '#f97316'; ctx.lineWidth = 4; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(carX, carY - carH*0.95); ctx.lineTo(carX + arrowLen, carY - carH*0.95); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(carX + arrowLen, carY - carH*0.95);
+    ctx.lineTo(carX + arrowLen - 10*Math.sign(arrowLen||1), carY - carH*0.95 - 6);
+    ctx.lineTo(carX + arrowLen - 10*Math.sign(arrowLen||1), carY - carH*0.95 + 6); ctx.closePath(); ctx.fillStyle='#f97316'; ctx.fill();
 
-  // Luci posteriori o fari
-  if (isFront) {
-    ctx.fillStyle = '#fef08a'; // fari gialli
-    ctx.fillRect(-carW/2+5, -carH/4, 10, 10);
-    ctx.fillRect(carW/2-15, -carH/4, 10, 10);
-  } else {
-    ctx.fillStyle = '#ef4444'; // luci posteriori rosse
-    ctx.fillRect(-carW/2+5, carH/4, 10, 10);
-    ctx.fillRect(carW/2-15, carH/4, 10, 10);
+    // HUD
+    ctx.fillStyle='rgba(255,255,255,.9)'; ctx.strokeStyle='rgba(0,0,0,.08)'; ctx.lineWidth=1; ctx.beginPath(); ctx.roundRect(12,12,160,54,10); ctx.fill(); ctx.stroke();
+    ctx.fillStyle='#0f172a'; ctx.font='700 18px Inter, system-ui, sans-serif'; ctx.fillText(`v = ${v.toFixed(0)} m/s`, 24, 36);
+    ctx.fillStyle='#475569'; ctx.font='12px Inter, system-ui, sans-serif'; ctx.fillText(frontView? 'Vista ANT.: v negativa' : 'Vista POST.: v positiva', 24, 52);
   }
 
-  ctx.restore();
+  // === GRAFICO s–t (storia integrata) ===
+  function drawGraph(){
+    const w = graph.clientWidth, h = graph.clientHeight; gtx.clearRect(0,0,w,h);
+    // riquadro
+    gtx.fillStyle='#ffffff'; gtx.fillRect(0,0,w,h); gtx.strokeStyle='#cbd5e1'; gtx.lineWidth=1.5; gtx.strokeRect(48,16,w-64,h-48);
 
-  // Freccia di velocità
-  ctx.strokeStyle = '#f97316';
-  ctx.lineWidth = 4;
-  ctx.beginPath();
-  ctx.moveTo(w/2, carY - 50);
-  ctx.lineTo(w/2 + v * 2, carY - 50);
-  ctx.stroke();
-}
+    // scala finestra mobile in x
+    const tMax = Math.max(maxSecondsShown, t);
+    const tMin = Math.max(0, t - maxSecondsShown);
+    // scala y in base alla storia (include negativi)
+    const sVals = points.filter(p=>p.t>=tMin).map(p=>p.s);
+    const sMax = sVals.length? Math.max(...sVals, 10):10;
+    const sMin = sVals.length? Math.min(...sVals, 0):0;
 
-function drawGraph() {
-  gtx.clearRect(0, 0, graph.width, graph.height);
-  const w = graph.width, h = graph.height;
+    const tx = tt => 48 + ((tt - tMin)/(tMax - tMin)) * (w-64);
+    const sy = ss => h-32 - ((ss - sMin)/(sMax - sMin || 1)) * (h-64);
 
-  // Assi
-  gtx.strokeStyle = '#aaa';
-  gtx.lineWidth = 2;
-  gtx.beginPath();
-  gtx.moveTo(50, h - 30);
-  gtx.lineTo(w - 20, h - 30);
-  gtx.moveTo(50, h - 30);
-  gtx.lineTo(50, 20);
-  gtx.stroke();
+    // griglia
+    gtx.strokeStyle='#e5e7eb'; gtx.lineWidth=1; const gx=5, gy=5;
+    for(let i=0;i<=gx;i++){ const x=48+i*(w-64)/gx; gtx.beginPath(); gtx.moveTo(x,16); gtx.lineTo(x,h-32); gtx.stroke(); }
+    for(let i=0;i<=gy;i++){ const y=16+i*(h-48)/gy; gtx.beginPath(); gtx.moveTo(48,y); gtx.lineTo(w-16,y); gtx.stroke(); }
 
-  // Grafico
-  gtx.strokeStyle = '#2563eb';
-  gtx.lineWidth = 2;
-  gtx.beginPath();
-  graphPoints.forEach((p, i) => {
-    const x = 50 + p.t * 10;
-    const y = h - 30 - p.s * 0.3;
-    if (i === 0) gtx.moveTo(x, y);
-    else gtx.lineTo(x, y);
-  });
-  gtx.stroke();
-}
+    // etichette
+    gtx.fillStyle='#0f172a'; gtx.font='12px Inter, system-ui, sans-serif'; gtx.fillText('Tempo (s)', w/2-28, h-10);
+    gtx.save(); gtx.translate(18, h/2+28); gtx.rotate(-Math.PI/2); gtx.fillText('Spazio (m)', 0, 0); gtx.restore();
 
-function update(dt) {
-  s += v * dt;
-  t += dt;
-  graphPoints.push({ t, s });
-}
+    // polilinea storia
+    gtx.strokeStyle='#2563eb'; gtx.lineWidth=2; gtx.beginPath();
+    let moved=false; for(const p of points){ if(p.t < tMin) continue; const X=tx(p.t), Y=sy(p.s); if(!moved){ gtx.moveTo(X,Y); moved=true; } else { gtx.lineTo(X,Y); } }
+    if(moved) gtx.stroke();
 
-function loop(timestamp) {
-  if (!lastTime) lastTime = timestamp;
-  const dt = (timestamp - lastTime) / 1000;
-  lastTime = timestamp;
+    // punto corrente + crocette
+    const Xc = tx(t), Yc = sy(s); gtx.fillStyle='#2563eb'; gtx.beginPath(); gtx.arc(Xc,Yc,4,0,Math.PI*2); gtx.fill();
+    gtx.strokeStyle='#94a3b8'; gtx.setLineDash([6,6]); gtx.beginPath(); gtx.moveTo(48,Yc); gtx.lineTo(w-16,Yc); gtx.moveTo(Xc,16); gtx.lineTo(Xc,h-32); gtx.stroke(); gtx.setLineDash([]);
 
-  update(dt);
-  drawScene();
-  drawGraph();
+    // ticks numerici
+    gtx.fillStyle='#334155'; gtx.font='11px Inter, system-ui, sans-serif';
+    for(let i=0;i<=gx;i++){ const tt = tMin + i*(tMax-tMin)/gx; const x=48+i*(w-64)/gx; gtx.fillText(tt.toFixed(0), x-8, h-36+24); }
+    for(let i=0;i<=gy;i++){ const ss = sMin + i*(sMax-sMin)/gy; const y=16+i*(h-48)/gy; gtx.fillText(ss.toFixed(0), 6, y+4); }
+  }
 
-  requestAnimationFrame(loop);
-}
+  // === LOOP ===
+  let last = performance.now();
+  function frame(now){
+    resize(scene); resize(graph);
+    const rawdt = (now - last)/1000; last = now; const dt = Math.min(0.05, rawdt) * (playing? timeMul: 0);
 
-requestAnimationFrame(loop);
+    // INTEGRAZIONE: s accumula, la storia resta coerente quando cambi v
+    t += dt; s += v * dt; 
+
+    // registra storia con cadenza 50 Hz max
+    if(points.length===0 || t - points[points.length-1].t >= 0.02){ points.push({t, s}); if(points.length>5000) points.splice(0,1000); }
+
+    // KPI
+    kpiT.textContent = `t = ${t.toFixed(1)} s`; kpiS.textContent = `s = ${s.toFixed(1)} m`;
+
+    // draw
+    drawScene(dt); drawGraph();
+
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
 </script>
 </body>
 </html>
