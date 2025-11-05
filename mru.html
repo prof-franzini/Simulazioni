@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moto Rettilineo Uniforme (MRU)</title>
+<style>
+  body {
+    font-family: "Segoe UI", Roboto, sans-serif;
+    background: linear-gradient(180deg, #eef2f3, #d9e3f0);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0;
+    padding: 1rem;
+    color: #333;
+  }
+
+  h1 {
+    margin-bottom: 0.5rem;
+    color: #2a4b8d;
+  }
+
+  .container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2rem;
+    margin-top: 1rem;
+  }
+
+  canvas {
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  }
+
+  .controls {
+    background: white;
+    padding: 1rem 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    text-align: center;
+  }
+
+  input[type="range"] {
+    width: 200px;
+  }
+
+  .info {
+    margin-top: 0.5rem;
+    font-size: 1rem;
+  }
+</style>
+</head>
+<body>
+<h1>Simulazione: Moto Rettilineo Uniforme</h1>
+<p>Un punto si muove con velocità costante lungo una linea. Il grafico mostra la legge oraria <em>s = v·t</em>.</p>
+
+<div class="container">
+  <canvas id="motionCanvas" width="500" height="200"></canvas>
+  <canvas id="graphCanvas" width="500" height="200"></canvas>
+</div>
+
+<div class="controls">
+  <label for="velocity">Velocità (m/s): </label>
+  <input type="range" id="velocity" min="-50" max="50" step="1" value="20">
+  <span id="vValue">20</span>
+  <div class="info">
+    Tempo: <span id="timeValue">0.0</span> s — Spazio: <span id="spaceValue">0.0</span> m
+  </div>
+  <button id="resetBtn">Reset</button>
+</div>
+
+<script>
+const motionCanvas = document.getElementById("motionCanvas");
+const graphCanvas = document.getElementById("graphCanvas");
+const ctxM = motionCanvas.getContext("2d");
+const ctxG = graphCanvas.getContext("2d");
+
+const vSlider = document.getElementById("velocity");
+const vValue = document.getElementById("vValue");
+const tEl = document.getElementById("timeValue");
+const sEl = document.getElementById("spaceValue");
+const resetBtn = document.getElementById("resetBtn");
+
+let velocity = parseFloat(vSlider.value);
+let time = 0;
+let x = 50;
+let graphPoints = [];
+
+vSlider.addEventListener("input", () => {
+  velocity = parseFloat(vSlider.value);
+  vValue.textContent = velocity;
+});
+
+resetBtn.addEventListener("click", () => {
+  time = 0;
+  x = 50;
+  graphPoints = [];
+});
+
+function drawMotion() {
+  ctxM.clearRect(0, 0, motionCanvas.width, motionCanvas.height);
+
+  // Linea di riferimento
+  ctxM.strokeStyle = "#aaa";
+  ctxM.lineWidth = 2;
+  ctxM.beginPath();
+  ctxM.moveTo(0, 150);
+  ctxM.lineTo(motionCanvas.width, 150);
+  ctxM.stroke();
+
+  // Punto (oggetto)
+  ctxM.beginPath();
+  ctxM.arc(x, 150, 10, 0, Math.PI * 2);
+  ctxM.fillStyle = "#2a4b8d";
+  ctxM.fill();
+
+  // Freccia velocità
+  ctxM.beginPath();
+  ctxM.moveTo(x, 150);
+  ctxM.lineTo(x + velocity * 0.8, 150);
+  ctxM.strokeStyle = "#ff6600";
+  ctxM.lineWidth = 3;
+  ctxM.stroke();
+  ctxM.beginPath();
+  ctxM.moveTo(x + velocity * 0.8, 150);
+  ctxM.lineTo(x + velocity * 0.8 - 5 * Math.sign(velocity), 145);
+  ctxM.lineTo(x + velocity * 0.8 - 5 * Math.sign(velocity), 155);
+  ctxM.closePath();
+  ctxM.fillStyle = "#ff6600";
+  ctxM.fill();
+}
+
+function drawGraph() {
+  ctxG.clearRect(0, 0, graphCanvas.width, graphCanvas.height);
+
+  // Assi
+  ctxG.strokeStyle = "#aaa";
+  ctxG.lineWidth = 2;
+  ctxG.beginPath();
+  ctxG.moveTo(40, 180);
+  ctxG.lineTo(480, 180);
+  ctxG.moveTo(40, 180);
+  ctxG.lineTo(40, 20);
+  ctxG.stroke();
+
+  // Label
+  ctxG.fillStyle = "#333";
+  ctxG.font = "14px Segoe UI";
+  ctxG.fillText("Tempo (s)", 230, 195);
+  ctxG.save();
+  ctxG.rotate(-Math.PI / 2);
+  ctxG.fillText("Spazio (m)", -130, 15);
+  ctxG.restore();
+
+  // Grafico
+  ctxG.strokeStyle = "#2a4b8d";
+  ctxG.lineWidth = 2;
+  ctxG.beginPath();
+  for (let i = 0; i < graphPoints.length; i++) {
+    const pt = graphPoints[i];
+    const gx = 40 + pt.t * 10;
+    const gy = 180 - pt.s * 0.5;
+    if (i === 0) ctxG.moveTo(gx, gy);
+    else ctxG.lineTo(gx, gy);
+  }
+  ctxG.stroke();
+}
+
+function update(dt) {
+  time += dt;
+  x += velocity * dt * 2; // scala per visibilità
+  if (x > motionCanvas.width - 20) x = 50;
+  if (x < 20) x = motionCanvas.width - 50;
+
+  graphPoints.push({ t: time, s: velocity * time });
+
+  tEl.textContent = time.toFixed(1);
+  sEl.textContent = (velocity * time).toFixed(1);
+}
+
+let last = null;
+function loop(timestamp) {
+  if (!last) last = timestamp;
+  const dt = (timestamp - last) / 1000;
+  last = timestamp;
+
+  update(dt);
+  drawMotion();
+  drawGraph();
+
+  requestAnimationFrame(loop);
+}
+
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
