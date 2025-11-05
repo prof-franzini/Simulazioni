@@ -141,14 +141,88 @@ function beginClip(p, panel){
 }
 function endClip(p){p.drawingContext.restore();}
 
-function worldToScreenLeft(xm,ym){
-  const marginL=40;
-  const pyGround=leftPanel.y+Math.round(leftPanel.h*0.7);
-  // applica panX e panY solo a oggetti mobili
-  const px=leftPanel.x+marginL+Math.round((xm-leftPanX)*ppmLeft);
-  const py=pyGround-Math.round((ym-groundY)*ppmLeft)-leftPanY;
-  return {x:px,y:py,ground:pyGround};
+// === Coordinate panoramica con pan/zoom ===
+function worldToScreenLeft(xm, ym) {
+  const marginL = 40;
+  const pyGround = leftPanel.y + Math.round(leftPanel.h * 0.7);
+  // panY agisce solo come spostamento della telecamera (non muove il suolo)
+  const px = leftPanel.x + marginL + Math.round((xm - leftPanX) * ppmLeft);
+  const py = pyGround - Math.round((ym - groundY - leftPanY) * ppmLeft);
+  return { x: px, y: py, ground: pyGround };
 }
+
+// === Panoramica (SINISTRA) ===
+function drawLeft(p) {
+  const X = leftPanel.x, Y = leftPanel.y, Wp = leftPanel.w, Hp = leftPanel.h;
+  p.push();
+  p.noStroke(); p.fill('#fff'); p.rect(X, Y, Wp, Hp, 10);
+  beginClip(p, leftPanel);
+
+  drawSkyGrad(p, X, Y, Wp, Hp);
+
+  // Montagne e terreno FISSI, non soggetti a panY
+  p.fill(getCSS('--mountainFar'));
+  p.beginShape(); p.vertex(X, Y + Hp);
+  for (const h of hillsFar) {
+    const s = worldToScreenLeft(h.x, h.y + 8);
+    p.vertex(s.x, s.y);
+  }
+  p.vertex(X + Wp, Y + Hp); p.endShape();
+
+  p.fill(getCSS('--mountainNear'));
+  p.beginShape(); p.vertex(X, Y + Hp);
+  for (const h of hillsNear) {
+    const s = worldToScreenLeft(h.x, h.y + 4);
+    p.vertex(s.x, s.y);
+  }
+  p.vertex(X + Wp, Y + Hp); p.endShape();
+
+  const gLine = worldToScreenLeft(0, groundY).ground;
+  drawGround(p, gLine, X, Wp);
+  drawCannonPanorama(p, gLine);
+
+  // Traiettorie e proiettili soggetti a pan/zoom
+  for (const poly of shots) {
+    p.noFill(); p.stroke(getCSS('--trail')); p.strokeWeight(2.2);
+    p.beginShape();
+    for (const pt of poly) {
+      const s = worldToScreenLeft(pt.x, pt.y + leftPanY);
+      p.vertex(s.x, s.y);
+    }
+    p.endShape();
+  }
+
+  if (currentTrail.length) {
+    p.noFill(); p.stroke('#ff7f11'); p.strokeWeight(2.2);
+    p.beginShape();
+    for (const pt of currentTrail) {
+      const s = worldToScreenLeft(pt.x, pt.y + leftPanY);
+      p.vertex(s.x, s.y);
+    }
+    p.endShape();
+  }
+
+  if (proj) {
+    const s = worldToScreenLeft(proj.x, proj.y + leftPanY);
+    drawProjectile(p, s.x, s.y);
+  }
+
+  endClip(p);
+  p.fill('#0b253a'); p.noStroke(); p.textSize(13); p.text('Panoramica', X + 10, Y + 18);
+  p.pop();
+}
+
+// === Zoom centrato sulla vista attuale (aggiornato) ===
+function applyZoom(factor) {
+  const prevZoom = leftZoom;
+  leftZoom = clamp(leftZoom * factor, 0.1, 5);  // ora puoi zoomare molto più "fuori"
+  // mantieni il centro corrente invariato rispetto alla scena
+  const ratio = leftZoom / prevZoom;
+  leftPanX /= ratio;
+  leftPanY /= ratio;
+  layoutPanels();
+}
+
 function worldToScreenRight(xm,ym){
   const cx=rightPanel.x+rightPanel.w/2;
   const cy=rightPanel.y+rightPanel.h*0.65;
