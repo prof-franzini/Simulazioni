@@ -91,29 +91,22 @@ function drawScene(dt){
   const sky=ctx.createLinearGradient(0,0,0,h*0.6);
   sky.addColorStop(0,'#cfe3ff');sky.addColorStop(1,'#f2f7ff');
   ctx.fillStyle=sky;ctx.fillRect(0,0,w,h);
-  // Montagne
+  // Montagne grigio chiaro (valle)
   const horizon=h*0.58;ctx.fillStyle='#d1d5db';
   ctx.beginPath();
   ctx.moveTo(0,horizon);
-  ctx.lineTo(w*0.2,horizon-80);
-  ctx.lineTo(w*0.4,horizon-30);
-  ctx.lineTo(w*0.6,horizon-90);
-  ctx.lineTo(w*0.8,horizon-50);
+  ctx.lineTo(w*0.15,horizon-70);
+  ctx.lineTo(w*0.32,horizon-30);
+  ctx.lineTo(w*0.5,horizon-85);
+  ctx.lineTo(w*0.68,horizon-35);
+  ctx.lineTo(w*0.85,horizon-65);
   ctx.lineTo(w,horizon);
-  ctx.lineTo(w,h);
-  ctx.lineTo(0,h);
-  ctx.closePath();ctx.fill();
+  ctx.lineTo(w,h);ctx.lineTo(0,h);ctx.closePath();ctx.fill();
   // Terreno innevato
   ctx.fillStyle='#f8fafc';
-  ctx.beginPath();
-  ctx.moveTo(0,horizon);
-  ctx.lineTo(w,horizon);
-  ctx.lineTo(w,h);
-  ctx.lineTo(0,h);
-  ctx.closePath();ctx.fill();
-  // Strada
-  const cx=w/2;
-  const roadTopW=w*0.1,roadBotW=w*0.9;
+  ctx.beginPath();ctx.moveTo(0,horizon);ctx.lineTo(w,horizon);ctx.lineTo(w,h);ctx.lineTo(0,h);ctx.closePath();ctx.fill();
+  // Strada prospettica
+  const cx=w/2;const roadTopW=w*0.1,roadBotW=w*0.9;
   ctx.fillStyle='#3b414a';
   ctx.beginPath();
   ctx.moveTo(cx-roadTopW/2,horizon);
@@ -123,46 +116,41 @@ function drawScene(dt){
   ctx.closePath();ctx.fill();
   ctx.strokeStyle='#e5e7eb';ctx.lineWidth=4;
   ctx.beginPath();
-  ctx.moveTo(cx-roadTopW/2,horizon);
-  ctx.lineTo(cx-roadBotW/2,h);
-  ctx.moveTo(cx+roadTopW/2,horizon);
-  ctx.lineTo(cx+roadBotW/2,h);
+  ctx.moveTo(cx-roadTopW/2,horizon);ctx.lineTo(cx-roadBotW/2,h);
+  ctx.moveTo(cx+roadTopW/2,horizon);ctx.lineTo(cx+roadBotW/2,h);
   ctx.stroke();
-  // Linea centrale
+  // Linea centrale con clamp all'orizzonte (nessuna uscita sopra)
   laneOffset=(laneOffset+(v*dt*pxPerMeter))%(dashLen+dashGap);
-  const direction = v>=0?1:-1;
+  const dir = v>=0?1:-1;
   for(let i=0;i<24;i++){
     const p=i/24;
-    const y1=horizon+p*(h-horizon);
-    const y2=horizon+(p+dashLen/(h-horizon))*(h-horizon);
-    const shift=(laneOffset%(dashLen+dashGap))*((1-p)*0.25+0.75)*direction;
-    const yy1=y1+shift,yy2=y2+shift;
-    if(yy1>h)continue;
+    let y1=horizon+p*(h-horizon);
+    let y2=horizon+(p+dashLen/(h-horizon))*(h-horizon);
+    const shift=(laneOffset%(dashLen+dashGap))*((1-p)*0.25+0.75)*dir;
+    y1+=shift; y2+=shift;
+    // Evita che superi l'orizzonte quando v<0
+    if(y2 < horizon) continue;
+    y1 = Math.max(y1, horizon);
+    if(y1>h) continue;
     ctx.strokeStyle='#fff';
     ctx.lineWidth=Math.max(2,((roadTopW+(roadBotW-roadTopW)*p)*0.01));
-    ctx.beginPath();ctx.moveTo(cx,yy1);ctx.lineTo(cx,yy2);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(cx,y1);ctx.lineTo(cx,Math.min(y2,h));ctx.stroke();
   }
   // Auto
-  const front=v<0;
-  const carX=cx,carY=h*0.8,carW=150,carH=60;
+  const front=v<0;const carX=cx,carY=h*0.8,carW=150,carH=60;
   ctx.fillStyle='rgba(0,0,0,.25)';
-  ctx.beginPath();
-  ctx.ellipse(carX,carY+carH*0.55,carW*0.55,carH*0.35,0,0,Math.PI*2);
-  ctx.fill();
+  ctx.beginPath();ctx.ellipse(carX,carY+carH*0.55,carW*0.55,carH*0.35,0,0,Math.PI*2);ctx.fill();
   ctx.save();ctx.translate(carX,carY);if(front)ctx.scale(-1,1);
   ctx.fillStyle='#2563eb';ctx.beginPath();ctx.roundRect(-carW/2,-carH/2,carW,carH,14);ctx.fill();
   ctx.fillStyle='#1e40af';ctx.beginPath();ctx.roundRect(-carW/2,-carH*0.85,carW,carH*0.45,14);ctx.fill();
   ctx.fillStyle='#93c5fd';ctx.beginPath();ctx.roundRect(-carW/2+10,-carH*0.75,carW-20,carH*0.38,10);ctx.fill();
-  ctx.strokeStyle='rgba(255,255,255,.6)';ctx.lineWidth=2;
-  ctx.beginPath();ctx.moveTo(0,-carH*0.72);ctx.lineTo(0,-carH*0.37);ctx.stroke();
+  ctx.strokeStyle='rgba(255,255,255,.6)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,-carH*0.72);ctx.lineTo(0,-carH*0.37);ctx.stroke();
   if(front){
     ctx.fillStyle='#0f172a';ctx.fillRect(-carW*0.22,carH*0.02,carW*0.44,7);
-    ctx.fillStyle='#fde68a';
-    ctx.fillRect(-carW/2+12,-4,18,12);ctx.fillRect(carW/2-30,-4,18,12);
-  }else{
+    ctx.fillStyle='#fde68a';ctx.fillRect(-carW/2+12,-4,18,12);ctx.fillRect(carW/2-30,-4,18,12);
+  } else {
     ctx.fillStyle='#e2e8f0';ctx.fillRect(-20,6,40,8);
-    ctx.fillStyle='#ef4444';
-    ctx.fillRect(-carW/2+12,carH*0.1,18,12);ctx.fillRect(carW/2-30,carH*0.1,18,12);
+    ctx.fillStyle='#ef4444';ctx.fillRect(-carW/2+12,carH*0.1,18,12);ctx.fillRect(carW/2-30,carH*0.1,18,12);
   }
   ctx.restore();
 }
@@ -188,20 +176,20 @@ function drawGraph(){
   // Assi
   gtx.strokeStyle='#94a3b8';gtx.lineWidth=2;
   gtx.beginPath();gtx.moveTo(padL,sy(0));gtx.lineTo(w-padR,sy(0));gtx.moveTo(padL,h-padB);gtx.lineTo(padL,padT);gtx.stroke();
-  // Etichette
+  // Etichette (sposta "Spazio (m)" più a sinistra)
   gtx.fillStyle='#0f172a';gtx.font='12px Inter,sans-serif';
   gtx.fillText('Tempo (s)',w/2-30,h-8);
-  gtx.save();gtx.translate(10,h/2+30);gtx.rotate(-Math.PI/2);gtx.fillText('Spazio (m)',0,0);gtx.restore();
+  gtx.save();gtx.translate(6,h/2+30);gtx.rotate(-Math.PI/2);gtx.fillText('Spazio (m)',0,0);gtx.restore();
   // Numeri
   gtx.fillStyle='#334155';gtx.font='11px Inter,sans-serif';
-  for(let ss=-500;ss<=500;ss+=100){const y=sy(ss);gtx.fillText(ss,25,y+4);}
+  for(let ss=-500;ss<=500;ss+=100){const y=sy(ss);gtx.fillText(ss,26,y+4);} // numeri più a destra per evitare sovrapposizione
   for(let tt=Math.ceil(tMin/10)*10;tt<=tMax;tt+=20){const x=tx(tt);gtx.fillText(tt,x-10,h-22);}
   // Curva
   gtx.strokeStyle='#2563eb';gtx.lineWidth=2;gtx.beginPath();let moved=false;
   for(const p of points){if(p.t<tMin||p.t>tMax)continue;const X=tx(p.t),Y=sy(p.s);if(!moved){gtx.moveTo(X,Y);moved=true;}else{gtx.lineTo(X,Y);}}if(moved)gtx.stroke();
   // Punto (pallino)
   let Xc=tx(t);
-  if(t>MAX_T) Xc=w-padR-5; // resta all'estremo destro
+  if(t>MAX_T) Xc=w-padR-5; // resta all'estremo destro dopo 120 s
   const Yc=sy(s);
   gtx.fillStyle='#2563eb';gtx.beginPath();gtx.arc(Xc,Yc,5,0,Math.PI*2);gtx.fill();
 }
@@ -217,9 +205,8 @@ function frame(now){
     if(s>MAX_S){s=MAX_S;arrived=true;overlay.style.display='flex';playing=false;}
     if(s<MIN_S){s=MIN_S;arrived=true;overlay.style.display='flex';playing=false;}
   }
-  if(points.length===0||t-points[points.length-1].t>=0.02){
-    points.push({t,s});if(points.length>12000)points.splice(0,2000);
-  }
+  if(points.length===0||t-points[points.length-1].t>=0.02){points.push({t,s});if(points.length>12000)points.splice(0,2000);} 
+  // KPI senza decimali
   kpiT.textContent=`t = ${Math.round(t)} s`;
   kpiS.textContent=`s = ${Math.round(s)} m`;
   kpiV.textContent=`v = ${Math.round(v)} m/s`;
