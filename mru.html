@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>MRU — Visuale Dinamica (Davanti/Dietro) + Grafico integrato</title>
+<title>MRU — Visuale centrata + Auto migliorata</title>
 <style>
   :root{
     --bg1:#e9eef5; --bg2:#dbe6f3; --panel:#ffffff; --ink:#0f172a; --muted:#64748b; --blue:#2563eb; --orange:#f97316;
@@ -29,17 +29,16 @@
 </head>
 <body>
   <header>
-    <h1>MRU — Visuale dinamica (dietro ↔︎ davanti) e grafico s–t corretto</h1>
-    <div style="font-size:.9rem;color:#334155">La vista cambia con il segno di v. Il grafico integra v nel tempo (storia conservata).</div>
+    <h1>MRU — Punto centrato e auto migliorata</h1>
+    <div style="font-size:.9rem;color:#334155">Il punto nel grafico resta al centro. L'auto ha tettuccio e finestrino migliorati.</div>
   </header>
 
   <section class="layout">
     <div class="card" style="position:relative">
-      <div class="legend">v > 0: vista da dietro • v < 0: vista da davanti • freccia arancione ∝ |v|</div>
+      <div class="legend">v > 0: vista da dietro • v < 0: vista da davanti</div>
       <canvas id="scene" class="scene"></canvas>
       <div class="controls">
         <div class="ctrl"><label for="vel">Velocità (m/s)</label><input id="vel" type="range" min="-40" max="40" step="1" value="18"><strong id="velVal">18</strong></div>
-        <div class="ctrl"><label for="times">Tempo ×</label><input id="times" type="range" min="0.25" max="4" step="0.25" value="1"><strong id="timeMul">1.00</strong></div>
         <button id="pp" class="btn">Pausa</button>
         <button id="reset" class="btn secondary">Reset</button>
         <span class="pill" id="kpiT">t = 0.0 s</span>
@@ -49,184 +48,100 @@
     </div>
 
     <div class="card" style="position:relative">
-      <div class="legend">Grafico s–t integrato (la pendenza istantanea è v). Cambia v e la storia si conserva.</div>
+      <div class="legend">Grafico centrato: il punto rimane fisso al centro, gli assi si espandono</div>
       <canvas id="graph" class="graph"></canvas>
     </div>
   </section>
 
 <script>
 (function(){
-  // DOM
   const scene = document.getElementById('scene');
   const graph = document.getElementById('graph');
   const ctx = scene.getContext('2d');
   const gtx = graph.getContext('2d');
   const velR = document.getElementById('vel');
   const velVal = document.getElementById('velVal');
-  const timesR = document.getElementById('times');
-  const timeMulEl = document.getElementById('timeMul');
   const btnPP = document.getElementById('pp');
   const btnReset = document.getElementById('reset');
   const kpiT = document.getElementById('kpiT');
   const kpiS = document.getElementById('kpiS');
   const kpiV = document.getElementById('kpiV');
 
-  // State (INTEGRAZIONE CORRETTA)
-  let v = Number(velR.value); // m/s
-  let t = 0;                  // s
-  let s = 0;                  // m, posizione accumulata (si conserva quando cambia v)
+  let v = Number(velR.value);
+  let t = 0;
+  let s = 0;
   let playing = true;
-  let timeMul = Number(timesR.value);
+  const points = [];
 
-  // History for graph (storia completa)
-  const points = []; // {t, s}
-  const maxSecondsShown = 20;
+  velR.addEventListener('input',()=>{v=Number(velR.value);velVal.textContent=v;kpiV.textContent=`v = ${v} m/s`;});
+  btnPP.addEventListener('click',()=>{playing=!playing;btnPP.textContent=playing?'Pausa':'Riprendi';});
+  btnReset.addEventListener('click',()=>{t=0;s=0;points.length=0;});
 
-  // Scene params
-  const pxPerMeter = 6; // per parallax
-  const dashLen = 30, dashGap = 40; let dashOffset = 0; // scorrimento segnaletica
+  function drawScene(){
+    const w=scene.clientWidth,h=scene.clientHeight;ctx.clearRect(0,0,w,h);
+    const cx=w/2;const cy=h*0.78;const carW=120,carH=50;const front=v<0;
 
-  // Responsive sizing (pixel density aware)
-  function resize(canvas){
-    const w = canvas.clientWidth, h = canvas.clientHeight; const dpr = devicePixelRatio || 1;
-    if(canvas.width !== Math.floor(w*dpr) || canvas.height !== Math.floor(h*dpr)){
-      canvas.width = Math.floor(w*dpr); canvas.height = Math.floor(h*dpr);
-      const c = canvas.getContext('2d'); c.setTransform(dpr,0,0,dpr,0,0);
-    }
-  }
-  const ro = new ResizeObserver(()=>{ resize(scene); resize(graph); });
-  ro.observe(scene); ro.observe(graph);
+    // sfondo
+    const sky=ctx.createLinearGradient(0,0,0,h*0.6);sky.addColorStop(0,'#cfe3ff');sky.addColorStop(1,'#f2f7ff');ctx.fillStyle=sky;ctx.fillRect(0,0,w,h);
+    ctx.fillStyle='#3b414a';ctx.fillRect(0,h*0.6,w,h*0.4);
 
-  // UI bindings — IMPORTANT: NON si resetta s o t quando cambia v
-  velR.addEventListener('input', ()=>{ v = Number(velR.value); velVal.textContent = v.toFixed(0); kpiV.textContent = `v = ${v.toFixed(0)} m/s`; });
-  timesR.addEventListener('input', ()=>{ timeMul = Number(timesR.value); timeMulEl.textContent = timeMul.toFixed(2); });
-  btnPP.addEventListener('click', ()=>{ playing = !playing; btnPP.textContent = playing ? 'Pausa' : 'Riprendi'; });
-  btnReset.addEventListener('click', ()=>{ t=0; s=0; points.length=0; dashOffset=0; kpiT.textContent='t = 0.0 s'; kpiS.textContent='s = 0.0 m'; });
+    // auto con tettuccio
+    ctx.save();
+    ctx.translate(cx,cy);
+    if(front) ctx.scale(-1,1);
+    ctx.fillStyle='#2563eb';ctx.beginPath();ctx.roundRect(-carW/2,-carH/2,carW,carH,10);ctx.fill();
+    // tettuccio
+    ctx.fillStyle='#1e40af';ctx.fillRect(-carW*0.25,-carH*0.65,carW*0.5,carH*0.3);
+    // finestrino
+    ctx.fillStyle='#93c5fd';ctx.fillRect(-carW*0.2,-carH*0.55,carW*0.4,carH*0.25);
+    // fari o luci
+    if(front){ctx.fillStyle='#fde68a';ctx.fillRect(-carW/2+8,-carH*0.15,14,10);ctx.fillRect(carW/2-22,-carH*0.15,14,10);}else{ctx.fillStyle='#ef4444';ctx.fillRect(-carW/2+8,carH*0.05,14,10);ctx.fillRect(carW/2-22,carH*0.05,14,10);}
+    ctx.restore();
 
-  // === SCENA ===
-  function drawScene(dt){
-    const w = scene.clientWidth, h = scene.clientHeight; ctx.clearRect(0,0,w,h);
-
-    // cielo
-    const sky = ctx.createLinearGradient(0,0,0,h*0.6); sky.addColorStop(0,'#cfe3ff'); sky.addColorStop(1,'#f2f7ff'); ctx.fillStyle=sky; ctx.fillRect(0,0,w,h);
-    // colline
-    ctx.fillStyle = '#bcd1e6'; ctx.beginPath(); ctx.moveTo(0,h*0.55); for(let x=0;x<=w;x+=40){ ctx.lineTo(x, h*0.55 + Math.sin(x*0.008)*12); } ctx.lineTo(w,0); ctx.lineTo(0,0); ctx.closePath(); ctx.fill();
-    // strada prospettica
-    const horizon = h*0.62; const roadTopW = w*0.25, roadBotW = w*0.92; const cx=w/2;
-    ctx.fillStyle = '#3b414a'; ctx.beginPath(); ctx.moveTo(cx-roadTopW/2,horizon); ctx.lineTo(cx+roadTopW/2,horizon); ctx.lineTo(cx+roadBotW/2,h); ctx.lineTo(cx-roadBotW/2,h); ctx.closePath(); ctx.fill();
-    // bordi
-    ctx.strokeStyle = '#e5e7eb'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(cx-roadTopW/2,horizon); ctx.lineTo(cx-roadBotW/2,h); ctx.moveTo(cx+roadTopW/2,horizon); ctx.lineTo(cx+roadBotW/2,h); ctx.stroke();
-
-    // linea tratteggiata centrale — scorre in funzione del segno di v
-    dashOffset = (dashOffset + (v * timeMul) * dt * pxPerMeter) % (dashLen + dashGap);
-    const steps = 22;
-    for(let i=0;i<steps;i++){
-      const p = i/steps; const y1 = horizon + p*(h-horizon); const y2 = horizon + (p + dashLen/(h-horizon))*(h-horizon);
-      const yShift = (dashOffset % (dashLen+dashGap)) * ((1-p)*0.25 + 0.75);
-      const yy1 = y1 + yShift; const yy2 = y2 + yShift; if(yy1>h) continue;
-      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = Math.max(2, ((roadTopW+(roadBotW-roadTopW)*p)*0.01));
-      ctx.beginPath(); ctx.moveTo(cx,yy1); ctx.lineTo(cx,yy2); ctx.stroke();
-    }
-
-    // auto: vista posteriore se v>0, anteriore se v<0
-    const carX = cx, carY = h*0.78, carW = 120, carH = 42; const frontView = v < 0;
-    // ombra
-    ctx.fillStyle='rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(carX, carY+carH*0.6, carW*0.55, carH*0.35, 0, 0, Math.PI*2); ctx.fill();
-    // carrozzeria
-    ctx.fillStyle = '#2563eb'; ctx.strokeStyle='#0f172a'; ctx.lineWidth=2;
-    ctx.beginPath(); ctx.roundRect(carX-carW/2, carY-carH/2, carW, carH, 10); ctx.fill(); ctx.stroke();
-    // parabrezza / lunotto
-    ctx.fillStyle = frontView ? '#93c5fd' : '#93c5fd';
-    const glassW = carW*0.42, glassH = carH*0.33; ctx.beginPath(); ctx.roundRect(carX-glassW/2, carY-carH*0.45, glassW, glassH, 6); ctx.fill();
-    // dettagli frontali o posteriori
-    if(frontView){
-      // griglia
-      ctx.fillStyle = '#0f172a'; ctx.fillRect(carX-carW*0.18, carY+carH*0.05, carW*0.36, 6);
-      // fari bianchi
-      ctx.fillStyle = '#fde68a'; ctx.fillRect(carX-carW/2+8, carY-6, 14, 10); ctx.fillRect(carX+carW/2-22, carY-6, 14, 10);
-    } else {
-      // targa
-      ctx.fillStyle = '#e2e8f0'; ctx.fillRect(carX-18, carY+carH*0.05, 36, 8);
-      // luci rosse posteriori
-      ctx.fillStyle = '#ef4444'; ctx.fillRect(carX-carW/2+8, carY+carH*0.15, 14, 10); ctx.fillRect(carX+carW/2-22, carY+carH*0.15, 14, 10);
-    }
-
-    // freccia velocità (direzione e modulo)
-    const arrowLen = Math.max(10, Math.min(160, Math.abs(v)*3)) * Math.sign(v||1);
-    ctx.strokeStyle = '#f97316'; ctx.lineWidth = 4; ctx.lineCap='round';
-    ctx.beginPath(); ctx.moveTo(carX, carY - carH*0.95); ctx.lineTo(carX + arrowLen, carY - carH*0.95); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(carX + arrowLen, carY - carH*0.95);
-    ctx.lineTo(carX + arrowLen - 10*Math.sign(arrowLen||1), carY - carH*0.95 - 6);
-    ctx.lineTo(carX + arrowLen - 10*Math.sign(arrowLen||1), carY - carH*0.95 + 6); ctx.closePath(); ctx.fillStyle='#f97316'; ctx.fill();
-
-    // HUD
-    ctx.fillStyle='rgba(255,255,255,.9)'; ctx.strokeStyle='rgba(0,0,0,.08)'; ctx.lineWidth=1; ctx.beginPath(); ctx.roundRect(12,12,160,54,10); ctx.fill(); ctx.stroke();
-    ctx.fillStyle='#0f172a'; ctx.font='700 18px Inter, system-ui, sans-serif'; ctx.fillText(`v = ${v.toFixed(0)} m/s`, 24, 36);
-    ctx.fillStyle='#475569'; ctx.font='12px Inter, system-ui, sans-serif'; ctx.fillText(frontView? 'Vista ANT.: v negativa' : 'Vista POST.: v positiva', 24, 52);
+    // freccia velocità
+    ctx.strokeStyle='#f97316';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(cx,cy-carH*1.1);ctx.lineTo(cx+v*3,cy-carH*1.1);ctx.stroke();
   }
 
-  // === GRAFICO s–t (storia integrata) ===
   function drawGraph(){
-    const w = graph.clientWidth, h = graph.clientHeight; gtx.clearRect(0,0,w,h);
-    // riquadro
-    gtx.fillStyle='#ffffff'; gtx.fillRect(0,0,w,h); gtx.strokeStyle='#cbd5e1'; gtx.lineWidth=1.5; gtx.strokeRect(48,16,w-64,h-48);
+    const w=graph.clientWidth,h=graph.clientHeight;gtx.clearRect(0,0,w,h);
+    gtx.fillStyle='#fff';gtx.fillRect(0,0,w,h);
+    gtx.strokeStyle='#cbd5e1';gtx.lineWidth=1.5;gtx.strokeRect(48,16,w-64,h-48);
 
-    // scala finestra mobile in x
-    const tMax = Math.max(maxSecondsShown, t);
-    const tMin = Math.max(0, t - maxSecondsShown);
-    // scala y in base alla storia (include negativi)
-    const sVals = points.filter(p=>p.t>=tMin).map(p=>p.s);
-    const sMax = sVals.length? Math.max(...sVals, 10):10;
-    const sMin = sVals.length? Math.min(...sVals, 0):0;
+    // centro punto fisso, finestra che si muove
+    const halfWindow=10; // secondi prima e dopo il punto centrale
+    const tMin=Math.max(0,t-halfWindow);
+    const tMax=t+halfWindow;
 
-    const tx = tt => 48 + ((tt - tMin)/(tMax - tMin)) * (w-64);
-    const sy = ss => h-32 - ((ss - sMin)/(sMax - sMin || 1)) * (h-64);
+    // y parte da 0 in basso e cresce verso l'alto
+    const sVals=points.filter(p=>p.t>=tMin&&p.t<=tMax).map(p=>p.s);
+    const sMax=Math.max(0,...sVals,10);
+    const sMin=0;
 
-    // griglia
-    gtx.strokeStyle='#e5e7eb'; gtx.lineWidth=1; const gx=5, gy=5;
-    for(let i=0;i<=gx;i++){ const x=48+i*(w-64)/gx; gtx.beginPath(); gtx.moveTo(x,16); gtx.lineTo(x,h-32); gtx.stroke(); }
-    for(let i=0;i<=gy;i++){ const y=16+i*(h-48)/gy; gtx.beginPath(); gtx.moveTo(48,y); gtx.lineTo(w-16,y); gtx.stroke(); }
+    const tx=tt=>48+((tt-tMin)/(tMax-tMin))*(w-64);
+    const sy=ss=>h-32-((ss-sMin)/(sMax-sMin||1))*(h-64);
 
-    // etichette
-    gtx.fillStyle='#0f172a'; gtx.font='12px Inter, system-ui, sans-serif'; gtx.fillText('Tempo (s)', w/2-28, h-10);
-    gtx.save(); gtx.translate(18, h/2+28); gtx.rotate(-Math.PI/2); gtx.fillText('Spazio (m)', 0, 0); gtx.restore();
+    // assi
+    gtx.strokeStyle='#aaa';gtx.beginPath();gtx.moveTo(50,h-30);gtx.lineTo(w-20,h-30);gtx.moveTo(50,h-30);gtx.lineTo(50,20);gtx.stroke();
 
-    // polilinea storia
-    gtx.strokeStyle='#2563eb'; gtx.lineWidth=2; gtx.beginPath();
-    let moved=false; for(const p of points){ if(p.t < tMin) continue; const X=tx(p.t), Y=sy(p.s); if(!moved){ gtx.moveTo(X,Y); moved=true; } else { gtx.lineTo(X,Y); } }
-    if(moved) gtx.stroke();
+    // curva
+    gtx.strokeStyle='#2563eb';gtx.lineWidth=2;gtx.beginPath();
+    let started=false;
+    for(const p of points){if(p.t<tMin||p.t>tMax)continue;const X=tx(p.t),Y=sy(p.s);if(!started){gtx.moveTo(X,Y);started=true;}else{gtx.lineTo(X,Y);}}
+    gtx.stroke();
 
-    // punto corrente + crocette
-    const Xc = tx(t), Yc = sy(s); gtx.fillStyle='#2563eb'; gtx.beginPath(); gtx.arc(Xc,Yc,4,0,Math.PI*2); gtx.fill();
-    gtx.strokeStyle='#94a3b8'; gtx.setLineDash([6,6]); gtx.beginPath(); gtx.moveTo(48,Yc); gtx.lineTo(w-16,Yc); gtx.moveTo(Xc,16); gtx.lineTo(Xc,h-32); gtx.stroke(); gtx.setLineDash([]);
-
-    // ticks numerici
-    gtx.fillStyle='#334155'; gtx.font='11px Inter, system-ui, sans-serif';
-    for(let i=0;i<=gx;i++){ const tt = tMin + i*(tMax-tMin)/gx; const x=48+i*(w-64)/gx; gtx.fillText(tt.toFixed(0), x-8, h-36+24); }
-    for(let i=0;i<=gy;i++){ const ss = sMin + i*(sMax-sMin)/gy; const y=16+i*(h-48)/gy; gtx.fillText(ss.toFixed(0), 6, y+4); }
+    // punto corrente centrato
+    const Xc=tx(t),Yc=sy(s);gtx.fillStyle='#2563eb';gtx.beginPath();gtx.arc(Xc,Yc,4,0,Math.PI*2);gtx.fill();
+    gtx.strokeStyle='#94a3b8';gtx.setLineDash([6,6]);gtx.beginPath();gtx.moveTo(48,Yc);gtx.lineTo(w-16,Yc);gtx.moveTo(Xc,16);gtx.lineTo(Xc,h-32);gtx.stroke();gtx.setLineDash([]);
   }
 
-  // === LOOP ===
-  let last = performance.now();
-  function frame(now){
-    resize(scene); resize(graph);
-    const rawdt = (now - last)/1000; last = now; const dt = Math.min(0.05, rawdt) * (playing? timeMul: 0);
-
-    // INTEGRAZIONE: s accumula, la storia resta coerente quando cambi v
-    t += dt; s += v * dt; 
-
-    // registra storia con cadenza 50 Hz max
-    if(points.length===0 || t - points[points.length-1].t >= 0.02){ points.push({t, s}); if(points.length>5000) points.splice(0,1000); }
-
-    // KPI
-    kpiT.textContent = `t = ${t.toFixed(1)} s`; kpiS.textContent = `s = ${s.toFixed(1)} m`;
-
-    // draw
-    drawScene(dt); drawGraph();
-
-    requestAnimationFrame(frame);
+  let last=performance.now();
+  function loop(now){
+    const dt=(now-last)/1000;last=now;if(playing){t+=dt;s+=v*dt;}
+    if(points.length===0||t-points[points.length-1].t>=0.02){points.push({t,s});if(points.length>5000)points.splice(0,1000);}
+    kpiT.textContent=`t = ${t.toFixed(1)} s`;kpiS.textContent=`s = ${s.toFixed(1)} m`;
+    drawScene();drawGraph();requestAnimationFrame(loop);
   }
-  requestAnimationFrame(frame);
+  requestAnimationFrame(loop);
 })();
 </script>
 </body>
