@@ -3,22 +3,55 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Sovrapposizione di onde – tema chiaro</title>
+<title>Sovrapposizione di onde – tempo accumulato (no salto)</title>
 <style>
   :root{
     --bg:#f6f8fa; --panel:#ffffff; --ink:#1d2a35; --muted:#5c6a75;
     --accent:#0077cc; --accent2:#00a86b; --sum:#ff7b00;
   }
   *{box-sizing:border-box}
-  body{
-    margin:0; background:var(--bg); color:var(--ink);
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial;
-    display:flex; min-height:100dvh; align-items:center; justify-content:center; padding:20px;
+  body {
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial;
+  display:flex;
+  min-height:100dvh;
+  align-items:center;
+  justify-content:center;
+  padding:12px;
+}
+
+.wrap {
+  width:100%;
+  max-width:1100px;
+  display:grid;
+  gap:16px;
+  grid-template-columns: 1fr 320px;
+}
+
+/* --- layout mobile --- */
+@media (max-width: 768px) {
+  .wrap {
+    grid-template-columns: 1fr;
   }
-  .wrap{
-    width:min(1100px,95vw); display:grid; gap:16px;
-    grid-template-columns: 1fr 320px;
+  .card {
+    padding:12px;
   }
+  canvas {
+    height:140px; /* riduce un po' l’altezza */
+  }
+  button {
+    flex:1;
+    padding:14px;
+    font-size:15px;
+  }
+  input[type="range"] {
+    width:100%;
+    touch-action:none;
+  }
+}
+
   .card{
     background:var(--panel); border:1px solid #d1d9e0; border-radius:14px; padding:16px;
     box-shadow:0 6px 18px rgba(0,0,0,.08);
@@ -34,14 +67,15 @@
     font-weight:600; background:var(--accent); color:#fff;
   }
   button.secondary{background:#e5ebf0; color:var(--ink)}
+  button.pause{background:#ffb703; color:#000}
   .legend{display:flex; gap:14px; align-items:center; font-size:13px; color:var(--muted)}
   .dot{width:10px; height:10px; border-radius:50%}
   .l-left{background:var(--accent)}
   .l-right{background:var(--accent2)}
   .l-sum{background:var(--sum)}
   .note{font-size:12px; color:var(--muted)}
-  canvas{width:100%; height:auto; display:block; background:#fafafa; border-radius:10px}
-  .axesNote{font-size:12px; color:var(--muted); margin-top:6px}
+  canvas{width:100%; height:auto; display:block; background:#fafafa; border-radius:10px; margin-top:8px;}
+  .axesNote{font-size:12px; color:var(--muted); margin-top:4px}
   .status{font-size:12px; color:var(--muted);}
 </style>
 </head>
@@ -54,9 +88,13 @@
         <span class="dot l-right"></span><span>Onda destra</span>
         <span class="dot l-sum"></span><span>Somma</span>
       </div>
-      <canvas id="cv" width="900" height="360" aria-label="grafico onde"></canvas>
-      <div class="axesNote">Assi senza numerazione; linea orizzontale = y = 0</div>
-      <div class="status" id="status"></div>
+
+      <canvas id="cv1" width="900" height="180"></canvas>
+      <div class="axesNote">Onde singole (sinistra e destra)</div>
+      <canvas id="cv2" width="900" height="180"></canvas>
+      <div class="axesNote">Somma delle due onde</div>
+
+      <div class="status" id="status" style="margin-top:6px;"></div>
     </div>
 
     <div class="card controls">
@@ -75,7 +113,7 @@
       <div class="row" style="margin-top:8px">
         <div>
           <label for="speed">Velocità (px/s): <span id="speedVal"></span></label>
-          <input id="speed" type="range" min="30" max="300" step="10" value="180" />
+          <input id="speed" type="range" min="30" max="300" step="10" value="50" />
         </div>
         <div>
           <label for="yScale">Scala verticale (%): <span id="yScaleVal"></span></label>
@@ -85,10 +123,11 @@
 
       <div class="btns">
         <button id="startBtn">Avvia</button>
+        <button id="pauseBtn" class="pause">Pausa</button>
         <button id="resetBtn" class="secondary">Reset</button>
       </div>
       <p class="note" style="margin-top:6px">
-        Ogni sorgente emette solo mezza sinusoide di lunghezza spaziale pari a λ / 2.  
+        Ogni sorgente emette solo mezza sinusoide di lunghezza spaziale pari a λ/2.  
         Il segno dell’ampiezza decide se la mezza onda è positiva o negativa.
       </p>
     </div>
@@ -96,8 +135,10 @@
 
 <script>
 (function(){
-  const cv = document.getElementById('cv');
-  const ctx = cv.getContext('2d');
+  const cv1 = document.getElementById('cv1');
+  const cv2 = document.getElementById('cv2');
+  const ctx1 = cv1.getContext('2d');
+  const ctx2 = cv2.getContext('2d');
 
   const ampL = document.getElementById('ampL');
   const lamL = document.getElementById('lamL');
@@ -114,6 +155,7 @@
     yScaleVal: document.getElementById('yScaleVal'),
   };
   const startBtn = document.getElementById('startBtn');
+  const pauseBtn = document.getElementById('pauseBtn');
   const resetBtn = document.getElementById('resetBtn');
   const statusEl = document.getElementById('status');
 
@@ -124,15 +166,19 @@
     sum: '#ff7b00'
   };
 
-  const W = cv.width, H = cv.height;
-  const midYBase = H * 0.5;
-  let midY = midYBase;
-  let raf = null, running = false, t0 = 0;
+  const W = cv1.width, H = cv1.height;
+  const midY1 = H * 0.5;
+  const midY2 = H * 0.5;
+
+  // --- Stato animazione basato su tempo accumulato ---
+  let raf = null;
+  let running = false;
+  let paused  = false;
+  let simT    = 0;      // tempo di simulazione accumulato (s)
+  let lastTs  = null;   // timestamp dell'ultimo frame (ns rAF), usato solo per calcolare dt
   let doneL=false, doneR=false;
 
-  const x0L = 30;
-  const x0R = 30;
-  const margin = 6;
+  const x0L = 30, x0R = 30, margin = 6;
 
   function updateLabels(){
     labels.ampLVal.textContent = ampL.value;
@@ -144,7 +190,7 @@
   }
   updateLabels();
 
-  function drawAxes(){
+  function drawAxes(ctx, midY){
     ctx.save();
     ctx.strokeStyle = COLORS.axes;
     ctx.lineWidth = 1;
@@ -183,19 +229,15 @@
     doneR = ((W - x0R) - v*t + LpR) < 0;
   }
 
-  function clear(){ ctx.clearRect(0,0,W,H); }
+  function clear(ctx){ ctx.clearRect(0,0,W,H); }
 
-  function drawCurve(sampleFn, color, width, glow=false){
+  function drawCurve(ctx, sampleFn, color, width, glow, midY){
     ctx.save();
     ctx.strokeStyle = color;
     ctx.lineWidth = width;
-    if(glow){
-      ctx.shadowColor = color;
-      ctx.shadowBlur = 8;
-    }
+    if(glow){ ctx.shadowColor = color; ctx.shadowBlur = 8; }
     ctx.beginPath();
-    const n=W;
-    for(let i=0;i<n;i++){
+    for(let i=0;i<W;i++){
       const x=i+0.5;
       const y=sampleFn(x);
       const ypix=midY - y;
@@ -206,11 +248,8 @@
   }
 
   function render(t){
-    clear();
-    drawAxes();
     const v = speed.valueAsNumber;
     const scale = yScale.valueAsNumber / 100;
-
     const A1 = ampL.valueAsNumber*scale;
     const L1 = lamL.valueAsNumber;
     const A2 = ampR.valueAsNumber*scale;
@@ -220,41 +259,82 @@
     const fR = x => yRight(x,t,A2,L2,v);
     const fSum = x => fL(x)+fR(x);
 
-    drawCurve(fL, COLORS.left, 1.5);
-    drawCurve(fR, COLORS.right, 1.5);
-    drawCurve(fSum, COLORS.sum, 3.2, true);
+    clear(ctx1);
+    drawAxes(ctx1, midY1);
+    drawCurve(ctx1,fL,COLORS.left,1.6,false,midY1);
+    drawCurve(ctx1,fR,COLORS.right,1.6,false,midY1);
+
+    clear(ctx2);
+    drawAxes(ctx2, midY2);
+    drawCurve(ctx2,fSum,COLORS.sum,3.0,true,midY2);
 
     statusEl.textContent = running
-      ? "Animazione in corso…"
+      ? (paused ? "In pausa" : "Animazione in corso…")
       : "Pronto. Regola i parametri e premi Avvia.";
   }
 
-  function step(ts){
-    if(!running) return;
-    if(!t0) t0 = ts;
-    const t = (ts - t0)/1000;
+  function animate(ts){
+    if(!running){ return; }
+
+    if(paused){
+      // Non accumula tempo durante la pausa; mantiene sync tra frame
+      lastTs = ts;                // evita dt al frame successivo
+      raf = requestAnimationFrame(animate);
+      return;
+    }
+
+    if(lastTs === null) lastTs = ts;
+    const dt = Math.max(0, (ts - lastTs) / 1000); // in secondi
+    lastTs = ts;
+    simT += dt;
+
     const v = speed.valueAsNumber;
-    render(t);
-    checkFinished(t,v);
+    render(simT);
+    checkFinished(simT, v);
+
     if(doneL && doneR){
-      running=false; t0=0; doneL=doneR=false;
+      running=false;
       startBtn.disabled=false;
       render(0);
       return;
     }
-    raf = requestAnimationFrame(step);
+    raf = requestAnimationFrame(animate);
   }
 
   function start(){
-    if(running) return;
-    running=true; startBtn.disabled=true;
-    t0=0; doneL=doneR=false;
-    cancelAnimationFrame(raf);
-    raf=requestAnimationFrame(step);
+    if(!running){
+      running = true;
+      paused  = false;
+      startBtn.disabled = true;
+      // reset totale
+      simT = 0;
+      lastTs = null;
+      doneL = doneR = false;
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(animate);
+    } else if(paused){
+      // ripresa senza salto: azzera lastTs così il prossimo dt è 0
+      paused = false;
+      pauseBtn.textContent = "Pausa";
+      lastTs = null;
+      // non serve forzare un nuovo rAF: il loop è già vivo
+    }
   }
+
+  function pause(){
+    if(!running) return;
+    paused = !paused;
+    pauseBtn.textContent = paused ? "Riprendi" : "Pausa";
+    if(paused){
+      statusEl.textContent = "In pausa";
+    }
+  }
+
   function reset(){
-    running=false; t0=0; doneL=doneR=false;
+    running=false; paused=false;
+    simT=0; lastTs=null; doneL=doneR=false;
     startBtn.disabled=false;
+    pauseBtn.textContent = "Pausa";
     cancelAnimationFrame(raf);
     render(0);
   }
@@ -263,7 +343,9 @@
     inp.addEventListener('input',()=>{updateLabels(); if(!running) render(0);});
   });
   startBtn.addEventListener('click',start);
+  pauseBtn.addEventListener('click',pause);
   resetBtn.addEventListener('click',reset);
+
   render(0);
 })();
 </script>
