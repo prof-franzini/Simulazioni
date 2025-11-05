@@ -3,418 +3,157 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>MRU — Simulazione Realistica (Strada)</title>
+<title>MRU — Visuale Dinamica (Davanti/Dietro)</title>
 <style>
-  :root{
-    --bg: #e9eef5;
-    --panel: #ffffff;
-    --text: #1e2a3a;
-    --accent: #2563eb;
-    --accent-2: #f97316;
-    --muted: #94a3b8;
-    --ok: #16a34a;
-  }
-  *{box-sizing:border-box}
-  body{
-    margin:0; font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-    color:var(--text); background:linear-gradient(180deg,var(--bg),#dbe6f3);
-    min-height:100dvh; display:flex; flex-direction:column; gap:1rem; padding:1rem;
-  }
-  header{display:flex; align-items:center; justify-content:space-between; gap:1rem;}
-  h1{font-size:clamp(1.1rem,1.6rem,2rem); margin:0; color:#0f172a}
-  .tag{font-size:.8rem; color:#334155; background:#e2e8f0; padding:.25rem .6rem; border-radius:999px}
-
-  .layout{display:grid; grid-template-columns:1fr; gap:1rem;}
-  @media (min-width: 980px){.layout{grid-template-columns: 1.2fr .8fr}}
-
-  .card{background:var(--panel); border-radius:16px; box-shadow:0 10px 30px rgba(15,23,42,.08);
-        padding:1rem;}
-  .scene-wrap, .graph-wrap{position:relative}
-  canvas{width:100%; height:100%; display:block; border-radius:12px}
-  .scene{aspect-ratio: 16/9;}
-  .graph{aspect-ratio: 16/9;}
-
-  .controls{display:flex; flex-wrap:wrap; gap:.9rem; align-items:center}
-  .ctrl{background:var(--panel); padding:.8rem 1rem; border-radius:12px; box-shadow:0 6px 16px rgba(15,23,42,.06);}
-  .row{display:flex; align-items:center; gap:.6rem}
-  .row label{font-weight:600; font-size:.95rem}
-  input[type="range"]{width:220px}
-  .btn{border:0; background:var(--accent); color:white; padding:.7rem 1rem; border-radius:12px; font-weight:700; cursor:pointer}
-  .btn.secondary{background:#0f172a}
-  .btn.ghost{background:#e2e8f0; color:#0f172a}
-  .kpi{display:flex; gap:1rem; flex-wrap:wrap}
-  .kpi .pill{background:#0ea5e9; color:white; padding:.4rem .8rem; border-radius:999px; font-weight:700}
-  .eq{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size:.95rem; color:#0f172a}
-
-  .legend{position:absolute; right:.6rem; top:.6rem; background:rgba(255,255,255,.85); padding:.35rem .6rem; border-radius:8px; font-size:.8rem; box-shadow:0 2px 8px rgba(0,0,0,.08)}
-
-  /* Night mode toggle */
-  .toggle{display:inline-flex; align-items:center; gap:.5rem; padding:.4rem .6rem; background:#e2e8f0; border-radius:999px}
-  .toggle input{accent-color:#0ea5e9}
+  body { font-family: 'Inter', sans-serif; background: linear-gradient(180deg,#e9eef5,#dbe6f3); margin:0; padding:1rem; display:flex; flex-direction:column; align-items:center; }
+  canvas { background:white; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,0.1); margin:10px; }
+  .controls { background:white; padding:1rem 2rem; border-radius:1rem; box-shadow:0 2px 10px rgba(0,0,0,0.1); text-align:center; }
+  input[type=range] { width:200px; }
+  button { margin-left:10px; padding:0.4rem 0.8rem; border:none; border-radius:8px; background:#2563eb; color:white; cursor:pointer; }
+  button:hover { background:#1e3a8a; }
 </style>
 </head>
 <body>
-  <header>
-    <div style="display:flex; align-items:center; gap:.75rem">
-      <h1>Simulazione MRU — Strada realistica</h1>
-      <span class="tag">Canvas • HTML/JS</span>
-    </div>
-    <div class="toggle"><input type="checkbox" id="night"> <label for="night">Modalità notturna</label></div>
-  </header>
-
-  <section class="layout">
-    <!-- SCENA -->
-    <div class="card scene-wrap">
-      <div class="legend">Velocità tangibile: freccia arancione. Segnaletica scorre proporzionale a v.</div>
-      <canvas id="scene" class="scene"></canvas>
-      <div class="controls" style="margin-top:1rem">
-        <div class="ctrl row">
-          <label for="vel">Velocità (m/s)</label>
-          <input type="range" id="vel" min="-40" max="40" value="18" step="1">
-          <strong id="velVal">18</strong>
-        </div>
-        <div class="ctrl row">
-          <label for="times">Tempo ×</label>
-          <input type="range" id="times" min="0.25" max="4" value="1" step="0.25">
-          <strong id="timeMul">1.00</strong>
-        </div>
-        <button id="pp" class="btn">Pausa</button>
-        <button id="reset" class="btn secondary">Reset</button>
-      </div>
-      <div class="kpi" style="margin-top:.5rem">
-        <div class="pill" id="kpiT">t = 0.0 s</div>
-        <div class="pill" id="kpiS">s = 0.0 m</div>
-        <div class="pill" id="kpiV">v = 18 m/s</div>
-      </div>
-      <div class="eq" style="margin-top:.25rem">Legge oraria: s(t) = s₀ + v·t — qui s₀ = 0</div>
-    </div>
-
-    <!-- GRAFICO s–t -->
-    <div class="card graph-wrap">
-      <div class="legend">Grafico s–t (pendenza = v). Clicca per mostrare un istante.</div>
-      <canvas id="graph" class="graph"></canvas>
-    </div>
-  </section>
+<h1>Simulazione MRU — Visuale dinamica</h1>
+<canvas id="scene" width="600" height="300"></canvas>
+<canvas id="graph" width="600" height="300"></canvas>
+<div class="controls">
+  <label>Velocità (m/s): <input type="range" id="vel" min="-40" max="40" value="20"> <span id="velVal">20</span></label>
+  <button id="reset">Reset</button>
+</div>
 
 <script>
-(function(){
-  const scene = document.getElementById('scene');
-  const gcanvas = document.getElementById('graph');
-  const ctx = scene.getContext('2d');
-  const gtx = gcanvas.getContext('2d');
+const scene = document.getElementById('scene');
+const ctx = scene.getContext('2d');
+const graph = document.getElementById('graph');
+const gtx = graph.getContext('2d');
 
-  const velR = document.getElementById('vel');
-  const velVal = document.getElementById('velVal');
-  const timesR = document.getElementById('times');
-  const timeMulEl = document.getElementById('timeMul');
-  const btnPP = document.getElementById('pp');
-  const btnReset = document.getElementById('reset');
-  const kpiT = document.getElementById('kpiT');
-  const kpiS = document.getElementById('kpiS');
-  const kpiV = document.getElementById('kpiV');
-  const nightToggle = document.getElementById('night');
+const velSlider = document.getElementById('vel');
+const velVal = document.getElementById('velVal');
+const resetBtn = document.getElementById('reset');
 
-  // State
-  let v = Number(velR.value); // m/s
-  let t = 0;                  // s
-  let s = 0;                  // m (s0 = 0)
-  let playing = true;
-  let timeMul = Number(timesR.value);
+let v = parseFloat(velSlider.value);
+let s = 0; // posizione
+let t = 0; // tempo
+let lastTime = null;
+let graphPoints = [];
+let dir = 1; // 1 = avanti, -1 = indietro
 
-  // Rendering sizes (responsive)
-  function resize(){
-    const ratio = 16/9;
-    const sw = scene.clientWidth, sh = scene.clientHeight; // CSS size
-    scene.width = sw * devicePixelRatio; scene.height = sh * devicePixelRatio;
-    gcanvas.width = gcanvas.clientWidth * devicePixelRatio;
-    gcanvas.height = gcanvas.clientHeight * devicePixelRatio;
-    ctx.scale(devicePixelRatio, devicePixelRatio);
-    gtx.scale(devicePixelRatio, devicePixelRatio);
-  }
-  // Avoid double scaling on repeated resize calls
-  let scaled = false;
-  const ro = new ResizeObserver(() => { if(!scaled){ scaled = true; resize(); requestAnimationFrame(()=>{ scaled=false; }); }});
-  ro.observe(scene); ro.observe(gcanvas);
+velSlider.addEventListener('input', () => {
+  const newV = parseFloat(velSlider.value);
+  // Mantieni lo spazio accumulato, cambia solo la velocità
+  v = newV;
+  dir = v >= 0 ? 1 : -1;
+  velVal.textContent = v;
+});
 
-  // World scale: meters -> pixels (road feel)
-  const pxPerMeter = 6; // tuning
+resetBtn.addEventListener('click', () => {
+  s = 0; t = 0; graphPoints = [];
+});
 
-  // Road dash pattern parameters
-  const dashLen = 30;   // px
-  const dashGap = 40;   // px
-  let dashOffset = 0;   // animated offset
+function drawScene() {
+  ctx.clearRect(0, 0, scene.width, scene.height);
 
-  // Graph history
-  const points = [];
-  const maxSecondsShown = 20; // adaptive window on x
+  // Sfondo e strada
+  const w = scene.width, h = scene.height;
+  ctx.fillStyle = '#bcd1e6';
+  ctx.fillRect(0, 0, w, h);
+  ctx.fillStyle = '#3b414a';
+  ctx.beginPath();
+  ctx.moveTo(w/2 - 120, h*0.55);
+  ctx.lineTo(w/2 + 120, h*0.55);
+  ctx.lineTo(w, h);
+  ctx.lineTo(0, h);
+  ctx.closePath();
+  ctx.fill();
 
-  // UI bindings
-  velR.addEventListener('input', () => {
-    v = Number(velR.value);
-    velVal.textContent = v.toFixed(0);
-    kpiV.textContent = `v = ${v.toFixed(0)} m/s`;
-  });
-  timesR.addEventListener('input', () => {
-    timeMul = Number(timesR.value);
-    timeMulEl.textContent = timeMul.toFixed(2);
-  });
-  btnPP.addEventListener('click', () => {
-    playing = !playing; btnPP.textContent = playing ? 'Pausa' : 'Riprendi';
-  });
-  btnReset.addEventListener('click', () => reset());
+  // Auto vista da dietro o davanti
+  const carY = h * 0.75;
+  const carW = 120, carH = 40;
+  const isFront = v < 0;
 
-  // Night mode
-  nightToggle.addEventListener('change', ()=>{
-    document.body.style.background = nightToggle.checked
-      ? 'linear-gradient(180deg,#0b1220,#0f172a)'
-      : 'linear-gradient(180deg,#e9eef5,#dbe6f3)';
-  });
+  ctx.save();
+  ctx.translate(w/2, carY);
+  if (isFront) ctx.scale(-1, 1); // ribalta visuale
 
-  function reset(){
-    t = 0; s = 0; points.length = 0; dashOffset = 0;
-    kpiT.textContent = `t = 0.0 s`;
-    kpiS.textContent = `s = 0.0 m`;
+  // Corpo
+  ctx.fillStyle = '#2563eb';
+  ctx.beginPath();
+  ctx.roundRect(-carW/2, -carH/2, carW, carH, 10);
+  ctx.fill();
+
+  // Finestrino
+  ctx.fillStyle = '#93c5fd';
+  ctx.fillRect(-carW*0.2, -carH*0.4, carW*0.4, carH*0.25);
+
+  // Luci posteriori o fari
+  if (isFront) {
+    ctx.fillStyle = '#fef08a'; // fari gialli
+    ctx.fillRect(-carW/2+5, -carH/4, 10, 10);
+    ctx.fillRect(carW/2-15, -carH/4, 10, 10);
+  } else {
+    ctx.fillStyle = '#ef4444'; // luci posteriori rosse
+    ctx.fillRect(-carW/2+5, carH/4, 10, 10);
+    ctx.fillRect(carW/2-15, carH/4, 10, 10);
   }
 
-  // ====== DRAW SCENE ======
-  function drawScene(dt){
-    const w = scene.clientWidth, h = scene.clientHeight;
-    ctx.clearRect(0,0,w,h);
+  ctx.restore();
 
-    const isNight = nightToggle.checked;
+  // Freccia di velocità
+  ctx.strokeStyle = '#f97316';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(w/2, carY - 50);
+  ctx.lineTo(w/2 + v * 2, carY - 50);
+  ctx.stroke();
+}
 
-    // Sky / background
-    const skyGrad = ctx.createLinearGradient(0,0,0,h*0.6);
-    if(isNight){
-      skyGrad.addColorStop(0,'#0b1220');
-      skyGrad.addColorStop(1,'#12203a');
-    } else {
-      skyGrad.addColorStop(0,'#cfe3ff');
-      skyGrad.addColorStop(1,'#f2f7ff');
-    }
-    ctx.fillStyle = skyGrad; ctx.fillRect(0,0,w,h);
+function drawGraph() {
+  gtx.clearRect(0, 0, graph.width, graph.height);
+  const w = graph.width, h = graph.height;
 
-    // Distant hills (parallax)
-    ctx.fillStyle = isNight ? '#0f1a2e' : '#bcd1e6';
-    ctx.beginPath(); ctx.moveTo(0,h*0.55);
-    for(let x=0; x<=w; x+=40){
-      const y = h*0.55 + Math.sin(x*0.008)*12; ctx.lineTo(x,y);
-    }
-    ctx.lineTo(w,0); ctx.lineTo(0,0); ctx.closePath(); ctx.fill();
+  // Assi
+  gtx.strokeStyle = '#aaa';
+  gtx.lineWidth = 2;
+  gtx.beginPath();
+  gtx.moveTo(50, h - 30);
+  gtx.lineTo(w - 20, h - 30);
+  gtx.moveTo(50, h - 30);
+  gtx.lineTo(50, 20);
+  gtx.stroke();
 
-    // Road trapezoid
-    const horizon = h*0.62;
-    const roadTopW = w*0.25, roadBotW = w*0.92;
-    const cx = w/2;
-    ctx.fillStyle = isNight ? '#111827' : '#3b414a';
-    ctx.beginPath();
-    ctx.moveTo(cx - roadTopW/2, horizon);
-    ctx.lineTo(cx + roadTopW/2, horizon);
-    ctx.lineTo(cx + roadBotW/2, h);
-    ctx.lineTo(cx - roadBotW/2, h); ctx.closePath(); ctx.fill();
-
-    // Road shoulders
-    ctx.strokeStyle = isNight ? '#64748b' : '#e5e7eb';
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(cx - roadTopW/2, horizon); ctx.lineTo(cx - roadBotW/2, h);
-    ctx.moveTo(cx + roadTopW/2, horizon); ctx.lineTo(cx + roadBotW/2, h);
-    ctx.stroke();
-
-    // Lane center dashed line (scrolls with v)
-    dashOffset = (dashOffset + (v * timeMul) * dt * pxPerMeter) % (dashLen + dashGap);
-    const centerLineStartXTop = cx, centerLineStartXBot = cx;
-    // Draw repeated perspective dashes
-    const steps = 20;
-    for(let i=0;i<steps;i++){
-      // interpolate between top and bottom widths to place dash segment
-      const p = i/steps;
-      const y1 = horizon + p*(h - horizon);
-      const y2 = horizon + (p + dashLen/(h-horizon))* (h - horizon);
-      const widthAtY1 = (roadTopW + (roadBotW-roadTopW)*p) * 0.01; // thin line
-      const widthAtY2 = (roadTopW + (roadBotW-roadTopW)*(p + dashLen/(h-horizon))) * 0.01;
-
-      // Offset along y depending on dashOffset
-      const yShift = (dashOffset % (dashLen+dashGap)) * ( (1-p)*0.25 + 0.75 );
-      const yy1 = y1 + yShift; const yy2 = y2 + yShift;
-      if(yy1>h) continue;
-
-      ctx.strokeStyle = isNight ? '#f8fafc' : '#fff';
-      ctx.lineWidth = Math.max(2, widthAtY1);
-      ctx.beginPath(); ctx.moveTo(centerLineStartXTop, yy1); ctx.lineTo(centerLineStartXBot, yy2); ctx.stroke();
-    }
-
-    // Car (kept near bottom center)
-    const carY = h*0.78; const carX = cx; const carW = 120; const carH = 38;
-    // Shadow
-    ctx.fillStyle = 'rgba(0,0,0,0.25)';
-    ctx.beginPath(); ctx.ellipse(carX, carY+carH*0.6, carW*0.55, carH*0.35, 0, 0, Math.PI*2); ctx.fill();
-
-    // Body
-    ctx.fillStyle = isNight ? '#38bdf8' : '#2563eb';
-    ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.roundRect(carX - carW/2, carY - carH/2, carW, carH, 8);
-    ctx.fill(); ctx.stroke();
-    // Cabin
-    ctx.fillStyle = isNight ? '#bae6fd' : '#93c5fd';
-    ctx.beginPath(); ctx.roundRect(carX - carW*0.18, carY - carH*0.55, carW*0.36, carH*0.4, 6); ctx.fill();
-
-    // Wheels
-    function wheel(xoff){
-      ctx.fillStyle = '#0f172a';
-      ctx.beginPath(); ctx.arc(carX + xoff, carY + carH*0.4, 11, 0, Math.PI*2); ctx.fill();
-      // hub
-      ctx.fillStyle = '#94a3b8'; ctx.beginPath(); ctx.arc(carX + xoff, carY + carH*0.4, 4, 0, Math.PI*2); ctx.fill();
-    }
-    wheel(-carW*0.3); wheel(carW*0.3);
-
-    // Velocity arrow (orange)
-    const arrowLen = Math.max(10, Math.min(160, v*3));
-    ctx.strokeStyle = '#f97316'; ctx.lineWidth = 4; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(carX, carY - carH*0.9); ctx.lineTo(carX + arrowLen, carY - carH*0.9); ctx.stroke();
-    // Arrow head
-    ctx.beginPath();
-    ctx.moveTo(carX + arrowLen, carY - carH*0.9);
-    ctx.lineTo(carX + arrowLen - 10*Math.sign(arrowLen||1), carY - carH*0.9 - 6);
-    ctx.lineTo(carX + arrowLen - 10*Math.sign(arrowLen||1), carY - carH*0.9 + 6);
-    ctx.closePath(); ctx.fillStyle = '#f97316'; ctx.fill();
-
-    // Speed HUD
-    ctx.fillStyle = 'rgba(255,255,255,.9)';
-    ctx.strokeStyle = 'rgba(0,0,0,.08)'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.roundRect(12,12,148,54,10); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#0f172a'; ctx.font = '700 18px Inter, system-ui, sans-serif';
-    ctx.fillText(`v = ${v.toFixed(0)} m/s`, 24, 36);
-    ctx.fillStyle = '#475569'; ctx.font = '12px Inter, system-ui, sans-serif';
-    ctx.fillText('MRU — velocità costante', 24, 52);
-  }
-
-  // ====== DRAW GRAPH ======
-  function drawGraph(){
-    const w = gcanvas.clientWidth, h = gcanvas.clientHeight;
-    gtx.clearRect(0,0,w,h);
-
-    // Axes box
-    gtx.fillStyle = '#ffffff'; gtx.fillRect(0,0,w,h);
-    gtx.strokeStyle = '#cbd5e1'; gtx.lineWidth = 1.5;
-    gtx.strokeRect(48,16,w-64,h-48);
-
-    // Determine scale (last maxSecondsShown seconds)
-    const tMax = Math.max(maxSecondsShown, t);
-    const tMin = Math.max(0, t - maxSecondsShown);
-    const sMax = Math.max(10, Math.max( ...points.map(p => p.s).concat([10]) ));
-    const sMin = Math.min(0, Math.min( ...points.map(p => p.s).concat([0]) ));
-
-    function tx(tt){ return 48 + ( (tt - tMin) / (tMax - tMin) ) * (w-64); }
-    function sy(ss){ return h-32 - ( (ss - sMin) / (sMax - sMin) ) * (h-64); }
-
-    // Grid
-    gtx.strokeStyle = '#e5e7eb'; gtx.lineWidth = 1;
-    const gridXTicks = 5, gridYTicks = 5;
-    for(let i=0;i<=gridXTicks;i++){
-      const x = 48 + i*(w-64)/gridXTicks; gtx.beginPath(); gtx.moveTo(x,16); gtx.lineTo(x,h-32); gtx.stroke();
-    }
-    for(let i=0;i<=gridYTicks;i++){
-      const y = 16 + i*(h-48)/gridYTicks; gtx.beginPath(); gtx.moveTo(48,y); gtx.lineTo(w-16,y); gtx.stroke();
-    }
-
-    // Labels
-    gtx.fillStyle = '#0f172a'; gtx.font = '12px Inter, system-ui, sans-serif';
-    gtx.fillText('Tempo (s)', w/2 - 28, h-10);
-    gtx.save(); gtx.translate(18, h/2 + 28); gtx.rotate(-Math.PI/2); gtx.fillText('Spazio (m)', 0, 0); gtx.restore();
-
-    // s–t polyline
-    gtx.strokeStyle = '#2563eb'; gtx.lineWidth = 2;
-    gtx.beginPath();
-    points.forEach((p,i)=>{
-      if(p.t < tMin) return; // window
-      const X = tx(p.t), Y = sy(p.s);
-      if(i===0) gtx.moveTo(X,Y); else gtx.lineTo(X,Y);
-    });
-    gtx.stroke();
-
-    // Current point marker
-    const Xc = tx(t), Yc = sy(s);
-    gtx.fillStyle = '#2563eb'; gtx.beginPath(); gtx.arc(Xc,Yc,4,0,Math.PI*2); gtx.fill();
-
-    // Crosshair lines
-    gtx.strokeStyle = '#94a3b8'; gtx.setLineDash([6,6]);
-    gtx.beginPath(); gtx.moveTo(48,Yc); gtx.lineTo(w-16,Yc); gtx.moveTo(Xc,16); gtx.lineTo(Xc,h-32); gtx.stroke(); gtx.setLineDash([]);
-
-    // Axis ticks values
-    gtx.fillStyle = '#334155'; gtx.font = '11px Inter, system-ui, sans-serif';
-    for(let i=0;i<=gridXTicks;i++){
-      const tt = (tMin + i*(tMax-tMin)/gridXTicks);
-      const x = 48 + i*(w-64)/gridXTicks; gtx.fillText(tt.toFixed(0), x-8, h-36+24);
-    }
-    for(let i=0;i<=gridYTicks;i++){
-      const ss = (sMin + i*(sMax-sMin)/gridYTicks);
-      const y = 16 + i*(h-48)/gridYTicks; gtx.fillText(ss.toFixed(0), 6, y+4);
-    }
-  }
-
-  // Interactivity: click on graph to show a historical instant
-  gcanvas.addEventListener('click', (e)=>{
-    const rect = gcanvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left);
-    const w = gcanvas.clientWidth;
-    const tMax = Math.max(maxSecondsShown, t);
-    const tMin = Math.max(0, t - maxSecondsShown);
-    const tt = tMin + ( (x - 48) / (w - 64) ) * (tMax - tMin);
-    if(isFinite(tt)){
-      // find closest point
-      let closest = points[0];
-      let best = Infinity;
-      for(const p of points){
-        const d = Math.abs(p.t - tt); if(d < best){ best = d; closest = p; }
-      }
-      if(closest){
-        // Flash a tiny indicator
-        const g = document.createElement('div');
-        g.textContent = `t≈${closest.t.toFixed(2)}s, s≈${closest.s.toFixed(2)}m`;
-        g.style.position='absolute'; g.style.right='12px'; g.style.bottom='12px';
-        g.style.background='rgba(15,23,42,.9)'; g.style.color='white'; g.style.padding='.35rem .6rem'; g.style.borderRadius='8px';
-        g.style.font='12px Inter, system-ui, sans-serif';
-        document.querySelector('.graph-wrap').appendChild(g);
-        setTimeout(()=>g.remove(), 1200);
-      }
-    }
+  // Grafico
+  gtx.strokeStyle = '#2563eb';
+  gtx.lineWidth = 2;
+  gtx.beginPath();
+  graphPoints.forEach((p, i) => {
+    const x = 50 + p.t * 10;
+    const y = h - 30 - p.s * 0.3;
+    if (i === 0) gtx.moveTo(x, y);
+    else gtx.lineTo(x, y);
   });
+  gtx.stroke();
+}
 
-  // ====== LOOP ======
-  let last = performance.now();
-  function frame(now){
-    const rawdt = (now - last) / 1000; last = now;
-    const dt = Math.min(0.05, rawdt) * (playing ? timeMul : 0); // clamp + pause
+function update(dt) {
+  s += v * dt;
+  t += dt;
+  graphPoints.push({ t, s });
+}
 
-    // Physics MRU
-    t += dt; s = v * t; // s0 = 0
+function loop(timestamp) {
+  if (!lastTime) lastTime = timestamp;
+  const dt = (timestamp - lastTime) / 1000;
+  lastTime = timestamp;
 
-    // Road dash offset update tied to v already inside drawScene()
+  update(dt);
+  drawScene();
+  drawGraph();
 
-    // History for graph
-    if(points.length === 0 || t - points[points.length-1].t >= 0.02){
-      points.push({t: t, s: s});
-      // keep reasonable size
-      if(points.length > 4000) points.splice(0, 1000);
-    }
+  requestAnimationFrame(loop);
+}
 
-    // KPIs
-    kpiT.textContent = `t = ${t.toFixed(1)} s`;
-    kpiS.textContent = `s = ${s.toFixed(1)} m`;
-
-    // Draw
-    drawScene(dt);
-    drawGraph();
-
-    requestAnimationFrame(frame);
-  }
-
-  // Kickoff
-  resize();
-  requestAnimationFrame(frame);
-})();
+requestAnimationFrame(loop);
 </script>
 </body>
 </html>
