@@ -1,3 +1,4 @@
+gtx.save();gtx.translate(18,h/2+30);
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -171,17 +172,21 @@ function drawScene(dt){
   const sky=ctx.createLinearGradient(0,0,0,h*0.6);
   sky.addColorStop(0,'#cfe3ff');sky.addColorStop(1,'#f2f7ff');
   ctx.fillStyle=sky;ctx.fillRect(0,0,w,h);
-  // Montagne grigio chiaro
-  const horizon=h*0.58;ctx.fillStyle='#d1d5db';
-  ctx.beginPath();
-  ctx.moveTo(0,horizon);
-  ctx.lineTo(w*0.15,horizon-70);
-  ctx.lineTo(w*0.32,horizon-30);
-  ctx.lineTo(w*0.5,horizon-85);
-  ctx.lineTo(w*0.68,horizon-35);
-  ctx.lineTo(w*0.85,horizon-65);
-  ctx.lineTo(w,horizon);
-  ctx.lineTo(w,h);ctx.lineTo(0,h);ctx.closePath();ctx.fill();
+// Montagne grigio chiaro (ai lati, valle centrale)
+const horizon = h * 0.58;
+ctx.fillStyle = '#d1d5db';
+ctx.beginPath();
+ctx.moveTo(0, h);              // angolo in basso sinistra
+ctx.lineTo(0, horizon + 30);   // inizio salita sinistra
+ctx.lineTo(w * 0.2, horizon - 80);  // cima sinistra
+ctx.lineTo(w * 0.4, horizon + 10);  // discesa verso centro
+ctx.lineTo(w * 0.6, horizon + 10);  // risalita centro-destra
+ctx.lineTo(w * 0.8, horizon - 80);  // cima destra
+ctx.lineTo(w, horizon + 30);        // discesa destra
+ctx.lineTo(w, h);                   // angolo in basso destra
+ctx.closePath();
+ctx.fill();
+
   // Terreno innevato
   ctx.fillStyle='#f8fafc';
   ctx.beginPath();
