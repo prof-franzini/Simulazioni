@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Moto parabolico — Campo montano</title>
+<title>Moto parabolico — Campo montano (Zoom e Pan)</title>
 <script src="https://cdn.jsdelivr.net/npm/p5@1.9.2/lib/p5.min.js"></script>
 <style>
   :root{
@@ -30,7 +30,7 @@
 <body>
   <div class="wrap">
     <h1>Moto parabolico — Campo montano</h1>
-    <div class="sub">Sinistra: panoramica con traiettorie permanenti · Destra: telecamera che segue il proiettile</div>
+    <div class="sub">Sinistra: panoramica con zoom e pan · Destra: telecamera che segue il proiettile</div>
 
     <div id="holder"></div>
 
@@ -53,6 +53,13 @@
         <button id="btn-reset" class="btn alt">Reset</button>
       </div>
 
+      <div class="ctrl">
+        <button id="zoom-out" class="btn">Zoom −</button>
+        <button id="zoom-in"  class="btn">Zoom +</button>
+        <button id="zoom-reset" class="btn">Centra</button>
+        <span class="small">Pan: ← ↑ ↓ → · Zoom: rotella</span>
+      </div>
+
       <div class="ctrl" style="gap:16px">
         <span class="stat">Tvolo: <span id="tflight">0.00</span> s</span>
         <span class="stat">Hmax: <span id="hmax">0.00</span> m</span>
@@ -66,14 +73,12 @@
   </div>
 
 <script>
-/*  Moto parabolico — Campo montano (p5.js)
-    - Panoramica sinistra: mantiene tutte le traiettorie "sparate" (persistenti)
-    - Follow-cam destra: camera morbida che segue il proiettile in X e Y
-    - Controlli: potenza (m/s), angolo (°), Spara / Pausa / Reset
-    - Indicatori: tempo di volo, altezza max, portata (teorici + misura live)
-*/
+/* ——————————————————————————
+   Moto parabolico — Campo montano
+   (zoom-out panoramico, pan e zoom manuale)
+—————————————————————————— */
 
-// =================== Stato globale & UI ===================
+// === Variabili globali ===
 const holder = document.getElementById('holder');
 const inputPower = document.getElementById('power');
 const inputAngle = document.getElementById('angle');
@@ -82,399 +87,181 @@ const labelAngle = document.getElementById('label-angle');
 const btnFire = document.getElementById('btn-fire');
 const btnPause = document.getElementById('btn-pause');
 const btnReset = document.getElementById('btn-reset');
+const btnZoomIn  = document.getElementById('zoom-in');
+const btnZoomOut = document.getElementById('zoom-out');
+const btnZoomReset = document.getElementById('zoom-reset');
 const tflightEl = document.getElementById('tflight');
 const hmaxEl = document.getElementById('hmax');
 const rangeEl = document.getElementById('range');
 
 let W=1100, H=540;
 let leftPanel={}, rightPanel={};
+const g = 9.81;
+let ppmLeft = 24, ppmRight = 32;
+let paused = false, lastMs = null;
+let proj = null, currentTrail = [], shots = [];
+let hillsFar=[], hillsNear=[], groundY=0;
+let camX=0, camY=5, CAM_LERP=0.12;
 
-const g = 9.81;           // m/s^2
-let ppmLeft = 24;         // px per metro (panoramica) — si adatta per includere la portata
-let ppmRight = 32;        // px per metro (follow cam)
+// ——— Pan & Zoom per la panoramica ———
+let leftZoom = 0.8;    // default più "zoom-out"
+let leftPanX = 0;
+let leftPanY = 0;
+const ZOOM_STEP = 1.15;
+const PAN_STEP_M = 5;
 
-let paused = false;
-let lastMs = null;
+// === Funzioni utili ===
+function deg2rad(d){return d*Math.PI/180;}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function lerp(a,b,t){return a+(b-a)*t;}
 
-// proiettile attuale
-let proj = null; // {x,y,vx,vy, alive, t}
-
-// storicizzazione delle traiettorie per la panoramica (persistenti)
-const shots = []; // array di array di punti [{x,y}, ...]
-
-// terreno / scenario (in metri world)
-let hillsFar=[], hillsNear=[];
-let groundY = 0;
-
-// camera (follow) in world metri, con smoothing
-let camX = 0, camY = 5; // focus iniziale (leggermente sopra terra)
-const CAM_LERP = 0.12;
-
-// =================== Utilità matematiche ===================
-function deg2rad(d){ return d*Math.PI/180; }
-function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
-function lerp(a,b,t){ return a + (b-a)*t; }
-
-// portata/tempo/altezza teoriche (y0=0)
-function theory(v0, theta){
+// Calcoli teorici
+function theory(v0,theta){
   const tflight = 2*v0*Math.sin(theta)/g;
-  const Hmax = (v0*v0*Math.sin(theta)*Math.sin(theta)) / (2*g);
+  const Hmax = (v0*v0*Math.sin(theta)**2)/(2*g);
   const R = (v0*v0*Math.sin(2*theta))/g;
-  return {tflight, Hmax, R};
+  return {tflight,Hmax,R};
 }
 
-// =================== Layout pannelli ===================
+// === Layout pannelli ===
 function layoutPanels(){
-  const gap = 12, pad = 12;
-  const usableW = holder.getBoundingClientRect().width || W;
-  W = Math.max(720, Math.min(1200, Math.floor(usableW)));
-  H = Math.floor(W*0.48);
+  const gap=12,pad=12;
+  const usableW=holder.getBoundingClientRect().width||W;
+  W=Math.max(720,Math.min(1200,Math.floor(usableW)));
+  H=Math.floor(W*0.48);
+  const panelW=Math.floor((W-pad*2-gap)/2);
+  const panelH=H-pad*2;
+  leftPanel={x:pad,y:pad,w:panelW,h:panelH};
+  rightPanel={x:pad+panelW+gap,y:pad,w:panelW,h:panelH};
 
-  // pannelli affiancati
-  const panelW = Math.floor((W - pad*2 - gap)/2);
-  const panelH = H - pad*2;
-
-  leftPanel  = {x:pad, y:pad, w:panelW, h:panelH};
-  rightPanel = {x:pad+panelW+gap, y:pad, w:panelW, h:panelH};
-
-  // 🔹 nuova logica di zoom panoramica:
-  // trova la gittata più grande fra tutti i colpi e ingrandisci la vista
-  let maxRange = 60; // default minimo in metri
-  for(const s of shots){
-    if(s._R) maxRange = Math.max(maxRange, s._R);
-  }
-  if (proj && proj._R) maxRange = Math.max(maxRange, proj._R);
-
-  // 🔸 aggiungi un margine del 20% e forza a non superare certe scale
-  maxRange *= 1.2; 
-
-  // 🔸 scala in pixel per metro: più piccolo = più "zoom-out"
-  // per rendere la parabola sempre completamente visibile
-  ppmLeft = clamp(Math.floor(leftPanel.w / maxRange), 6, 28);
-
-  // la vista ravvicinata resta uguale
-  ppmRight = clamp(Math.floor(rightPanel.w / 50), 18, 42);
+  let maxRange=60;
+  for(const s of shots){if(s._R)maxRange=Math.max(maxRange,s._R);}
+  if(proj&&proj._R)maxRange=Math.max(maxRange,proj._R);
+  const targetRange=Math.max(40,maxRange)*1.3;
+  const basePPM=clamp(Math.floor(leftPanel.w/targetRange),6,28);
+  ppmLeft=clamp(Math.floor(basePPM*leftZoom),4,60);
+  ppmRight=clamp(Math.floor(rightPanel.w/50),18,42);
 }
 
-
-// =================== Coordinate world→screen ===================
-// Panoramica: origine in basso a sinistra, ground a ~65% altezza
-function worldToScreenLeft(xm, ym){
-  const marginL = 40;
-  const pyGround = leftPanel.y + Math.round(leftPanel.h*0.7);
-  const px = leftPanel.x + marginL + Math.round(xm*ppmLeft);
-  const py = pyGround - Math.round((ym-groundY)*ppmLeft);
-  return {x:px, y:py, ground:pyGround};
+// === Coordinate panoramica con pan/zoom ===
+function worldToScreenLeft(xm,ym){
+  const marginL=40;
+  const pyGround=leftPanel.y+Math.round(leftPanel.h*0.7);
+  const px=leftPanel.x+marginL+Math.round((xm-leftPanX)*ppmLeft);
+  const py=pyGround-Math.round((ym-groundY-leftPanY)*ppmLeft);
+  return {x:px,y:py,ground:pyGround};
 }
 
-// Follow: centro pannello ≈ (camX,camY)
-function worldToScreenRight(xm, ym){
-  const cx = rightPanel.x + rightPanel.w/2;
-  const cy = rightPanel.y + rightPanel.h*0.65; // ground un po' più basso
-  const px = cx + Math.round((xm - camX)*ppmRight);
-  const py = cy - Math.round((ym - camY)*ppmRight);
-  return {x:px, y:py, cx, cy};
+// === Coordinate follow ===
+function worldToScreenRight(xm,ym){
+  const cx=rightPanel.x+rightPanel.w/2;
+  const cy=rightPanel.y+rightPanel.h*0.65;
+  const px=cx+Math.round((xm-camX)*ppmRight);
+  const py=cy-Math.round((ym-camY)*ppmRight);
+  return {x:px,y:py,cx,cy};
 }
 
-// =================== Scenario montano (parallax) ===================
+// === Scenario montano ===
 function generateHills(){
-  hillsFar = []; hillsNear = [];
-  const Wm = 300; // larghezza mondo "virtuale" per colline
-  const spacing = 12;
-
-  // catena lontana
-  for(let x=0; x<=Wm; x+=spacing){
-    // tre "gobbe" morbide
-    const y = 10
-      + 4*Math.sin(x*0.03)
-      + 2*Math.sin(x*0.11+1.2)
-      + 1.5*Math.sin(x*0.05-0.7);
+  hillsFar=[]; hillsNear=[];
+  const Wm=300, spacing=12;
+  for(let x=0;x<=Wm;x+=spacing){
+    const y=10+4*Math.sin(x*0.03)+2*Math.sin(x*0.11+1.2)+1.5*Math.sin(x*0.05-0.7);
     hillsFar.push({x,y});
   }
-  // catena vicina
-  for(let x=0; x<=Wm; x+=spacing){
-    const y = 4
-      + 6*Math.sin(x*0.02+0.4)
-      + 3*Math.sin(x*0.09-1.1);
+  for(let x=0;x<=Wm;x+=spacing){
+    const y=4+6*Math.sin(x*0.02+0.4)+3*Math.sin(x*0.09-1.1);
     hillsNear.push({x,y});
   }
 }
 
-// =================== Disegni di sfondo ===================
-function drawSkyGrad(p, X,Y,Wp,Hp){
-  const gTop = p.color(getComputedStyle(document.documentElement).getPropertyValue('--skyTop'));
-  const gMid = p.color(getComputedStyle(document.documentElement).getPropertyValue('--skyMid'));
-  const gBot = p.color(getComputedStyle(document.documentElement).getPropertyValue('--skyBot'));
-  for(let i=0;i<Hp;i++){
-    const t = i/(Hp-1);
-    const c = t<0.5 ?
-      p.lerpColor(gTop, gMid, t*2) :
-      p.lerpColor(gMid, gBot, (t-0.5)*2);
-    p.stroke(c); p.line(X, Y+i, X+Wp, Y+i);
-  }
+// === Fisica ===
+function newProjectile(v0,theta){
+  const vx=v0*Math.cos(theta), vy=v0*Math.sin(theta);
+  const th=theory(v0,theta);
+  proj={x:0,y:0,vx,vy,t:0,alive:true,_R:th.R,_T:th.tflight,_H:th.Hmax};
+  currentTrail=[{x:0,y:0}];
+  tflightEl.textContent=th.tflight.toFixed(2);
+  hmaxEl.textContent=th.Hmax.toFixed(2);
+  rangeEl.textContent=th.R.toFixed(2);
 }
-
-// sole semplice
-function drawSun(p, X,Y){
-  p.noStroke();
-  p.fill(255, 220, 120, 220);
-  p.circle(X, Y, 36);
-  p.fill(255, 230, 160, 120);
-  p.circle(X, Y, 70);
-}
-
-// prato
-function drawGround(p, py, X, Wp){
-  p.noStroke();
-  p.fill(getCSS('--grass'));
-  p.rect(X, py, Wp, 999);
-  p.fill(getCSS('--soil'));
-  p.rect(X, py+40, Wp, 999);
-}
-
-function getCSS(varname){
-  return getComputedStyle(document.documentElement).getPropertyValue(varname);
-}
-
-// =================== Motore fisico ===================
-function newProjectile(v0, theta){
-  const vx = v0*Math.cos(theta);
-  const vy = v0*Math.sin(theta);
-  const th = theory(v0, theta); // teorici per scale/indicatori
-  proj = {x:0, y:0, vx, vy, t:0, alive:true, _R: th.R, _T: th.tflight, _H: th.Hmax};
-  // nuovo trail temporaneo
-  currentTrail = [{x:0,y:0}];
-  // aggiorna indicatori teorici
-  tflightEl.textContent = th.tflight.toFixed(2);
-  hmaxEl.textContent    = th.Hmax.toFixed(2);
-  rangeEl.textContent   = th.R.toFixed(2);
-}
-
-let currentTrail = []; // trail del colpo in corso (poi push in shots)
-
 function stepPhysics(dt){
-  if(!proj || !proj.alive) return;
-  proj.t += dt;
-  // integrazione Euler-Cromer
-  proj.vy -= g*dt;
-  proj.x  += proj.vx*dt;
-  proj.y  += proj.vy*dt;
-
-  if (proj.y <= groundY){
-    proj.y = groundY;
-    proj.alive = false;
-    // salva traiettoria permanente
-    shots.push(Object.assign(currentTrail.slice(), {_R:proj._R}));
-  } else {
-    currentTrail.push({x:proj.x, y:proj.y});
-    if (currentTrail.length>5000) currentTrail.shift();
-  }
+  if(!proj||!proj.alive)return;
+  proj.t+=dt; proj.vy-=g*dt; proj.x+=proj.vx*dt; proj.y+=proj.vy*dt;
+  if(proj.y<=groundY){
+    proj.y=groundY; proj.alive=false; shots.push(Object.assign(currentTrail.slice(),{_R:proj._R}));
+  } else currentTrail.push({x:proj.x,y:proj.y});
 }
 
-// =================== Disegno pannello sinistro (panoramica) ===================
+// === Disegni base ===
+function getCSS(v){return getComputedStyle(document.documentElement).getPropertyValue(v);}
+function drawSkyGrad(p,X,Y,Wp,Hp){
+  const t1=p.color(getCSS('--skyTop')),t2=p.color(getCSS('--skyMid')),t3=p.color(getCSS('--skyBot'));
+  for(let i=0;i<Hp;i++){const t=i/(Hp-1);const c=t<.5?p.lerpColor(t1,t2,t*2):p.lerpColor(t2,t3,(t-.5)*2);p.stroke(c);p.line(X,Y+i,X+Wp,Y+i);}
+}
+function drawGround(p,py,X,Wp){
+  p.noStroke();p.fill(getCSS('--grass'));p.rect(X,py,Wp,999);p.fill(getCSS('--soil'));p.rect(X,py+40,Wp,999);
+}
+function drawProjectile(p,px,py){
+  p.noStroke();p.fill(255,165,0,200);p.circle(px,py,14);p.fill(255,200,80,120);p.circle(px,py,26);
+}
+
+// === Panoramica ===
 function drawLeft(p){
-  const X=leftPanel.x, Y=leftPanel.y, Wp=leftPanel.w, Hp=leftPanel.h;
-  p.push();
-  p.noStroke(); p.fill('#ffffff'); p.rect(X, Y, Wp, Hp, 10);
-
-  drawSkyGrad(p, X,Y,Wp,Hp);
-  drawSun(p, X+Wp-90, Y+80);
-
-  // parallax: far hills
-  p.noStroke(); p.fill(getCSS('--mountainFar'));
-  p.beginShape();
-  p.vertex(X, Y+Hp);
-  for(const h of hillsFar){
-    const s = worldToScreenLeft(h.x, h.y+8);
-    p.vertex(s.x, s.y);
-  }
-  p.vertex(X+Wp, Y+Hp);
-  p.endShape();
-
-  // near hills
-  p.fill(getCSS('--mountainNear'));
-  p.beginShape();
-  p.vertex(X, Y+Hp);
-  for(const h of hillsNear){
-    const s = worldToScreenLeft(h.x, h.y+4);
-    p.vertex(s.x, s.y);
-  }
-  p.vertex(X+Wp, Y+Hp);
-  p.endShape();
-
-  // terreno/prato
-  const gLine = worldToScreenLeft(0, groundY).ground;
-  drawGround(p, gLine, X, Wp);
-
-  // cannone
+  const X=leftPanel.x,Y=leftPanel.y,Wp=leftPanel.w,Hp=leftPanel.h;
+  p.push();p.noStroke();p.fill('#fff');p.rect(X,Y,Wp,Hp,10);
+  drawSkyGrad(p,X,Y,Wp,Hp);
+  p.fill(getCSS('--mountainFar'));p.beginShape();p.vertex(X,Y+Hp);
+  for(const h of hillsFar){const s=worldToScreenLeft(h.x,h.y+8);p.vertex(s.x,s.y);}p.vertex(X+Wp,Y+Hp);p.endShape();
+  p.fill(getCSS('--mountainNear'));p.beginShape();p.vertex(X,Y+Hp);
+  for(const h of hillsNear){const s=worldToScreenLeft(h.x,h.y+4);p.vertex(s.x,s.y);}p.vertex(X+Wp,Y+Hp);p.endShape();
+  const gLine=worldToScreenLeft(0,groundY).ground;drawGround(p,gLine,X,Wp);
   drawCannonPanorama(p);
-
-  // traiettorie permanenti
-  for(const poly of shots){
-    p.noFill(); p.stroke(getCSS('--trail')); p.strokeWeight(2.2);
-    p.beginShape();
-    for(const pt of poly){
-      const s = worldToScreenLeft(pt.x, pt.y);
-      p.vertex(s.x, s.y);
-    }
-    p.endShape();
-  }
-
-  // traiettoria in corso
-  if(currentTrail.length){
-    p.noFill(); p.stroke('#ff7f11'); p.strokeWeight(2.2);
-    p.beginShape();
-    for(const pt of currentTrail){
-      const s = worldToScreenLeft(pt.x, pt.y);
-      p.vertex(s.x, s.y);
-    }
-    p.endShape();
-  }
-
-  // proiettile
-  if(proj){
-    const s = worldToScreenLeft(proj.x, proj.y);
-    drawProjectile(p, s.x, s.y);
-  }
-
-  // titolo
-  p.fill('#0b253a'); p.noStroke(); p.textSize(13);
-  p.text('Panoramica', X+10, Y+18);
-
+  for(const poly of shots){p.noFill();p.stroke(getCSS('--trail'));p.strokeWeight(2.2);p.beginShape();
+    for(const pt of poly){const s=worldToScreenLeft(pt.x,pt.y);p.vertex(s.x,s.y);}p.endShape();}
+  if(currentTrail.length){p.noFill();p.stroke('#ff7f11');p.strokeWeight(2.2);p.beginShape();
+    for(const pt of currentTrail){const s=worldToScreenLeft(pt.x,pt.y);p.vertex(s.x,s.y);}p.endShape();}
+  if(proj){const s=worldToScreenLeft(proj.x,proj.y);drawProjectile(p,s.x,s.y);}
+  p.fill('#0b253a');p.noStroke();p.textSize(13);p.text('Panoramica',X+10,Y+18);
   p.pop();
 }
-
 function drawCannonPanorama(p){
-  const base = worldToScreenLeft(0, groundY);
-  const ang = parseFloat(inputAngle.value);
-  p.push();
-  p.translate(base.x, base.y);
-  // base
-  p.noStroke(); p.fill(70); p.rect(-16, -12, 34, 20, 6);
-  // canna
-  p.push();
-  p.translate(0, -8);
-  p.rotate(-deg2rad(ang));
-  p.fill(60); p.rect(0, -7, 50, 14, 7);
-  p.pop();
-  p.pop();
+  const base=worldToScreenLeft(0,groundY),ang=parseFloat(inputAngle.value);
+  p.push();p.translate(base.x,base.y);p.noStroke();p.fill(70);p.rect(-16,-12,34,20,6);
+  p.push();p.translate(0,-8);p.rotate(-deg2rad(ang));p.fill(60);p.rect(0,-7,50,14,7);p.pop();p.pop();
 }
 
-function drawProjectile(p, px, py){
-  p.noStroke();
-  p.fill(255,165,0,200); p.circle(px, py, 14);
-  p.fill(255,200,80,120); p.circle(px, py, 26);
-}
-
-// =================== Disegno pannello destro (follow cam) ===================
+// === Follow-cam ===
 function drawRight(p){
-  const X=rightPanel.x, Y=rightPanel.y, Wp=rightPanel.w, Hp=rightPanel.h;
-  p.push();
-  p.noStroke(); p.fill('#ffffff'); p.rect(X, Y, Wp, Hp, 10);
-
-  // aggiorna camera se c'è proiettile
-  if(proj){
-    camX = lerp(camX, proj.x + 6, CAM_LERP);      // leggero anticipo in avanti
-    camY = lerp(camY, Math.max(groundY+4, proj.y), CAM_LERP);
-  } else {
-    camX = lerp(camX, 6, CAM_LERP);
-    camY = lerp(camY, 5, CAM_LERP);
-  }
-
-  // cielo follow
-  drawSkyGrad(p, X,Y,Wp,Hp);
-
-  // montagne con offset (parallax rispetto a camX)
-  // far
-  p.fill(getCSS('--mountainFar'));
-  p.noStroke();
-  p.beginShape();
-  p.vertex(X, Y+Hp);
-  for(const h of hillsFar){
-    const xm = h.x + (camX*0.2); // parallax lento
-    const s = worldToScreenRight(xm, h.y+8, p);
-    p.vertex(s.x, s.y);
-  }
-  p.vertex(X+Wp, Y+Hp);
-  p.endShape();
-
-  // near
-  p.fill(getCSS('--mountainNear'));
-  p.beginShape();
-  p.vertex(X, Y+Hp);
-  for(const h of hillsNear){
-    const xm = h.x + (camX*0.4);
-    const s = worldToScreenRight(xm, h.y+4, p);
-    p.vertex(s.x, s.y);
-  }
-  p.vertex(X+Wp, Y+Hp);
-  p.endShape();
-
-  // terreno
-  const gScr = worldToScreenRight(0, groundY, p);
-  p.noStroke();
-  p.fill(getCSS('--grass'));
-  p.rect(X, gScr.y, Wp, Hp);
-  p.fill(getCSS('--soil'));
-  p.rect(X, gScr.y+40, Wp, Hp);
-
-  // cannone locale
-  const cannonS = worldToScreenRight(0, groundY, p);
-  drawCannonFollow(p, cannonS.x, cannonS.y);
-
-  // trail storico (solo segmento vicino al campo visivo)
-  p.noFill(); p.stroke(getCSS('--trail')); p.strokeWeight(2.2);
-  for(const poly of shots){
-    p.beginShape();
-    for(const pt of poly){
-      const s = worldToScreenRight(pt.x, pt.y, p);
-      if (s.x<X-10 || s.x>X+Wp+10) continue;
-      p.vertex(s.x, s.y);
-    }
-    p.endShape();
-  }
-  // trail in corso
-  if(currentTrail.length){
-    p.noFill(); p.stroke('#ff7f11'); p.strokeWeight(2.2);
-    p.beginShape();
-    for(const pt of currentTrail){
-      const s = worldToScreenRight(pt.x, pt.y, p);
-      p.vertex(s.x, s.y);
-    }
-    p.endShape();
-  }
-
-  // proiettile
-  if(proj){
-    const s = worldToScreenRight(proj.x, proj.y, p);
-    drawProjectile(p, s.x, s.y);
-  }
-
-  // titolo
-  p.fill('#0b253a'); p.noStroke(); p.textSize(13);
-  p.text('Follow-cam', X+10, Y+18);
-
+  const X=rightPanel.x,Y=rightPanel.y,Wp=rightPanel.w,Hp=rightPanel.h;
+  p.push();p.noStroke();p.fill('#fff');p.rect(X,Y,Wp,Hp,10);
+  if(proj){camX=lerp(camX,proj.x+6,CAM_LERP);camY=lerp(camY,Math.max(groundY+4,proj.y),CAM_LERP);}
+  drawSkyGrad(p,X,Y,Wp,Hp);
+  p.fill(getCSS('--mountainFar'));p.noStroke();p.beginShape();p.vertex(X,Y+Hp);
+  for(const h of hillsFar){const xm=h.x+(camX*0.2);const s=worldToScreenRight(xm,h.y+8);p.vertex(s.x,s.y);}p.vertex(X+Wp,Y+Hp);p.endShape();
+  p.fill(getCSS('--mountainNear'));p.beginShape();p.vertex(X,Y+Hp);
+  for(const h of hillsNear){const xm=h.x+(camX*0.4);const s=worldToScreenRight(xm,h.y+4);p.vertex(s.x,s.y);}p.vertex(X+Wp,Y+Hp);p.endShape();
+  const gScr=worldToScreenRight(0,groundY,p);drawGround(p,gScr.y,X,Wp);
+  const cannonS=worldToScreenRight(0,groundY,p);drawCannonFollow(p,cannonS.x,cannonS.y);
+  p.noFill();p.stroke(getCSS('--trail'));p.strokeWeight(2.2);
+  for(const poly of shots){p.beginShape();
+    for(const pt of poly){const s=worldToScreenRight(pt.x,pt.y,p);if(s.x<X-10||s.x>X+Wp+10)continue;p.vertex(s.x,s.y);}p.endShape();}
+  if(currentTrail.length){p.noFill();p.stroke('#ff7f11');p.strokeWeight(2.2);p.beginShape();
+    for(const pt of currentTrail){const s=worldToScreenRight(pt.x,pt.y,p);p.vertex(s.x,s.y);}p.endShape();}
+  if(proj){const s=worldToScreenRight(proj.x,proj.y,p);drawProjectile(p,s.x,s.y);}
+  p.fill('#0b253a');p.noStroke();p.textSize(13);p.text('Follow-cam',X+10,Y+18);
   p.pop();
 }
-
-function drawCannonFollow(p, cx, cy){
-  const ang = parseFloat(inputAngle.value);
-  p.push();
-  p.translate(cx, cy);
-  p.noStroke(); p.fill(70); p.rect(-16, -12, 34, 20, 6);
-  p.push();
-  p.translate(0, -8);
-  p.rotate(-deg2rad(ang));
-  p.fill(60); p.rect(0, -7, 50, 14, 7);
-  p.pop();
-  p.pop();
+function drawCannonFollow(p,cx,cy){
+  const ang=parseFloat(inputAngle.value);p.push();p.translate(cx,cy);p.noStroke();p.fill(70);p.rect(-16,-12,34,20,6);
+  p.push();p.translate(0,-8);p.rotate(-deg2rad(ang));p.fill(60);p.rect(0,-7,50,14,7);p.pop();p.pop();
 }
 
-// =================== p5 setup/draw ===================
+// === p5 main ===
 new p5(p=>{
-  p.setup = ()=>{
-    const b = holder.getBoundingClientRect();
-    const cnv = p.createCanvas(Math.max(720, Math.min(1200, Math.floor(b.width))), 540);
+  p.setup=()=>{
+    const b=holder.getBoundingClientRect();
+    const cnv=p.createCanvas(Math.max(720,Math.min(1200,Math.floor(b.width))),540);
     cnv.parent(holder);
     layoutPanels();
     generateHills();
