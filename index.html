@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Simulazioni di Fisica</title>
+
+  <!-- Anteprima per social e condivisioni -->
+  <meta property="og:title" content="Simulazioni di Fisica">
+  <meta property="og:description" content="Simulazioni interattive per comprendere meglio la Fisica.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://prof-franzini.github.io/Simulazioni/">
+  <meta property="og:image" content="https://prof-franzini.github.io/Simulazioni/img/anteprima-fisica.jpg">
+  <meta property="og:image:alt" content="Anteprima delle Simulazioni di Fisica">
+
+  <!-- Per Twitter, Telegram, ecc. -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Simulazioni di Fisica">
+  <meta name="twitter:description" content="Un sito con simulazioni interattive di fenomeni fisici per esplorare, capire e imparare divertendosi.">
+  <meta name="twitter:image" content="https://prof-franzini.github.io/Simulazioni/img/anteprima-fisica.jpg">
+
+  <!-- Apple e Android App-like icons -->
+  <link rel="apple-touch-icon" href="img/anteprima-fisica.jpg" />
+  <meta name="apple-mobile-web-app-title" content="Simulazioni" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+
+  <!-- Favicon e Manifest -->
+  <link rel="icon" type="image/png" href="img/anteprima-fisica.jpg" />
+  <link rel="manifest" href="manifest.json" />
+
+  <style>
+    :root{--bg0:#070b18;--hd:linear-gradient(90deg,#101a3d,#0a0f1f 70%);--card:#121a36;--bd:#1c2548;--bd2:#2a3566;--tx:#e8ecff;--mu:#8d97bd;--ac:#4cc9f0;--glow:rgba(76,201,240,.18)}
+    body.light{--bg0:#e9edf7;--hd:linear-gradient(90deg,#dfe7fb,#f6f8fd 70%);--card:#ffffff;--bd:#d5dcee;--bd2:#bcc6e0;--tx:#16203f;--mu:#5c6890;--ac:#0a8fc0;--glow:rgba(10,143,192,.16)}
+    *{box-sizing:border-box}
+    body{margin:0;font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg0);color:var(--tx);min-height:100vh}
+    header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 22px;border-bottom:1px solid var(--bd);background:var(--hd)}
+    .tag{font-size:11px;text-transform:uppercase;letter-spacing:1.6px;color:var(--ac);display:block}
+    h1{margin:2px 0 0;font-size:24px;letter-spacing:.2px}
+    .hb{display:flex;gap:8px}
+    .hb button{width:40px;height:36px;border-radius:9px;border:1px solid var(--bd2);background:var(--card);color:var(--tx);font:600 13px system-ui;cursor:pointer}
+    .hb button:hover{border-color:var(--ac)}
+    main{max-width:1080px;margin:0 auto;padding:22px 22px 10px}
+    .intro{color:var(--mu);margin:0 0 6px;font-size:15.5px}
+    h2{font-size:11.5px;text-transform:uppercase;letter-spacing:1.5px;color:var(--mu);font-weight:600;margin:28px 0 12px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+    .card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px 16px 15px;text-decoration:none;color:var(--tx);display:flex;flex-direction:column;gap:6px;transition:transform .15s ease,box-shadow .2s ease,border-color .2s ease}
+    .card:hover,.card:focus-visible{transform:translateY(-3px);border-color:var(--ac);box-shadow:0 8px 26px var(--glow);outline:none}
+    .card .em{font-size:30px;line-height:1}
+    .card b{font-size:16.5px;font-weight:650}
+    .card span{font-size:13.5px;color:var(--mu)}
+    footer{max-width:1080px;margin:0 auto;padding:26px 22px 34px;font-size:13px;color:var(--mu)}
+    @media(max-width:600px){header{padding:12px 14px}main{padding:16px 14px 6px}h1{font-size:20px}}
+    @media(prefers-reduced-motion:reduce){.card{transition:none}}
+  </style>
+</head>
+<body>
+  <header>
+    <div><span class="tag">Prof. Franzini Lorenzo</span><h1 data-en="Physics Simulations">Simulazioni di Fisica</h1></div>
+    <div class="hb"><button id="thm" title="Tema chiaro-scuro / Light-dark theme">☀</button><button id="lang" title="Lingua / Language">EN</button></div>
+  </header>
+
+  <main>
+    <p class="intro" data-en="Welcome to the interactive simulations! Pick a topic to open its simulation.">Benvenuti nel portale delle simulazioni interattive! Scegli un argomento per aprire la simulazione.</p>
+
+    <h2 data-en="Vectors and motion">Vettori e moto</h2>
+    <div class="grid">
+      <a class="card" href="vettori.html" target="_blank"><div class="em">🧭</div><b data-en="Vectors">Vettori</b><span data-en="Sum, difference, components and a space mission">Somma, differenza, componenti e una missione spaziale</span></a>
+      <a class="card" href="mru.html" target="_blank"><div class="em">🚙</div><b data-en="Uniform linear motion">Il moto rettilineo uniforme</b><span data-en="Drive the car and watch the graphs build">Guida l'auto e guarda nascere i grafici</span></a>
+      <a class="card" href="moto_rettilineo.html" target="_blank"><div class="em">🏁</div><b data-en="Linear motion: two cars">Moto rettilineo: due auto</b><span data-en="Uniform and accelerated motion compared, in 3D">Moto uniforme e accelerato a confronto, in 3D</span></a>
+      <a class="card" href="moto_parabolico.html" target="_blank"><div class="em">🏹</div><b data-en="Projectile motion">Il moto parabolico</b><span data-en="Speed, angle, launch height and a target to hit">Velocità, angolo, altezza e un bersaglio da colpire</span></a>
+      <a class="card" href="moto_armonico.html" target="_blank"><div class="em">🌀</div><b data-en="Harmonic oscillation">Oscillazione armonica</b><span data-en="From circular motion to the sine wave">Dal moto circolare alla sinusoide</span></a>
+    </div>
+
+    <h2 data-en="Forces and fluids">Forze e fluidi</h2>
+    <div class="grid">
+      <a class="card" href="forze_piano_inclinato.html" target="_blank"><div class="em">📐</div><b data-en="Forces and the inclined plane">Forze e piano inclinato</b><span data-en="Weight, normal force and friction">Peso, reazione vincolare e attrito</span></a>
+      <a class="card" href="stevino.html" target="_blank"><div class="em">💧</div><b data-en="Pressure in fluids">Pressione nei fluidi</b><span data-en="Stevin's law and communicating vessels">Legge di Stevino e vasi comunicanti</span></a>
+      <a class="card" href="archimede.html" target="_blank"><div class="em">🧊</div><b data-en="Buoyancy">Galleggiamento</b><span data-en="Archimedes' principle in 3D">Il principio di Archimede in 3D</span></a>
+    </div>
+
+    <h2 data-en="Waves">Onde</h2>
+    <div class="grid">
+      <a class="card" href="Interferenza_onde.html" target="_blank"><div class="em">🌊</div><b data-en="Interference of waves">Interferenza tra onde</b><span data-en="Pulses that cross and standing waves">Impulsi che si incrociano e onde stazionarie</span></a>
+    </div>
+
+    <h2 data-en="Gravitation and space">Gravitazione e spazio</h2>
+    <div class="grid">
+      <a class="card" href="solar_system.html" target="_blank"><div class="em">🪐</div><b data-en="Solar system simulation">Simulazione del sistema solare</b><span data-en="Planets, orbits and periods around the Sun">Pianeti, orbite e periodi attorno al Sole</span></a>
+      <a class="card" href="low_earth_orbit.html" target="_blank"><div class="em">🛰️</div><b data-en="Low Earth orbit">Orbita terrestre bassa</b><span data-en="Satellites and orbital speed around the Earth">Satelliti e velocità orbitale attorno alla Terra</span></a>
+    </div>
+
+    <h2 data-en="Electricity">Elettricità</h2>
+    <div class="grid">
+      <a class="card" href="coulomb.html" target="_blank"><div class="em">⚡</div><b data-en="Coulomb's law">Legge di Coulomb</b><span data-en="Forces between two or more charges">Forze tra due o più cariche</span></a>
+      <a class="card" href="campo_elettrico.html" target="_blank"><div class="em">🧲</div><b data-en="Electric field">Campo elettrico</b><span data-en="Field lines, vectors and test charges">Linee di campo, vettori e cariche di prova</span></a>
+      <a class="card" href="potenziale_elettrico.html" target="_blank"><div class="em">⛰️</div><b data-en="Potential and potential energy">Potenziale ed energia potenziale</b><span data-en="Equipotential lines and a 3D landscape">Linee equipotenziali e paesaggio 3D</span></a>
+      <a class="card" href="circuiti.html" target="_blank"><div class="em">💡</div><b data-en="Electric circuits">Circuiti elettrici</b><span data-en="Ohm's and Kirchhoff's laws">Leggi di Ohm e di Kirchhoff</span></a>
+    </div>
+  </main>
+
+  <footer><p data-en="Made for teaching – © 2025">Realizzato per uso didattico – © 2025</p></footer>
+
+<script>
+(function(){
+  var lang='it',light=false,thm=document.getElementById('thm'),lb=document.getElementById('lang');
+  function setTheme(l){light=l;document.body.classList.toggle('light',l);thm.textContent=l?'☾':'☀';try{localStorage.setItem('simTheme',l?'light':'dark');}catch(e){}}
+  function setLang(){document.querySelectorAll('[data-en]').forEach(function(e){if(e.dataset.it===undefined)e.dataset.it=e.innerHTML;e.innerHTML=lang==='it'?e.dataset.it:e.dataset.en;});document.documentElement.lang=lang;lb.textContent=lang==='it'?'EN':'IT';}
+  thm.onclick=function(){setTheme(!light);};lb.onclick=function(){lang=lang==='it'?'en':'it';setLang();};
+  try{if(localStorage.getItem('simTheme')==='light')setTheme(true);}catch(e){}
+})();
+</script>
+</body>
+</html>
