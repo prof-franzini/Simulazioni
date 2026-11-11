@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bose–Einstein condensate</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; color: #dfe6f2;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; -webkit-text-size-adjust: 100%; }
+  canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+  canvas:active { cursor: grabbing; }
+  #vig { position: fixed; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(0,0,0,.55) 100%); }
+  .ui { transition: opacity .6s; }
+  body.clean .ui { opacity: 0; pointer-events: none; }
+
+  #head { position: fixed; left: calc(28px + env(safe-area-inset-left)); top: calc(24px + env(safe-area-inset-top));
+    max-width: 360px; pointer-events: none; text-shadow: 0 0 12px rgba(0,0,0,.9); }
+  #head b { display: block; font-size: 15px; letter-spacing: .3em; font-weight: 500; color: #fff; text-transform: uppercase; }
+  #cap { margin: 10px 0 14px; font-size: 12px; line-height: 1.6; color: #b9c6dc; letter-spacing: .02em; min-height: 3.2em; }
+  #tele { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; line-height: 1.9; }
+  #tele span { color: #8fa3c2; }
+  #tele i { font-style: normal; color: #ffd9a8; margin-right: 10px; text-transform: none; letter-spacing: .08em; }
+  #tele span span { text-transform: none; }
+  #tele em { font-style: normal; color: #8fc4ff; }
+  #bar { height: 3px; width: 220px; max-width: 100%; margin: 7px 0 3px; background: rgba(255,150,90,.35); border-radius: 2px; overflow: hidden; }
+  #bar div { height: 100%; width: 0; background: #7fb6ff; box-shadow: 0 0 8px #7fb6ff; }
+
+  #hint { position: fixed; right: calc(26px + env(safe-area-inset-right)); top: calc(22px + env(safe-area-inset-top));
+    font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: #7f90ab; text-align: right; line-height: 1.9; }
+  #hint .touch { display: none; }
+  #key { margin-top: 6px; }
+  #key u { text-decoration: none; display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin: 0 6px 0 12px; }
+
+  #ctl { position: fixed; right: calc(24px + env(safe-area-inset-right)); bottom: calc(24px + env(safe-area-inset-bottom));
+    display: flex; flex-direction: column; gap: 10px; align-items: flex-end;
+    font-size: 11px; letter-spacing: .12em; text-transform: uppercase; }
+  .row { display: flex; gap: 10px; align-items: center; }
+  button { font: inherit; letter-spacing: inherit; text-transform: inherit; color: #dfe6f2; cursor: pointer;
+    background: rgba(10,14,22,.5); border: 1px solid rgba(190,210,255,.25); border-radius: 999px; padding: 7px 14px;
+    -webkit-tap-highlight-color: transparent; white-space: nowrap; }
+  button:hover { background: rgba(60,80,120,.5); }
+  button.on { background: rgba(120,160,255,.3); color: #fff; border-color: rgba(190,210,255,.5); }
+  input[type=range] { width: 96px; accent-color: #9cc0ff; margin: 0; }
+  #temp { width: 230px; }
+  label { color: #8fa3c2; }
+  output { color: #ffd9a8; min-width: 62px; text-align: right; text-transform: none; }
+
+  .tag { position: fixed; left: 0; top: 0; pointer-events: none; font-size: 9px; letter-spacing: .18em; text-transform: uppercase;
+    color: #a9bad6; white-space: nowrap; text-shadow: 0 0 6px #000, 0 0 2px #000; will-change: transform; }
+  .tag::before { content: ""; display: inline-block; width: 14px; height: 1px; background: rgba(170,190,230,.6); vertical-align: middle; margin-right: 6px; }
+
+  #info { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; padding: 18px;
+    background: rgba(0,0,0,.55); z-index: 5; }
+  #info.open { display: flex; }
+  #card { max-width: 560px; max-height: 84vh; overflow: auto; background: rgba(9,13,22,.94); border: 1px solid rgba(190,210,255,.22);
+    border-radius: 14px; padding: 22px 24px; font-size: 12.5px; line-height: 1.65; color: #c5d0e3; -webkit-overflow-scrolling: touch; }
+  #card h2 { margin: 0 0 4px; font-size: 13px; letter-spacing: .3em; text-transform: uppercase; font-weight: 500; color: #fff; }
+  #card h3 { margin: 18px 0 4px; font-size: 10.5px; letter-spacing: .2em; text-transform: uppercase; font-weight: 500; color: #9cc0ff; }
+  #card p { margin: 0 0 8px; }
+  #card .h { color: #ffab7a; } #card .c { color: #8fc4ff; }
+  #card button { margin-top: 10px; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; }
+  #err { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; text-align: center; padding: 24px; }
+
+  @media (pointer: coarse) {
+    #hint .mouse { display: none; } #hint .touch { display: inline; }
+    button { padding: 10px 15px; } input[type=range] { height: 28px; }
+  }
+  @media (max-width: 720px) {
+    #hint { display: none; }
+    #head { left: calc(16px + env(safe-area-inset-left)); right: calc(16px + env(safe-area-inset-right)); top: calc(14px + env(safe-area-inset-top)); max-width: 440px; }
+    #head b { font-size: 13px; letter-spacing: .22em; }
+    #cap { font-size: 11.5px; margin: 7px 0 9px; line-height: 1.5; }
+    #tele { font-size: 10px; line-height: 1.75; letter-spacing: .1em; }
+    #ctl { left: calc(12px + env(safe-area-inset-left)); right: calc(12px + env(safe-area-inset-right)); bottom: calc(12px + env(safe-area-inset-bottom));
+      align-items: stretch; gap: 8px; font-size: 10px; letter-spacing: .08em; }
+    .row { gap: 8px; }
+    #rowA button, #rowC button { flex: 1; padding: 11px 4px; }
+    #temp { flex: 1; width: auto; min-width: 60px; }
+    #rowC label, #speed { display: none; }
+  }
+  @media (max-height: 480px) and (orientation: landscape) {
+    #tags { display: none; }
+    #cap { display: none; } #head b { margin-bottom: 8px; }
+    #head { max-width: 400px; right: auto; }
+    #head b { letter-spacing: .16em; }
+    #ctl { left: auto; width: 370px; gap: 6px; }
+    #rowA button, #rowC button { padding-top: 8px; padding-bottom: 8px; }
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="vig"></div>
+
+<div id="head" class="ui">
+  <b>Bose–Einstein condensate</b>
+  <p id="cap"></p>
+  <div id="tele"></div>
+  <div id="bar"><div></div></div>
+</div>
+
+<div id="hint" class="ui">
+  <span class="mouse">Drag to orbit · scroll to zoom · H hides interface</span><span class="touch">Drag to orbit · pinch to zoom</span>
+  <div id="key"><u style="background:#ff9a5c"></u>Thermal atoms<u style="background:#7fb6ff"></u>Condensate</div>
+</div>
+
+<div id="tags" class="ui"></div>
+
+<div id="ctl" class="ui">
+  <div class="row" id="rowA">
+    <button id="cool">Cool down</button>
+    <button id="release">Release trap</button>
+    <button id="stir">Stir</button>
+  </div>
+  <div class="row" id="rowB">
+    <label for="temp">Temp</label>
+    <input id="temp" type="range" min="20" max="1000" step="1" value="900">
+    <output id="tempOut">900 nK</output>
+  </div>
+  <div class="row" id="rowC">
+    <label for="speed">Time</label>
+    <input id="speed" type="range" min="0.1" max="3" step="0.1" value="1">
+    <button id="play">Pause</button>
+    <button id="about">Info</button>
+    <button id="hide">Hide UI</button>
+  </div>
+</div>
+
+<div id="info">
+  <div id="card">
+    <h2>A new state of matter</h2>
+    <p>Cool a dilute gas of bosons to a few hundred billionths of a degree above absolute zero and something abrupt happens: a large share of the atoms drops into the single lowest quantum state of the trap. They stop behaving as separate particles and act as one matter wave. Bose and Einstein predicted it in 1924–25; it was first made in 1995 with rubidium and sodium (Nobel Prize 2001).</p>
+    <h3>Why it happens</h3>
+    <p>Every atom is also a wave, with a wavelength that grows as the atom slows down (λ = h / √(2π m k T)). In a warm gas the waves are much shorter than the distance between atoms. Cooling stretches them until neighbours overlap. For bosons, which are allowed to share one state, overlap triggers condensation: it starts when the phase-space density nλ³ reaches 2.61.</p>
+    <h3>What you see</h3>
+    <p><span class="h">Orange dots</span> are thermal atoms, each moving on its own. <span class="c">Blue</span> is the condensate: dense, still and coherent. The surface below is what experiments record: a shadow picture of the cloud, drawn as height and colour. A broad hill is thermal gas; the sharp spike that rises through it below the critical temperature is the condensate.</p>
+    <h3>Release trap</h3>
+    <p>Switch the trap off and the cloud flies apart. The thermal gas spreads equally in all directions. The condensate does not: it expands fastest along the direction in which it was squeezed hardest, so a flat disc turns into a tall cigar. This inversion was the first proof of condensation.</p>
+    <h3>Stir</h3>
+    <p>A condensate is a superfluid and cannot rotate like water in a cup. It can only carry rotation in quantised vortices, thin holes that arrange themselves in a regular triangular lattice.</p>
+    <h3>About the model</h3>
+    <p>500 000 atoms of rubidium-87 in a harmonic trap (80 Hz across, 200 Hz vertically). The condensed share follows the ideal-gas law N₀/N = 1 − (T/T<sub>c</sub>)³, the condensate has the Thomas–Fermi shape set by repulsion between atoms, and its expansion follows the Castin–Dum scaling equations. Each dot stands for about 60 atoms, time is slowed about 400 times and vortex cores are drawn larger than they are.</p>
+    <button id="closeInfo">Close</button>
+  </div>
+</div>
+<div id="err">This scene needs WebGL, which isn't available in this browser.</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const fail = () => { $('err').style.display = 'flex'; };
+  if (!window.THREE) return fail();
+  const canvas = $('c');
+  let renderer;
+  try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true }); } catch (e) { return fail(); }
+  let pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+  renderer.setPixelRatio(pixelRatio);
+  renderer.setClearColor(0x000000, 1);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 500);
+  const FOV = 42;
+
+  // ---------------- physics constants ----------------
+  const HBAR = 1.0546e-34, KB = 1.3807e-23, MASS = 1.443e-25, HP = 6.626e-34;   // rubidium-87
+  const NATOM = 5e5, F_PERP = 80, F_Y = 200;                                    // trap frequencies in Hz
+  const WBAR = 2*Math.PI*Math.cbrt(F_PERP*F_PERP*F_Y);
+  const TC = 0.9405*HBAR*WBAR*Math.cbrt(NATOM)/KB*1e9;                          // critical temperature in nK (about 390)
+  // scene units: thermal width across the trap at T = Tc is 1.6; visual trap frequencies keep the 80:200 ratio
+  const W_PERP = 1.2, W_Y = 3.0, SIG_PERP = 1.6, SIG_Y = SIG_PERP*W_PERP/W_Y, R_PERP = 1.5, R_Y = R_PERP*W_PERP/W_Y;
+  const Y0 = 1.3, FLOOR = -4.7, HSCALE = 9.0;
+  const MS_PER_UNIT = W_PERP/(2*Math.PI*F_PERP)*1000;                           // real milliseconds per unit of visual time
+
+  // phase-space density of the ideal Bose gas at the trap centre
+  function gsum(z, s, n) { let a = 0, p = 1; for (let k = 1; k <= n; k++) { p *= z; a += p/Math.pow(k, s); } return a; }
+  function psd(t) {                              // t = T/Tc
+    if (t <= 1) return 2.612;
+    const target = 1.2021/(t*t*t); let lo = 0, hi = 1;
+    for (let i = 0; i < 40; i++) { const m = (lo + hi)/2; if (gsum(m, 3, 80) < target) lo = m; else hi = m; }
+    return Math.min(2.612, gsum(lo, 1.5, 600));
+  }
+
+  // ---------------- atoms ----------------
+  const NP = (window.innerWidth < 720 || (navigator.hardwareConcurrency || 8) <= 4) ? 6000 : 9000;
+  const VORT = [[0, 0]];
+  for (let k = 0; k < 6; k++) { const a = k*Math.PI/3; VORT.push([Math.cos(a), Math.sin(a)], [2*Math.cos(a), 2*Math.sin(a)], [Math.sqrt(3)*Math.cos(a + Math.PI/6), Math.sqrt(3)*Math.sin(a + Math.PI/6)]); }
+  const U = {
+    uT: { value: 2.3 }, uF: { value: 0 }, uPhase: { value: 0 }, uTau: { value: 0 }, uRot: { value: 0 }, uPx: { value: 1000 },
+    uRc: { value: new THREE.Vector2(R_PERP, R_Y) }, uD: { value: 1 }, uXi2: { value: 0 }, uSig: { value: SIG_PERP }, uTime: { value: 0 },
+    uV: { value: VORT.map(v => new THREE.Vector2(v[0], v[1])) }
+  };
+  (function () {
+    const g1 = new Float32Array(NP*3), g2 = new Float32Array(NP*3), tf = new Float32Array(NP*3), rank = new Float32Array(NP), pos = new Float32Array(NP*3);
+    const gauss = () => Math.sqrt(-2*Math.log(1 - Math.random()))*Math.cos(2*Math.PI*Math.random());
+    for (let i = 0; i < NP; i++) {
+      for (let k = 0; k < 3; k++) { g1[i*3 + k] = gauss(); g2[i*3 + k] = gauss(); }
+      let x, y, z, r2;                                             // Thomas-Fermi profile: density falls as 1 - r^2
+      do { x = Math.random()*2 - 1; y = Math.random()*2 - 1; z = Math.random()*2 - 1; r2 = x*x + y*y + z*z; } while (r2 > 1 || Math.random() > 1 - r2);
+      tf[i*3] = x; tf[i*3 + 1] = y; tf[i*3 + 2] = z; rank[i] = (i + Math.random())/NP;
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    g.setAttribute('g1', new THREE.BufferAttribute(g1, 3)); g.setAttribute('g2', new THREE.BufferAttribute(g2, 3));
+    g.setAttribute('tf', new THREE.BufferAttribute(tf, 3)); g.setAttribute('rank', new THREE.BufferAttribute(rank, 1));
+    const m = new THREE.ShaderMaterial({
+      uniforms: U, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+      vertexShader: `
+        attribute vec3 g1, g2, tf; attribute float rank;
+        uniform float uT, uF, uPhase, uTau, uRot, uPx, uD, uXi2, uTime; uniform vec2 uRc; uniform vec2 uV[19];
+        varying vec3 vCol; varying float vA;
+        const vec3 W = vec3(${W_PERP.toFixed(3)}, ${W_Y.toFixed(3)}, ${W_PERP.toFixed(3)});
+        void main(){
+          // thermal atom: every atom swings in the trap with its own amplitude and phase; after release it flies straight
+          vec3 c = cos(W*uPhase), s = sin(W*uPhase);
+          vec3 x0 = g1*c + g2*s, v0 = W*(g2*c - g1*s);
+          vec3 pth = sqrt(uT)*vec3(${SIG_PERP.toFixed(3)}, ${SIG_Y.toFixed(3)}, ${SIG_PERP.toFixed(3)})*(x0 + v0*uTau);
+          // condensed atom: a place inside the one shared wave function
+          vec2 q = tf.xz*uRc.x; float hole = 1.0;
+          for (int i = 0; i < 19; i++) { vec2 d = q - uV[i]*uD; float d2 = dot(d, d) + 1e-5; hole *= d2/(d2 + uXi2); }
+          float cr = cos(uRot), sr = sin(uRot), br = 1.0 + 0.012*sin(uTime*2.2);
+          vec3 pc = vec3(q.x*cr - q.y*sr, tf.y*uRc.y, q.x*sr + q.y*cr)*br;
+          float w = clamp((uF - rank)/0.03, 0.0, 1.0); w = w*w*(3.0 - 2.0*w);
+          vec3 p = mix(pth, pc, w) + vec3(0.0, ${Y0.toFixed(2)}, 0.0);
+          vec4 mv = modelViewMatrix*vec4(p, 1.0); gl_Position = projectionMatrix*mv;
+          float lam = clamp(inversesqrt(uT), 0.55, 1.7);                        // dots grow like the matter wavelength
+          gl_PointSize = max(mix(0.10*lam, 0.21, w)*uPx/-mv.z, 2.0);
+          vec3 hot = mix(vec3(1.0,0.60,0.30), vec3(1.0,0.30,0.12), smoothstep(0.8, 2.3, uT));
+          vCol = mix(hot, vec3(0.32,0.60,1.0), w);
+          vA = mix(0.75, 0.17*hole, w);
+        }`,
+      fragmentShader: `precision highp float; varying vec3 vCol; varying float vA;
+        void main(){ float d = length(gl_PointCoord - 0.5)*2.0; float a = pow(max(1.0 - d, 0.0), 2.0);
+          gl_FragColor = vec4(vCol*a*vA, 1.0); }`
+    });
+    const pts = new THREE.Points(g, m); pts.frustumCulled = false; pts.renderOrder = 2; scene.add(pts);
+  })();
+
+  // ---------------- density map (what the camera in the lab records) ----------------
+  (function () {
+    const g = new THREE.PlaneGeometry(13, 13, 180, 180); g.rotateX(-Math.PI/2);
+    const m = new THREE.ShaderMaterial({
+      uniforms: U,
+      vertexShader: `
+        uniform float uF, uSig, uD, uXi2, uRot; uniform vec2 uRc; uniform vec2 uV[19];
+        varying float vH; varying vec3 vN; varying vec2 vP; varying vec3 vW;
+        float dens(vec2 p){
+          float s2 = uSig*uSig, r2 = dot(p, p);
+          float th = (1.0 - uF)/(6.2832*s2)*exp(-r2/(2.0*s2));
+          float u = max(1.0 - r2/(uRc.x*uRc.x), 0.0);
+          float cr = cos(uRot), sr = sin(uRot); vec2 q = vec2(p.x*cr + p.y*sr, -p.x*sr + p.y*cr); float hole = 1.0;
+          for (int i = 0; i < 19; i++) { vec2 d = q - uV[i]*uD; float d2 = dot(d, d) + 1e-5; hole *= d2/(d2 + uXi2); }
+          return ${HSCALE.toFixed(1)}*(th + uF*5.0/(6.2832*uRc.x*uRc.x)*u*sqrt(u)*hole);
+        }
+        void main(){
+          vec2 p = position.xz; float h = dens(p), e = 0.05;
+          vN = normalize(vec3(dens(p - vec2(e, 0.0)) - dens(p + vec2(e, 0.0)), 2.0*e, dens(p - vec2(0.0, e)) - dens(p + vec2(0.0, e))));
+          vH = h; vP = p; vec3 w = vec3(p.x, ${FLOOR.toFixed(2)} + h, p.y); vW = w;
+          gl_Position = projectionMatrix*modelViewMatrix*vec4(w, 1.0);
+        }`,
+      fragmentShader: `precision highp float;
+        varying float vH; varying vec3 vN; varying vec2 vP; varying vec3 vW;
+        vec3 ramp(float t){
+          vec3 c = mix(vec3(0.012,0.02,0.07), vec3(0.04,0.14,0.50), smoothstep(0.0, 0.06, t));
+          c = mix(c, vec3(0.0,0.62,0.90), smoothstep(0.06, 0.20, t));
+          c = mix(c, vec3(0.18,0.86,0.36), smoothstep(0.20, 0.38, t));
+          c = mix(c, vec3(1.0,0.88,0.20), smoothstep(0.38, 0.58, t));
+          c = mix(c, vec3(1.0,0.30,0.10), smoothstep(0.58, 0.80, t));
+          return mix(c, vec3(1.0), smoothstep(0.80, 1.0, t));
+        }
+        void main(){
+          vec3 N = normalize(vN), V = normalize(cameraPosition - vW);
+          vec3 col = ramp(clamp(vH/3.2, 0.0, 1.0));
+          float lit = 0.55 + 0.45*max(dot(N, normalize(vec3(0.4, 0.8, 0.45))), 0.0);
+          col *= lit; col += vec3(0.25,0.4,0.7)*pow(1.0 - max(dot(N, V), 0.0), 3.0)*0.25;
+          vec2 gr = abs(fract(vP*2.0 + 0.5) - 0.5); float line = 1.0 - smoothstep(0.0, 0.035, min(gr.x, gr.y));
+          col += vec3(0.20,0.34,0.62)*line*0.30;
+          col *= 1.0 - smoothstep(4.3, 6.4, length(vP));
+          gl_FragColor = vec4(col, 1.0);
+        }`
+    });
+    const mesh = new THREE.Mesh(g, m); mesh.frustumCulled = false; scene.add(mesh);
+  })();
+
+  // ---------------- trap coils ----------------
+  const coilMat = new THREE.MeshBasicMaterial({ color: 0xc98848, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false });
+  [Y0 + 1.75, Y0 - 1.75].forEach(y => { const t = new THREE.Mesh(new THREE.TorusGeometry(3.3, 0.028, 8, 160), coilMat); t.rotation.x = Math.PI/2; t.position.y = y; scene.add(t); });
+
+  // ---------------- labels ----------------
+  const tags = [], tmpV = new THREE.Vector3();
+  function tag(text, x, y, z) {
+    const el = document.createElement('div'); el.className = 'tag'; el.textContent = text; $('tags').appendChild(el);
+    tags.push({ el, p: new THREE.Vector3(x, y, z), shown: true, w: el.offsetWidth + 10 });
+  }
+  tag('Atoms in the trap', 2.4, Y0 + 0.5, 0); tag('Shadow picture of the cloud', 3.4, FLOOR + 0.25, 3.4); tag('Trap coil', 0, Y0 + 1.75, -3.3);
+
+  // ---------------- state and controls ----------------
+  let T = 900, sweep = 0, released = false, tau = 0, spinTarget = 0, spin = 0, rot = 0, phase = 0;
+  const b = [1, 1, 1], db = [0, 0, 0]; let back = null;
+  let playing = true, speed = 1, idle = 0, started = false;
+  const cam = { az: 1.2, el: 0.55, dist: 26 }, tgt = { az: 0.75, el: 0.30, dist: 19 };
+  const frac = () => T < TC ? 1 - Math.pow(T/TC, 3) : 0;
+
+  function setT(v, fromSlider) { T = Math.max(20, Math.min(1000, v)); if (!fromSlider) $('temp').value = T; $('tempOut').textContent = Math.round(T) + ' nK'; }
+  function coolLabel() { $('cool').textContent = sweep ? 'Stop' : (T < 120 ? 'Reheat' : 'Cool down'); $('cool').classList.toggle('on', !!sweep); }
+  $('temp').oninput = e => { sweep = 0; started = true; setT(+e.target.value, true); coolLabel(); };
+  $('cool').onclick = () => { started = true; sweep = sweep ? 0 : (T < 120 ? 1 : -1); coolLabel(); };
+  $('release').onclick = () => {
+    if (!released && !back) { released = true; tau = 0; b[0] = b[1] = b[2] = 1; db[0] = db[1] = db[2] = 0; }
+    else if (released) { released = false; back = { tau, b: b.slice(), k: 1 }; }
+    $('release').textContent = released ? 'Recapture' : 'Release trap'; $('release').classList.toggle('on', released);
+  };
+  $('stir').onclick = () => { spinTarget = spinTarget ? 0 : 1; $('stir').textContent = spinTarget ? 'Stop stirring' : 'Stir'; $('stir').classList.toggle('on', !!spinTarget); };
+  $('play').onclick = () => { playing = !playing; $('play').textContent = playing ? 'Pause' : 'Play'; };
+  $('speed').oninput = e => { speed = +e.target.value; };
+  const toggleUI = () => document.body.classList.toggle('clean');
+  $('hide').onclick = toggleUI;
+  const toggleInfo = () => $('info').classList.toggle('open');
+  $('about').onclick = toggleInfo; $('closeInfo').onclick = toggleInfo;
+  $('info').addEventListener('click', e => { if (e.target === $('info')) toggleInfo(); });
+  window.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
+    if (e.key === 'h' || e.key === 'H') toggleUI();
+    if (e.key === ' ') { e.preventDefault(); $('play').click(); }
+    if (e.key === 'Escape') $('info').classList.remove('open');
+  });
+  const ptrs = new Map(); let pinch = 0;
+  canvas.addEventListener('pointerdown', e => {
+    if (document.body.classList.contains('clean') && e.pointerType !== 'mouse') toggleUI();
+    try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+    ptrs.set(e.pointerId, [e.clientX, e.clientY]); pinch = 0; idle = 0;
+  });
+  canvas.addEventListener('pointermove', e => {
+    const p = ptrs.get(e.pointerId); if (!p) return; idle = 0;
+    if (ptrs.size === 1) {
+      tgt.az += (e.clientX - p[0])*0.006;
+      tgt.el = Math.max(-0.1, Math.min(1.5, tgt.el + (e.clientY - p[1])*0.006));
+    }
+    p[0] = e.clientX; p[1] = e.clientY;
+    if (ptrs.size === 2) {
+      const a = Array.from(ptrs.values()), d = Math.hypot(a[0][0] - a[1][0], a[0][1] - a[1][1]);
+      if (pinch) tgt.dist = Math.max(5, Math.min(45, tgt.dist*pinch/d)); pinch = d;
+    }
+  });
+  const end = e => { ptrs.delete(e.pointerId); pinch = 0; };
+  canvas.addEventListener('pointerup', end); canvas.addEventListener('pointercancel', end);
+  canvas.addEventListener('contextmenu', e => e.preventDefault());
+  canvas.addEventListener('wheel', e => { e.preventDefault(); idle = 0; tgt.dist = Math.max(5, Math.min(45, tgt.dist*Math.exp(e.deltaY*0.001))); }, { passive: false });
+
+  let vw = 1, vh = 1;
+  function resize() {
+    vw = window.innerWidth; vh = window.innerHeight;
+    renderer.setPixelRatio(pixelRatio); renderer.setSize(vw, vh, false);
+    camera.aspect = vw/vh;
+    if (vw <= 720 && vh > vw) camera.setViewOffset(vw, vh, 0, -vh*0.03, vw, vh); else camera.clearViewOffset();
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resize); window.addEventListener('orientationchange', () => setTimeout(resize, 200)); resize();
+  if (vh > vw) tgt.dist = 15.5;                 // tall screens: move in, the scene is taller than it is wide
+
+  // ---------------- telemetry ----------------
+  let lastTele = 0, lastCap = '';
+  function telemetry() {
+    const t = T/TC, f = frac(), lam = HP/Math.sqrt(2*Math.PI*MASS*KB*T*1e-9)*1e6;
+    let h = '';
+    const row = (a, v, c, d) => { h += '<div><span>' + a + '</span> <i>' + v + '</i>' + (c ? '<span>' + c + '</span> <i>' + d + '</i>' : '') + '</div>'; };
+    row('Temperature', Math.round(T) + ' nK', 'Critical', Math.round(TC) + ' nK');
+    row('Matter wave', lam.toFixed(2) + ' µm', 'Density <span>nλ³</span>', psd(t).toFixed(2) + ' / 2.61');
+    let s, cap;
+    if (f <= 0) { s = '<span>Thermal gas · no condensate</span>';
+      cap = t > 1.5 ? 'A warm gas: every atom moves on its own and the cloud is wide and thin. Cool it down and watch the centre.'
+                    : 'The atoms’ matter waves have grown almost as long as the distance between neighbours. The gas is about to change.'; }
+    else { s = '<em>Condensed ' + Math.round(f*100) + ' % of 500 000 atoms</em>';
+      cap = f < 0.8 ? 'Below the critical temperature atoms pile into the lowest quantum state. A dense blue core appears inside the thermal cloud, and a sharp spike rises in the picture.'
+                    : 'Most atoms now share one quantum state and behave as a single matter wave. Only a faint thermal halo is left.'; }
+    if (released || back) { cap = 'Trap off. The thermal gas spreads evenly, but the condensate expands fastest along the direction in which it was squeezed: the flat disc turns into a tall cigar.';
+      s += '<div><span>Free flight</span> <i>' + (tau*MS_PER_UNIT).toFixed(1) + ' ms</i></div>'; }
+    else if (spin > 0.05) {
+      if (f > 0) { let n = 0; VORT.forEach(v => { if (Math.hypot(v[0], v[1])*U.uD.value < U.uRc.value.x*0.97) n++; });
+        cap = 'A superfluid cannot simply turn like water. The rotation enters as quantised vortices, holes that line up in a regular lattice.';
+        s += '<div><span>Vortices</span> <i>' + n + '</i></div>'; }
+      else cap = 'Stirring a thermal gas only makes it swirl like any fluid. Cool it below the critical temperature to see what a superfluid does.';
+    }
+    $('tele').innerHTML = h + s;
+    $('bar').firstElementChild.style.width = (f*100).toFixed(1) + '%';
+    if (cap !== lastCap) { lastCap = cap; $('cap').textContent = cap; }
+  }
+
+  // ---------------- animation ----------------
+  let time = 0, prev = performance.now(), frames = 0, slow = 0, t0 = prev;
+  function frame(now) {
+    const raw = Math.min(0.05, (now - prev)/1000); prev = now;
+    const dt = playing ? raw*speed : 0;
+    time += dt; U.uTime.value = time;
+    if (!started && now - t0 > 2500) { started = true; sweep = -1; coolLabel(); }      // open with one cooling run
+
+    // temperature sweep (evaporative cooling removes the fastest atoms; here only the temperature is shown)
+    if (sweep && dt > 0) {
+      setT(T*Math.exp(sweep*dt*(sweep < 0 ? 0.16 : 0.5)));
+      if ((sweep < 0 && T <= 60) || (sweep > 0 && T >= 900)) { sweep = 0; }
+      coolLabel();
+    }
+    const f = frac();
+
+    // free expansion: thermal atoms fly straight, the condensate follows the scaling equations b_i'' = w_i^2 / (b_i b_x b_y b_z)
+    if (released) {
+      let left = Math.min(dt*0.45, 1.5 - tau);
+      while (left > 1e-6) {
+        const h = Math.min(0.004, left), vol = b[0]*b[1]*b[2], w = [W_PERP, W_Y, W_PERP];
+        for (let i = 0; i < 3; i++) db[i] += h*w[i]*w[i]/(b[i]*vol);
+        for (let i = 0; i < 3; i++) b[i] += h*db[i];
+        tau += h; left -= h;
+      }
+    } else if (back) {
+      back.k *= Math.exp(-raw*5); if (back.k < 0.002) { back = null; tau = 0; b[0] = b[1] = b[2] = 1; }
+      else { tau = back.tau*back.k; for (let i = 0; i < 3; i++) b[i] = 1 + (back.b[i] - 1)*back.k; }
+    } else phase += dt;
+    coilMat.opacity += ((released ? 0.07 : 0.5) - coilMat.opacity)*Math.min(1, raw*6);
+
+    // rotation
+    spin += (spinTarget - spin)*(1 - Math.exp(-dt*0.5)); rot += dt*0.55*spin;
+    const r5 = Math.pow(Math.max(f, 1e-4), 0.2);
+    const Rp = R_PERP*r5*(1 + 0.12*spin)*b[0], Ry = R_Y*r5*(1 - 0.18*spin)*b[1];
+    U.uT.value = T/TC; U.uF.value = f; U.uPhase.value = phase; U.uTau.value = tau; U.uRot.value = rot;
+    U.uRc.value.set(Rp, Ry);
+    U.uD.value = 0.36*Rp*(1 + 2.6*Math.pow(1 - spin, 2));
+    U.uXi2.value = 0.011*spin*spin*r5*r5*b[0]*b[0];
+    U.uSig.value = SIG_PERP*Math.sqrt(T/TC)*Math.sqrt(1 + W_PERP*W_PERP*tau*tau);
+
+    // camera
+    idle += raw; if (idle > 7 && playing && !ptrs.size) tgt.az += raw*0.03;
+    const k = 1 - Math.exp(-raw*4);
+    cam.az += (tgt.az - cam.az)*k; cam.el += (tgt.el - cam.el)*k; cam.dist += (tgt.dist - cam.dist)*k;
+    const ce = Math.cos(cam.el), cy = -1.5;
+    camera.position.set(cam.dist*ce*Math.cos(cam.az), cy + cam.dist*Math.sin(cam.el), cam.dist*ce*Math.sin(cam.az));
+    camera.lookAt(0, cy, 0);
+    const vf = camera.aspect < 1 ? Math.min(100, 2*Math.atan(Math.tan(FOV*Math.PI/360)/camera.aspect)*180/Math.PI) : FOV;
+    if (Math.abs(vf - camera.fov) > 0.01) { camera.fov = vf; camera.updateProjectionMatrix(); }
+    U.uPx.value = vh*pixelRatio/(2*Math.tan(camera.fov*Math.PI/360));
+
+    for (const t of tags) {
+      const w = tmpV.copy(t.p).project(camera);
+      const show = w.z < 1 && Math.abs(w.x) < 0.94 && Math.abs(w.y) < 0.94 && (w.x*0.5 + 0.5)*vw + t.w < vw;
+      if (show) t.el.style.transform = 'translate(' + ((w.x*0.5 + 0.5)*vw + 6).toFixed(1) + 'px,' + ((-w.y*0.5 + 0.5)*vh - 6).toFixed(1) + 'px)';
+      if (show !== t.shown) { t.shown = show; t.el.style.display = show ? '' : 'none'; }
+    }
+    if (now - lastTele > 140) { lastTele = now; telemetry(); }
+    renderer.render(scene, camera);
+
+    frames++; if (raw > 0.045) slow++;
+    if (frames === 90) {
+      if (slow > 45 && pixelRatio > 0.75) { pixelRatio = Math.max(0.75, pixelRatio*0.75); resize(); }
+      frames = 0; slow = 0;
+    }
+    requestAnimationFrame(frame);
+  }
+  setT(900); coolLabel();
+  window.becDebug = { setT: v => { started = true; sweep = 0; setT(v); coolLabel(); }, tgt, get state() { return { T, TC, f: frac(), tau, b: b.slice(), spin }; } };
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
