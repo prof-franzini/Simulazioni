@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Low Earth orbit</title>
 <style>
   html, body { margin: 0; height: 100%; background: #000; overflow: hidden; color: #dfe6f2;
@@ -27,7 +27,18 @@
   #hint { position: fixed; right: 26px; top: 22px; font-size: 10px; letter-spacing: .16em;
     text-transform: uppercase; color: #7f90ab; }
   #err { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; text-align: center; padding: 24px; }
-  @media (max-width: 620px) { #hint, #ctl label, #ctl input { display: none; } #tele { left: 16px; bottom: 70px; } #ctl { right: 16px; bottom: 16px; } }
+  #tele { left: calc(28px + env(safe-area-inset-left)); bottom: calc(26px + env(safe-area-inset-bottom)); }
+  #ctl { right: calc(24px + env(safe-area-inset-right)); bottom: calc(24px + env(safe-area-inset-bottom)); }
+  #hint .touch { display: none; }
+  @media (pointer: coarse) { #hint .mouse { display: none; } #hint .touch { display: inline; } button { padding: 10px 16px; } input[type=range] { height: 28px; } }
+  @media (max-width: 620px) {
+    #hint, #ctl label { display: none; }
+    #tele { left: calc(16px + env(safe-area-inset-left)); bottom: calc(76px + env(safe-area-inset-bottom)); font-size: 10px; }
+    #tele b { font-size: 13px; letter-spacing: .26em; }
+    #ctl { left: calc(16px + env(safe-area-inset-left)); right: calc(16px + env(safe-area-inset-right)); bottom: calc(16px + env(safe-area-inset-bottom)); gap: 8px; }
+    #ctl input { flex: 1; width: auto; min-width: 60px; }
+  }
+  @media (max-height: 460px) { #hint { display: none; } #tele { bottom: calc(14px + env(safe-area-inset-bottom)); line-height: 1.6; } #ctl { bottom: calc(14px + env(safe-area-inset-bottom)); } }
 </style>
 </head>
 <body>
@@ -40,7 +51,7 @@
   <span>Met</span> <i id="met">T+ 00:00:00</i> &nbsp; <span id="phase">Orbital sunrise</span><br>
   <span style="opacity:.7">Imagery: NASA Blue Marble / Black Marble</span>
 </div>
-<div id="hint" class="ui">Drag to look · scroll to zoom · H hides interface</div>
+<div id="hint" class="ui"><span class="mouse">Drag to look · scroll to zoom · H hides interface</span><span class="touch">Drag to look · pinch to zoom</span></div>
 <div id="ctl" class="ui">
   <label for="speed">Time</label>
   <input id="speed" type="range" min="0" max="6" step="0.25" value="1">
@@ -369,20 +380,29 @@
   const toggleUI = () => document.body.classList.toggle('clean');
   $('hide').onclick = toggleUI;
   window.addEventListener('keydown', e => { if (e.key === 'h' || e.key === 'H') toggleUI(); });
-  let drag = null;
+  // one finger looks around, two fingers pinch to zoom
+  const ptrs = new Map(); let pinch = 0;
   canvas.addEventListener('pointerdown', e => {
     if (document.body.classList.contains('clean') && e.pointerType !== 'mouse') toggleUI();
-    canvas.setPointerCapture(e.pointerId); drag = [e.clientX, e.clientY];
+    try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+    ptrs.set(e.pointerId, [e.clientX, e.clientY]); pinch = 0;
   });
   canvas.addEventListener('pointermove', e => {
-    if (!drag) return;
-    const k = 0.0022*fov/50;
-    yaw = Math.max(-1.3, Math.min(1.3, yaw + (e.clientX - drag[0])*k));
-    pitch = Math.max(-0.75, Math.min(0.6, pitch + (e.clientY - drag[1])*k));
-    drag = [e.clientX, e.clientY];
+    const p = ptrs.get(e.pointerId); if (!p) return;
+    if (ptrs.size === 1) {
+      const k = 0.0022*fov/50;
+      yaw = Math.max(-1.3, Math.min(1.3, yaw + (e.clientX - p[0])*k));
+      pitch = Math.max(-0.75, Math.min(0.6, pitch + (e.clientY - p[1])*k));
+    }
+    p[0] = e.clientX; p[1] = e.clientY;
+    if (ptrs.size === 2) {
+      const a = Array.from(ptrs.values()), d = Math.hypot(a[0][0] - a[1][0], a[0][1] - a[1][1]);
+      if (pinch) fov = Math.max(22, Math.min(75, fov*pinch/d)); pinch = d;
+    }
   });
-  const end = () => { drag = null; };
+  const end = e => { ptrs.delete(e.pointerId); pinch = 0; };
   canvas.addEventListener('pointerup', end); canvas.addEventListener('pointercancel', end);
+  canvas.addEventListener('contextmenu', e => e.preventDefault());
   canvas.addEventListener('wheel', e => { e.preventDefault(); fov = Math.max(22, Math.min(75, fov*Math.exp(e.deltaY*0.0008))); }, { passive: false });
 
   function resize() {
@@ -390,7 +410,7 @@
     renderer.setPixelRatio(pixelRatio); renderer.setSize(w, h, false);
     camera.aspect = w/h; camera.updateProjectionMatrix();
   }
-  window.addEventListener('resize', resize); resize();
+  window.addEventListener('resize', resize); window.addEventListener('orientationchange', () => setTimeout(resize, 200)); resize();
 
   // ---------------- animation ----------------
   const ORBIT_SECONDS = 420;                     // one full orbit at 1x (real: ~92.6 min)
@@ -436,7 +456,8 @@
     navR.scale.setScalar(0.07 + 0.05*night); navG.scale.setScalar(0.07 + 0.05*night);
 
     // camera: gentle float plus user look
-    camera.fov += (fov - camera.fov)*0.15; camera.updateProjectionMatrix();
+    const vf = camera.aspect < 1 ? Math.min(100, 2*Math.atan(Math.tan(fov*Math.PI/360)/camera.aspect)*180/Math.PI) : fov;
+    camera.fov += (vf - camera.fov)*0.15; camera.updateProjectionMatrix();
     camera.rotation.y = -yaw + Math.sin(now*0.00011)*0.012;
     camera.rotation.x = -0.20 - pitch + Math.sin(now*0.00016)*0.008;
     camera.rotation.z = 0.10 + Math.sin(now*0.00009)*0.01;

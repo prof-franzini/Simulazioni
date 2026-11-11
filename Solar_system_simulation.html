@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Solar system simulation</title>
 <style>
   :root { --line: rgba(170,195,255,.16); --dim: #8493ad; --txt: #e3e9f4; --acc: #ffc978; --bg: rgba(9,12,20,.78); }
@@ -68,10 +68,29 @@
   #note { margin: 14px 8px 6px; font-size: 10px; line-height: 1.4; color: #62708a; }
   #menu { display: none; top: 14px; left: 14px; }
   #err { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; text-align: center; padding: 24px; }
-  @media (max-width: 820px) {
-    #list { display: none; top: 56px; bottom: 150px; z-index: 5; } body.open #list { display: block; }
-    #menu { display: block; position: fixed; } 
-    #info { width: 220px; padding: 10px 12px; font-size: 12px; max-height: 50%; } #info p { display: none; }
+  #more, #info .tog { display: none; }
+  #info.min > :not(#close):not(.kind):not(h1):not(.tog) { display: none; }
+  #info .tog { margin-top: 6px; font: inherit; font-size: 11px; color: var(--acc); background: none; border: 0; padding: 4px 0; cursor: pointer; }
+  #list { top: calc(14px + env(safe-area-inset-top)); left: calc(14px + env(safe-area-inset-left)); }
+  #info { top: calc(14px + env(safe-area-inset-top)); right: calc(14px + env(safe-area-inset-right)); }
+  #bar { bottom: calc(14px + env(safe-area-inset-bottom)); }
+  @media (max-width: 820px), (max-height: 520px) {
+    #list { display: none; top: calc(58px + env(safe-area-inset-top)); bottom: auto; max-height: calc(100% - 190px); z-index: 5; } body.open #list { display: block; }
+    #menu { display: block; position: fixed; top: calc(12px + env(safe-area-inset-top)); left: calc(12px + env(safe-area-inset-left)); }
+    #info { width: min(250px, calc(100% - 128px)); padding: 10px 12px; font-size: 12px; max-height: 46%; top: calc(12px + env(safe-area-inset-top)); right: calc(12px + env(safe-area-inset-right)); }
+    #info p { display: none; } #info h1 { font-size: 17px; } #info .tog { display: block; }
+    #bar { left: 10px; right: 10px; bottom: calc(10px + env(safe-area-inset-bottom)); padding: 8px 10px; gap: 6px 8px; }
+    #date { font-size: 12.5px; min-width: 0; } #rate { min-width: 0; font-size: 12px; }
+    #bar input[type=range] { width: 84px; }
+    #more { display: inline-block; }
+    #jump, #bar .sep, #bar label.t { display: none; }
+    body.more #jump { display: inline-block; } body.more #bar label.t { display: flex; }
+  }
+  @media (max-height: 520px) { #info { max-height: calc(100% - 100px); } }
+  @media (pointer: coarse) {
+    button.b, #bar input[type=date] { padding: 8px 12px; } #list button { padding: 8px 10px; } #list button.m { padding-left: 26px; }
+    #close { width: 34px; height: 34px; } label.t input { width: 18px; height: 18px; } #bar input[type=range] { height: 28px; }
+    .lb i { width: 10px; height: 10px; margin-left: -5px; }
   }
 </style>
 </head>
@@ -89,6 +108,7 @@
   <input id="speed" type="range" min="0" max="7" step="1" value="4" aria-label="Time speed">
   <span id="rate"></span>
   <button class="b" id="now">Now</button>
+  <button class="b" id="more" aria-label="More options">⋯</button>
   <input type="date" id="jump" aria-label="Jump to date">
   <span class="sep"></span>
   <label class="t"><input type="checkbox" id="tOrb" checked>Orbits</label>
@@ -527,6 +547,7 @@
   }
   $('lb').onclick = () => $('lb').classList.remove('on');
   // leave the selected body: hide its card and pull back to the whole-system view
+  const SMALL = matchMedia('(max-width: 820px), (max-height: 520px)'); let infoMin = SMALL.matches;
   function overview() {
     select(byId.sun); cam.want = 900;
     $('info').style.display = 'none'; sel.btn.classList.remove('sel'); sel.lb.classList.remove('sel');
@@ -538,6 +559,9 @@
     const x = document.createElement('button'); x.id = 'close'; x.title = 'Back to the whole solar system (Esc)'; x.setAttribute('aria-label', 'Close'); x.textContent = '×'; x.onclick = overview; el.appendChild(x);
     const k = document.createElement('div'); k.className = 'kind'; k.textContent = b.par ? 'Moon of ' + b.par.name : b.type; el.appendChild(k);
     const t = document.createElement('h1'); t.textContent = b.name; el.appendChild(t);
+    const tg = document.createElement('button'); tg.className = 'tog'; el.appendChild(tg);
+    const setMin = m => { infoMin = m; el.classList.toggle('min', m); tg.textContent = m ? 'Show details ▾' : 'Hide details ▴'; };
+    tg.onclick = () => setMin(!infoMin); setMin(infoMin && SMALL.matches);
     const p = document.createElement('p'); p.textContent = b.txt || MOONTXT[b.id] || ''; if (p.textContent) el.appendChild(p);
     const tabs = document.createElement('div'); tabs.className = 'tabs'; el.appendChild(tabs);
     const gl = GALLERY[b.id] || [];
@@ -581,6 +605,7 @@
   }
 
   $('menu').onclick = () => document.body.classList.toggle('open');
+  $('more').onclick = () => { document.body.classList.toggle('more'); $('more').classList.toggle('on'); };
   $('play').onclick = () => { playing = !playing; $('play').textContent = playing ? 'Pause' : 'Play'; };
   $('rev').onclick = () => { dir = -dir; $('rev').classList.toggle('on', dir < 0); };
   $('speed').oninput = e => { speedIx = +e.target.value; $('rate').textContent = SPEEDS[speedIx][1]; };
@@ -596,7 +621,8 @@
 
   // camera input
   const cv = $('c'), ptrs = new Map(); let pinch = 0;
-  cv.addEventListener('pointerdown', e => { cv.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, [e.clientX, e.clientY]); pinch = 0; });
+  cv.addEventListener('contextmenu', e => e.preventDefault());
+  cv.addEventListener('pointerdown', e => { document.body.classList.remove('open'); cv.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, [e.clientX, e.clientY]); pinch = 0; });
   cv.addEventListener('pointermove', e => {
     const p = ptrs.get(e.pointerId); if (!p) return;
     if (ptrs.size === 1) { cam.th -= (e.clientX - p[0])*0.006; cam.ph = Math.max(0.05, Math.min(3.09, cam.ph - (e.clientY - p[1])*0.006)); }
@@ -608,7 +634,8 @@
   cv.addEventListener('wheel', e => { e.preventDefault(); cam.want *= Math.exp(e.deltaY*0.0012); }, { passive: false });
 
   let W = 1, H = 1;
-  function resize() { W = window.innerWidth; H = window.innerHeight; renderer.setSize(W, H, false); camera.aspect = W/H; camera.updateProjectionMatrix(); }
+  function resize() { W = window.innerWidth; H = window.innerHeight; renderer.setSize(W, H, false); camera.aspect = W/H;
+    camera.fov = W < H ? Math.min(85, 2*Math.atan(Math.tan(22.5*D2R)/camera.aspect)/D2R) : 45; camera.updateProjectionMatrix(); }
   window.addEventListener('resize', resize); resize();
 
   // ======================= loop =======================

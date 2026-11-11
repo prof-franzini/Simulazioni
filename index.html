@@ -32,7 +32,7 @@
   <style>
     :root{--bg0:#070b18;--hd:linear-gradient(90deg,#101a3d,#0a0f1f 70%);--card:#121a36;--bd:#1c2548;--bd2:#2a3566;--tx:#e8ecff;--mu:#8d97bd;--ac:#4cc9f0;--glow:rgba(76,201,240,.18)}
     body.light{--bg0:#e9edf7;--hd:linear-gradient(90deg,#dfe7fb,#f6f8fd 70%);--card:#ffffff;--bd:#d5dcee;--bd2:#bcc6e0;--tx:#16203f;--mu:#5c6890;--ac:#0a8fc0;--glow:rgba(10,143,192,.16)}
-    *{box-sizing:border-box}
+    html{-webkit-text-size-adjust:100%;text-size-adjust:100%}*{box-sizing:border-box}
     body{margin:0;font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg0);color:var(--tx);min-height:100vh}
     header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 22px;border-bottom:1px solid var(--bd);background:var(--hd)}
     .tag{font-size:11px;text-transform:uppercase;letter-spacing:1.6px;color:var(--ac);display:block}
@@ -50,7 +50,7 @@
     .card b{font-size:16.5px;font-weight:650}
     .card span{font-size:13.5px;color:var(--mu)}
     footer{max-width:1080px;margin:0 auto;padding:26px 22px 34px;font-size:13px;color:var(--mu)}
-    @media(max-width:600px){header{padding:12px 14px}main{padding:16px 14px 6px}h1{font-size:20px}}
+    @media(pointer:coarse){.hb button{width:42px;height:40px}}@media(max-width:600px){header{padding:12px 14px}.tag{font-size:10px}main{padding:16px 14px 6px}h1{font-size:20px}}
     @media(prefers-reduced-motion:reduce){.card{transition:none}}
   </style>
 </head>
@@ -86,8 +86,8 @@
 
     <h2 data-en="Gravitation and space">Gravitazione e spazio</h2>
     <div class="grid">
-      <a class="card" href="Solar_system_simulation.html" target="_blank"><div class="em">🪐</div><b data-en="Solar system simulation">Simulazione del sistema solare</b><span data-en="Planets, orbits and periods around the Sun">Pianeti, orbite e periodi attorno al Sole</span></a>
-      <a class="card" href="Low_Earth_orbit.html" target="_blank"><div class="em">🛰️</div><b data-en="Low Earth orbit">Orbita terrestre bassa</b><span data-en="Satellites and orbital speed around the Earth">Satelliti e velocità orbitale attorno alla Terra</span></a>
+      <a class="card" href="solar_system.html" target="_blank"><div class="em">🪐</div><b data-en="Solar system simulation">Simulazione del sistema solare</b><span data-en="Planets, orbits and periods around the Sun">Pianeti, orbite e periodi attorno al Sole</span></a>
+      <a class="card" href="low_earth_orbit.html" target="_blank"><div class="em">🛰️</div><b data-en="Low Earth orbit">Orbita terrestre bassa</b><span data-en="Satellites and orbital speed around the Earth">Satelliti e velocità orbitale attorno alla Terra</span></a>
     </div>
 
     <h2 data-en="Electricity">Elettricità</h2>
