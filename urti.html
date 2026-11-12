@@ -183,21 +183,21 @@ function onParam(id){
  if(['dim','pre','m1','m2','v1','v2'].includes(id))reset();
  if(['m1','m2','v1','v2'].includes(id)&&P.pre){$('#pre').value='';P.pre='';}}
 $('#go').onclick=()=>{if(ended){reset();run=true;}else run=!run;btnText();};
-$('#rst').onclick=()=>{reset();};
+$('#rst').onclick=()=>{reset();fx=[];rings=[];};
 /* --- physics --- */
 function collide(a,b,nx,ny){const rv=(b.vx-a.vx)*nx+(b.vy-a.vy)*ny;if(rv>=0)return false;const j=-(1+P.e)*rv/(1/a.m+1/b.m);a.vx-=j*nx/a.m;a.vy-=j*ny/a.m;b.vx+=j*nx/b.m;b.vy+=j*ny/b.m;
  if(P.e===0){/* perfectly inelastic: move together */const M=a.m+b.m,vx=(a.m*a.vx+b.m*b.vx)/M,vy=(a.m*a.vy+b.m*b.vy)/M;a.vx=b.vx=vx;a.vy=b.vy=vy;}return true;}
 function step(dt){for(const b of B){b.x+=b.vx*dt;b.y+=b.vy*dt;}
- if(P.dim==='1'){const g=(B[1].x-cw(B[1].m)/2)-(B[0].x+cw(B[0].m)/2);if(g<=0){const o=-g/2;B[0].x-=o;B[1].x+=o;if(collide(B[0],B[1],1,0))collided=true;}
+ if(P.dim==='1'){const g=(B[1].x-cw(B[1].m)/2)-(B[0].x+cw(B[0].m)/2);if(g<=0){const o=-g/2;B[0].x-=o;B[1].x+=o;const rv0=Math.abs(B[0].vx-B[1].vx);if(collide(B[0],B[1],1,0)){collided=true;impact((B[0].x+cw(B[0].m)/2+B[1].x-cw(B[1].m)/2)/2,0,rv0/3);}}
   for(const b of B){const h=cw(b.m)/2;if(b.x<h||b.x>TL-h){b.x=clamp(b.x,h,TL-h);ended=true;}}}
- else{const a=B[0],b=B[1],dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy),rs=rad(a.m)+rad(b.m);if(d<rs&&d>1e-9){const nx=dx/d,ny=dy/d,o=(rs-d)/2;a.x-=nx*o;a.y-=ny*o;b.x+=nx*o;b.y+=ny*o;if(collide(a,b,nx,ny))collided=true;}
+ else{const a=B[0],b=B[1],dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy),rs=rad(a.m)+rad(b.m);if(d<rs&&d>1e-9){const nx=dx/d,ny=dy/d,o=(rs-d)/2;a.x-=nx*o;a.y-=ny*o;b.x+=nx*o;b.y+=ny*o;const rv0=Math.hypot(a.vx-b.vx,a.vy-b.vy);if(collide(a,b,nx,ny)){collided=true;impact(a.x+nx*rad(a.m),a.y+ny*rad(a.m),rv0/3);}}
   for(const q of B){const r=rad(q.m);if(q.x<r||q.x>TW2-r||q.y<r||q.y>TH2-r){q.x=clamp(q.x,r,TW2-r);q.y=clamp(q.y,r,TH2-r);ended=true;}}}
  if(ended){run=false;btnText();}}
 /* --- input --- */
 const VS=()=>P.dim==='1'?.35:.35; /* metres of arrow per m/s */
 const X=x=>ox+x*s,Y=y=>oy-y*s;
 pointer(cv,{down(q){if(run)return;drag=null;let bd=26*TS;
-  B.forEach((b,i)=>{const tx=X(b.x+b.vx*VS()),ty=P.dim==='1'?Y(0)-70:Y(b.y+b.vy*VS());const d=Math.hypot(q.x-tx,q.y-ty);if(d<bd){bd=d;drag={i,k:'v'};}});
+  B.forEach((b,i)=>{const tx=X(b.x+b.vx*VS()),ty=P.dim==='1'?Y(0)-96:Y(b.y+b.vy*VS());const d=Math.hypot(q.x-tx,q.y-ty);if(d<bd){bd=d;drag={i,k:'v'};}});
   if(!drag)B.forEach((b,i)=>{const d=Math.hypot(q.x-X(b.x),q.y-(P.dim==='1'?Y(0)-20:Y(b.y)));if(d<Math.max(30*TS,(P.dim==='1'?cw(b.m)/2:rad(b.m))*s)){drag={i,k:'x'};}});
   if(drag&&(ended||collided))reset();},
  move(q){if(!drag)return;const b=B[drag.i],x=(q.x-ox)/s,y=(oy-q.y)/s;
@@ -210,25 +210,83 @@ pointer(cv,{down(q){if(run)return;drag=null;let bd=26*TS;
 /* --- drawing --- */
 const COL=()=>[C.cy,C.pk];
 function velArrow(b,i,x0,y0,dx,dy){const L_=Math.hypot(dx,dy);if(L_<.01){c.fillStyle=COL()[i];c.beginPath();c.arc(x0,y0,4,0,7);c.fill();return;}arrow(c,x0,y0,x0+dx,y0+dy,COL()[i],3.5);}
-function draw1D(){const trackY=Y(0);
- c.fillStyle=C.slab?'rgb('+C.slab+')':C.gnd;rr(c,X(0)-10,trackY,TL*s+20,16,5);c.fill();c.fillStyle=fa(.25);for(let x=.05;x<TL;x+=.1){c.beginPath();c.arc(X(x),trackY+8,1.6,0,7);c.fill();}
- c.fillStyle=C.wall;c.fillRect(X(0)-14,trackY-40,8,56);c.fillRect(X(TL)+6,trackY-40,8,56);
- for(let x=0;x<=TL+1e-6;x+=.5){c.fillStyle=C.mu;c.fillRect(X(x)-.5,trackY+18,1,6);txt(c,nf(x,1),X(x),trackY+32,C.mu,10.5,'center');}
- B.forEach((b,i)=>{const w=cw(b.m)*s,h=26+6*b.m,x0=X(b.x)-w/2,y0=trackY-h;const g=c.createLinearGradient(0,y0,0,trackY);g.addColorStop(0,COL()[i]);g.addColorStop(1,shade(i?C.pos:C.neg,.55));c.fillStyle=g;rr(c,x0,y0,w,h,6);c.fill();
-  /* bumpers: spring (elastic) or putty (sticky) */
-  const bx=i?x0:x0+w,dir=i?-1:1;c.strokeStyle=C.tx;c.lineWidth=1.6;if(P.e>.05){c.beginPath();for(let k=0;k<=6;k++){const xx=bx+dir*k*1.6,yy=y0+h/2+(k%2?-5:5)*(k&&k<6?1:0);k?c.lineTo(xx,yy):c.moveTo(xx,yy);}c.stroke();}else{c.fillStyle=C.yl;c.beginPath();c.arc(bx+dir*3,y0+h/2,5,0,7);c.fill();}
-  txt(c,nf(b.m,1)+' kg',X(b.x),y0+h/2,'#fff',12,'center',true);
-  velArrow(b,i,X(b.x),trackY-70,b.vx*VS()*s,0);txt(c,nf(b.vx,2)+' m/s',X(b.x),trackY-88,COL()[i],12,'center',true);
-  if(!run){c.strokeStyle=COL()[i];c.lineWidth=1.5;c.beginPath();c.arc(X(b.x+b.vx*VS()),trackY-70,7,0,7);c.stroke();}});
- if(P.cm){const M=B[0].m+B[1].m,xc=(B[0].m*B[0].x+B[1].m*B[1].x)/M;c.fillStyle=C.yl;c.beginPath();c.moveTo(X(xc),trackY+3);c.lineTo(X(xc)-7,trackY+15);c.lineTo(X(xc)+7,trackY+15);c.closePath();c.fill();txt(c,'CM',X(xc),trackY+46,C.yl,11,'center',true);}
- if(!run&&!collided&&B[0].vx<=B[1].vx)bubble(c,X(TL/2)-120,trackY-150,[L('Non si scontreranno mai','They will never collide'),L('il carrello azzurro deve essere più veloce del rosa','the blue cart must be faster than the pink one')],C.pk);}
-function draw2D(){c.fillStyle=LIGHT?'#d6efe2':'#0f2a24';rr(c,X(0),Y(TH2),TW2*s,TH2*s,10);c.fill();c.strokeStyle=C.wall;c.lineWidth=6;c.stroke();
- tr.forEach((t,i)=>{if(t.length<2)return;c.strokeStyle=COL()[i];c.globalAlpha=.45;c.lineWidth=2;c.beginPath();t.forEach((p,k)=>k?c.lineTo(X(p[0]),Y(p[1])):c.moveTo(X(p[0]),Y(p[1])));c.stroke();c.globalAlpha=1;});
+/* ---- effects: flash, shock ring and sparks where the bodies touch ---- */
+let fx=[],rings=[],clock=0;
+function impact(xw,yw,pow){const x=X(xw),y=P.dim==='1'?Y(0)-14:Y(yw),soft=P.e<.05;rings.push({x,y,t:0,pow});
+ const n=soft?6:Math.round(10+pow*10);for(let i=0;i<n;i++){const a=Math.random()*6.283,sp=(soft?40:90)+Math.random()*(soft?50:220)*Math.min(1.5,pow);
+  fx.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-(P.dim==='1'?60:0),t:0,life:.35+Math.random()*.45,col:soft?[255,209,102]:[255,235,170]});}}
+function stepFx(dt){clock+=dt;for(const p of fx){p.t+=dt;p.vx*=.96;p.vy=p.vy*.96+(P.dim==='1'?260*dt:0);p.x+=p.vx*dt;p.y+=p.vy*dt;}fx=fx.filter(p=>p.t<p.life);for(const r of rings)r.t+=dt;rings=rings.filter(r=>r.t<.6);}
+function drawFx(){for(const r of rings){const u=r.t/.6,R=10+90*u*Math.min(1.4,.5+r.pow);c.strokeStyle='rgba(255,240,200,'+(.8*(1-u)).toFixed(3)+')';c.lineWidth=3*(1-u)+.5;c.beginPath();c.arc(r.x,r.y,R,0,7);c.stroke();
+  if(r.t<.12){const k=1-r.t/.12,g=c.createRadialGradient(r.x,r.y,0,r.x,r.y,46);g.addColorStop(0,'rgba(255,255,240,'+k+')');g.addColorStop(1,'rgba(255,220,120,0)');c.fillStyle=g;c.beginPath();c.arc(r.x,r.y,46,0,7);c.fill();}}
+ for(const p of fx){const a=1-p.t/p.life;c.strokeStyle='rgba('+p.col+','+a.toFixed(3)+')';c.lineWidth=2;c.lineCap='round';c.beginPath();c.moveTo(p.x,p.y);c.lineTo(p.x-p.vx*.03,p.y-p.vy*.03);c.stroke();}}
+const metal=(y0,y1,dim)=>{const g=c.createLinearGradient(0,y0,0,y1),k=LIGHT?1:(dim||.82),m=v=>'rgb('+[v,v+6,v+18].map(q=>Math.min(255,q*k|0))+')';g.addColorStop(0,m(238));g.addColorStop(.18,m(190));g.addColorStop(.55,m(128));g.addColorStop(1,m(70));return g;};
+const brass=(y0,y1)=>{const g=c.createLinearGradient(0,y0,0,y1);g.addColorStop(0,'#f7dc8f');g.addColorStop(.4,'#c9973a');g.addColorStop(1,'#6e4a14');return g;};
+const RGBc=i=>i?C.pos:C.neg;
+/* ---- 1D: an air track on a lab bench ---- */
+function draw1D(){const ty=Y(0),x0=X(0)-20,x1=X(TL)+20,bench=ty+60;
+ /* wall and bench */
+ const wl=c.createLinearGradient(0,0,0,bench);wl.addColorStop(0,LIGHT?'#eef2fb':'#0a0f1f');wl.addColorStop(1,LIGHT?'#dbe3f4':'#131b38');c.fillStyle=wl;c.fillRect(0,0,W,bench);
+ c.strokeStyle=fa(.045);c.lineWidth=1;for(let x=(W/2)%64;x<W;x+=64){c.beginPath();c.moveTo(x,0);c.lineTo(x,bench);c.stroke();}for(let y=bench-64;y>0;y-=64){c.beginPath();c.moveTo(0,y);c.lineTo(W,y);c.stroke();}
+ const bw=c.createLinearGradient(0,bench,0,bench+30);bw.addColorStop(0,LIGHT?'#d9b17a':'#5a4028');bw.addColorStop(.25,LIGHT?'#c2955c':'#44301d');bw.addColorStop(1,LIGHT?'#8d6638':'#231709');c.fillStyle=bw;c.fillRect(0,bench,W,30);c.fillStyle='rgba(255,255,255,.18)';c.fillRect(0,bench,W,1.5);
+ c.fillStyle=LIGHT?'#c9d2e6':'#070b18';c.fillRect(0,bench+30,W,H);
+ /* shadow of the track on the bench, legs, air hose */
+ c.fillStyle='rgba(0,0,0,.28)';c.beginPath();c.ellipse((x0+x1)/2,bench+7,(x1-x0)/2+10,6,0,0,7);c.fill();
+ for(const lx of[X(.55),X(TL-.55)]){c.fillStyle=metal(ty+16,bench,.6);c.beginPath();c.moveTo(lx-9,ty+16);c.lineTo(lx+9,ty+16);c.lineTo(lx+16,bench+2);c.lineTo(lx-16,bench+2);c.closePath();c.fill();c.fillStyle='#16181f';rr(c,lx-20,bench,40,5,2);c.fill();}
+ c.strokeStyle=LIGHT?'#8b93a8':'#3a4260';c.lineWidth=9;c.lineCap='round';c.beginPath();c.moveTo(x0+2,ty+9);c.bezierCurveTo(x0-34,ty+10,x0-20,bench-4,x0-60,bench+2);c.stroke();c.strokeStyle='rgba(0,0,0,.25)';c.lineWidth=1;for(let k=0;k<7;k++){const u=k/7,px_=x0+2-62*u,py_=ty+9+(bench-7-ty)*u*u;c.beginPath();c.moveTo(px_,py_-5);c.lineTo(px_-2,py_+5);c.stroke();}
+ /* the beam, with its air holes and scale */
+ c.fillStyle=metal(ty,ty+18);rr(c,x0,ty,x1-x0,18,4);c.fill();c.fillStyle='rgba(255,255,255,.55)';c.fillRect(x0+3,ty+1,x1-x0-6,1.2);
+ c.fillStyle='rgba(0,0,0,.55)';for(let x=.05;x<TL;x+=.05){c.beginPath();c.arc(X(x),ty+5,1.1,0,7);c.fill();}
+ c.fillStyle=LIGHT?'#fdf7dc':'#e9e2bd';c.fillRect(X(0),ty+10,TL*s,6);c.fillStyle='#222';for(let x=0;x<=TL+1e-6;x+=.1){const mj=Math.abs(x*2-Math.round(x*2))<1e-6;c.fillRect(X(x)-.5,ty+10,1,mj?6:3);}
+ for(let x=0;x<=TL+1e-6;x+=.5)txt(c,nf(x,1)+(x?'':' m'),X(x),ty+30,C.mu,10.5,'center');
+ /* end stops with rubber pads */
+ for(const[ex,d]of[[X(0)-20,1],[X(TL)+8,-1]]){c.fillStyle=metal(ty-34,ty+18,.6);rr(c,ex,ty-34,12,52,3);c.fill();c.fillStyle='#7a2e2e';rr(c,d>0?ex+12:ex-4,ty-22,4,18,2);c.fill();}
+ /* gliders */
+ B.forEach((b,i)=>{const w=cw(b.m)*s,xl=X(b.x)-w/2,col=COL()[i],rgb=RGBc(i),hov=run?Math.sin(clock*38+i)*.5:0,BH=25,top=ty-BH-2+hov;
+  if(run&&Math.abs(b.vx)>.25)for(let k=1;k<=3;k++){c.fillStyle='rgba('+rgb+','+(.13/k)+')';rr(c,xl-b.vx*s*.035*k,top,w,BH,5);c.fill();}
+  /* air escaping under the glider */
+  c.strokeStyle=fa(.35);c.lineWidth=1;for(let k=0;k<Math.floor(w/9);k++){const ax=xl+5+k*9+((clock*40+k*3)%9)*(b.vx>=0?-1:1)*.4;c.beginPath();c.moveTo(ax,ty-1.2);c.lineTo(ax+3,ty-1.2);c.stroke();}
+  /* skirt over the beam, then the body */
+  c.fillStyle=shade(rgb,.42);rr(c,xl+2,ty-2+hov,w-4,11,2);c.fill();
+  const g=c.createLinearGradient(0,top,0,top+BH);g.addColorStop(0,shade(rgb,1.25));g.addColorStop(.35,shade(rgb,.95));g.addColorStop(1,shade(rgb,.5));c.fillStyle=g;rr(c,xl,top,w,BH,5);c.fill();c.fillStyle='rgba(255,255,255,.45)';c.fillRect(xl+5,top+2,w-10,1.6);
+  /* brass masses on a post: one disc per kilogram */
+  const nd=Math.max(1,Math.round(b.m)),dw=Math.min(w*.7,58);c.fillStyle=metal(top-nd*8-9,top,.7);c.fillRect(X(b.x)-2,top-nd*8-8,4,nd*8+8);
+  for(let k=0;k<nd;k++){const dy=top-8-k*8;c.fillStyle=brass(dy,dy+7.2);rr(c,X(b.x)-dw/2,dy,dw,7.2,2.5);c.fill();c.fillStyle='rgba(255,255,255,.4)';c.fillRect(X(b.x)-dw/2+3,dy+1,dw-6,1.1);}
+  /* bumpers: a steel spring bow (elastic) or a ball of putty (they stick) */
+  const bx=i?xl:xl+w,dir=i?-1:1,by=top+BH/2;
+  if(P.e>.05){c.strokeStyle=LIGHT?'#59607a':'#d5dbf0';c.lineWidth=2;c.beginPath();c.ellipse(bx+dir*6,by,6,9,0,0,7);c.stroke();}
+  else{c.fillStyle='#ffd166';c.beginPath();c.arc(bx+dir*3.5,by,5,0,7);c.fill();c.fillStyle='rgba(0,0,0,.2)';c.beginPath();c.arc(bx+dir*4.5,by+1.5,2,0,7);c.fill();}
+  c.fillStyle='#2a2d38';rr(c,i?xl+w-1:xl-3,by-4,4,8,1.5);c.fill();
+  if(w>46){c.save();c.shadowColor='rgba(0,0,0,.6)';c.shadowBlur=3;txt(c,nf(b.m,1)+' kg',X(b.x),top+BH/2+1,'#fff',12.5,'center',true);c.restore();}
+  velArrow(b,i,X(b.x),ty-96,b.vx*VS()*s,0);txt(c,nf(b.vx,2)+' m/s',X(b.x),ty-114-(i&&Math.abs(X(B[0].x)-X(B[1].x))<84?16:0),col,12,'center',true);
+  if(!run){c.strokeStyle=col;c.lineWidth=1.5;c.beginPath();c.arc(X(b.x+b.vx*VS()),ty-96,7,0,7);c.stroke();}});
+ if(P.cm){const M=B[0].m+B[1].m,xc=(B[0].m*B[0].x+B[1].m*B[1].x)/M;c.fillStyle=C.yl;c.beginPath();c.moveTo(X(xc),ty+19);c.lineTo(X(xc)-7,ty+31);c.lineTo(X(xc)+7,ty+31);c.closePath();c.fill();txt(c,'CM',X(xc),ty+44,C.yl,11,'center',true);}
+ drawFx();
+ if(!run&&!collided&&B[0].vx<=B[1].vx)bubble(c,X(TL/2)-120,ty-176,[L('Non si scontreranno mai','They will never collide'),L('il carrello azzurro deve essere più veloce del rosa','the blue cart must be faster than the pink one')],C.pk);}
+/* ---- 2D: a felt table with wooden rails, seen from above ---- */
+function draw2D(){const x0=X(0),y0=Y(TH2),w=TW2*s,h=TH2*s,f=Math.max(12,s*.07);
+ c.fillStyle='rgba(0,0,0,.35)';rr(c,x0-f+4,y0-f+8,w+2*f,h+2*f,16);c.fill();
+ const wd=c.createLinearGradient(0,y0-f,0,y0+h+f);wd.addColorStop(0,LIGHT?'#b9814a':'#7a4f27');wd.addColorStop(.5,LIGHT?'#94602f':'#5a3717');wd.addColorStop(1,LIGHT?'#6f4520':'#3a220c');c.fillStyle=wd;rr(c,x0-f,y0-f,w+2*f,h+2*f,14);c.fill();
+ c.strokeStyle='rgba(255,255,255,.18)';c.lineWidth=1;rr(c,x0-f+1.5,y0-f+1.5,w+2*f-3,h+2*f-3,13);c.stroke();
+ /* sights on the rails */
+ c.fillStyle='rgba(255,240,200,.8)';for(let k=1;k<8;k++){const xx=x0+w*k/8;for(const yy of[y0-f/2,y0+h+f/2]){c.beginPath();c.arc(xx,yy,1.8,0,7);c.fill();}}for(let k=1;k<4;k++){const yy=y0+h*k/4;for(const xx of[x0-f/2,x0+w+f/2]){c.beginPath();c.arc(xx,yy,1.8,0,7);c.fill();}}
+ /* felt, lit from above */
+ const fl=c.createRadialGradient(x0+w/2,y0+h*.45,h*.1,x0+w/2,y0+h/2,w*.75);fl.addColorStop(0,LIGHT?'#3fae7c':'#1f7a58');fl.addColorStop(1,LIGHT?'#1f7a55':'#0a3526');c.fillStyle=fl;rr(c,x0,y0,w,h,5);c.fill();
+ c.strokeStyle='rgba(0,0,0,.35)';c.lineWidth=4;rr(c,x0+2,y0+2,w-4,h-4,5);c.stroke();
+ c.save();rr(c,x0,y0,w,h,5);c.clip();
+ /* glowing trails */
+ tr.forEach((t,i)=>{if(t.length<2)return;c.save();c.strokeStyle=COL()[i];c.shadowColor=COL()[i];c.shadowBlur=10;c.globalAlpha=.75;c.lineWidth=2.4;c.lineJoin='round';c.beginPath();t.forEach((p,k)=>k?c.lineTo(X(p[0]),Y(p[1])):c.moveTo(X(p[0]),Y(p[1])));c.stroke();c.restore();});
  if(P.cm&&cmTrail.length>1){c.strokeStyle=C.yl;c.setLineDash([4,4]);c.lineWidth=1.5;c.beginPath();cmTrail.forEach((p,k)=>k?c.lineTo(X(p[0]),Y(p[1])):c.moveTo(X(p[0]),Y(p[1])));c.stroke();c.setLineDash([]);}
- B.forEach((b,i)=>{const r=rad(b.m)*s,g=c.createRadialGradient(X(b.x)-r*.35,Y(b.y)-r*.35,r*.1,X(b.x),Y(b.y),r);g.addColorStop(0,'#fff');g.addColorStop(.25,COL()[i]);g.addColorStop(1,shade(i?C.pos:C.neg,.45));c.fillStyle=g;c.beginPath();c.arc(X(b.x),Y(b.y),r,0,7);c.fill();
-  txt(c,nf(b.m,1),X(b.x),Y(b.y),'#fff',11,'center',true);velArrow(b,i,X(b.x),Y(b.y),b.vx*VS()*s,-b.vy*VS()*s);
+ /* shadows first, then the balls */
+ B.forEach(b=>{const r=rad(b.m)*s;c.fillStyle='rgba(0,0,0,.38)';c.beginPath();c.ellipse(X(b.x)+r*.28,Y(b.y)+r*.38,r*1.02,r*.92,0,0,7);c.fill();});
+ c.restore();
+ B.forEach((b,i)=>{const r=rad(b.m)*s,bx=X(b.x),by=Y(b.y),rgb=RGBc(i),g=c.createRadialGradient(bx-r*.38,by-r*.42,r*.05,bx,by,r);g.addColorStop(0,shade(rgb,1.7));g.addColorStop(.3,shade(rgb,1.05));g.addColorStop(.8,shade(rgb,.6));g.addColorStop(1,shade(rgb,.32));c.fillStyle=g;c.beginPath();c.arc(bx,by,r,0,7);c.fill();
+  /* number disc and highlight */
+  c.fillStyle='rgba(255,255,255,.92)';c.beginPath();c.arc(bx,by,r*.5,0,7);c.fill();txt(c,nf(b.m,1),bx,by+.5,'#15182a',Math.max(9,r*.42),'center',true);
+  c.fillStyle='rgba(255,255,255,.75)';c.beginPath();c.ellipse(bx-r*.42,by-r*.5,r*.24,r*.13,-.6,0,7);c.fill();
+  velArrow(b,i,bx,by,b.vx*VS()*s,-b.vy*VS()*s);
   if(!run){c.strokeStyle=COL()[i];c.lineWidth=1.5;c.beginPath();c.arc(X(b.x+b.vx*VS()),Y(b.y+b.vy*VS()),7,0,7);c.stroke();}});
- if(P.cm){const M=B[0].m+B[1].m,xc=(B[0].m*B[0].x+B[1].m*B[1].x)/M,yc=(B[0].m*B[0].y+B[1].m*B[1].y)/M;c.strokeStyle=C.yl;c.lineWidth=2;c.beginPath();c.arc(X(xc),Y(yc),6,0,7);c.moveTo(X(xc)-10,Y(yc));c.lineTo(X(xc)+10,Y(yc));c.moveTo(X(xc),Y(yc)-10);c.lineTo(X(xc),Y(yc)+10);c.stroke();}}
+ if(P.cm){const M=B[0].m+B[1].m,xc=(B[0].m*B[0].x+B[1].m*B[1].x)/M,yc=(B[0].m*B[0].y+B[1].m*B[1].y)/M;c.strokeStyle=C.yl;c.lineWidth=2;c.beginPath();c.arc(X(xc),Y(yc),6,0,7);c.moveTo(X(xc)-10,Y(yc));c.lineTo(X(xc)+10,Y(yc));c.moveTo(X(xc),Y(yc)-10);c.lineTo(X(xc),Y(yc)+10);c.stroke();}
+ drawFx();}
 /* momentum (and energy) panel */
 function drawBars(x,y,w,h){const ps=[B[0].m*B[0].vx,B[1].m*B[1].vx],pt=ps[0]+ps[1],ks=B.map(b=>.5*b.m*(b.vx*b.vx+b.vy*b.vy)),kt=ks[0]+ks[1];
  const half=(w-16)/2;c.fillStyle=C.panel;rr(c,x,y,w,h,10);c.fill();c.strokeStyle=C.grid2;c.lineWidth=1;c.stroke();
@@ -246,12 +304,12 @@ function drawBars(x,y,w,h){const ps=[B[0].m*B[0].vx,B[1].m*B[1].vx],pt=ps[0]+ps[
 function readouts(){const a=snap(),fp=o=>P.dim==='1'?nf(o.px,2):'('+nf(o.px,2)+'; '+nf(o.py,2)+')';
  ro('pb',fp(before));ro('kb',nf(before.k,2)+' J');ro('pa',collided?fp(a):'–');ro('ka',collided?nf(a.k,2)+' J':'–');ro('kl',collided?nf(before.k-a.k,2)+' J ('+nf(before.k>0?100*(before.k-a.k)/before.k:0,0)+' %)':'–');}
 reset();onParam('dim');
-loop(dt=>{c=fit(cv);W=cv.W;H=cv.H;c.fillStyle=C.bg;c.fillRect(0,0,W,H);
+loop(dt=>{c=fit(cv);W=cv.W;H=cv.H;c.fillStyle=C.bg;c.fillRect(0,0,W,H);stepFx(dt);
  if(run){const sd=dt*P.slow;for(let i=0;i<8;i++)step(sd/8);if(P.dim==='2'){B.forEach((b,i)=>{tr[i].push([b.x,b.y]);if(tr[i].length>600)tr[i].shift();});const M=B[0].m+B[1].m;cmTrail.push([(B[0].m*B[0].x+B[1].m*B[1].x)/M,(B[0].m*B[0].y+B[1].m*B[1].y)/M]);}}
  const bh=Math.min(230,Math.max(150,H*.34));
- if(P.dim==='1'){s=Math.min((W-60)/TL,200);ox=(W-TL*s)/2;oy=Math.max(170,(H-bh)*.62);draw1D();}
- else{s=Math.min((W-40)/TW2,(H-bh-50)/TH2);ox=(W-TW2*s)/2;oy=30+TH2*s;draw2D();}
- drawBars(10,P.dim==='2'?Math.min(H-bh-8,oy+18):H-bh-8,W-20,bh);readouts();
+ if(P.dim==='1'){s=Math.min((W-60)/TL,200);ox=(W-TL*s)/2;oy=Math.max(196,(H-bh)*.62);draw1D();}
+ else{s=Math.min((W-64)/TW2,(H-bh-74)/TH2);ox=(W-TW2*s)/2;oy=42+TH2*s;draw2D();}
+ drawBars(10,P.dim==='2'?Math.min(H-bh-8,oy+30):H-bh-8,W-20,bh);readouts();
  ro('cap',run?L('In corso…','Running…'):P.dim==='1'?L('Trascina i carrelli e le punte delle frecce · poi Avvia','Drag the carts and arrow tips · then Start'):L('Trascina dischi e frecce · poi Avvia','Drag discs and arrows · then Start'));});
 applyLang();
 </script>

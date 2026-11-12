@@ -190,22 +190,53 @@ function optics(){const mir=P.el==='cm'||P.el==='vm',f=(P.el==='cl'||P.el==='cm'
 /* ray: start point, direction (after the element), drawn to the edge; returns end */
 function toEdge(x,y,dx,dy){const L=Math.hypot(dx,dy);dx/=L;dy/=L;let t=1e9;const xl=(-ox)/s-5,xr=(W-ox)/s+5,yt=oy/s+5,yb=-(H-oy)/s-5;
  if(dx>1e-9)t=Math.min(t,(xr-x)/dx);if(dx<-1e-9)t=Math.min(t,(xl-x)/dx);if(dy>1e-9)t=Math.min(t,(yt-y)/dy);if(dy<-1e-9)t=Math.min(t,(yb-y)/dy);return[x+dx*t,y+dy*t];}
-function seg2(x1,y1,x2,y2,col,w,dash,al){c.save();c.globalAlpha=al||1;c.strokeStyle=col;c.lineWidth=w||2;c.lineCap='round';if(dash)c.setLineDash(dash);c.beginPath();c.moveTo(X(x1),Y(y1));c.lineTo(X(x2),Y(y2));c.stroke();c.restore();}
+function seg2(x1,y1,x2,y2,col,w,dash,al){c.save();c.globalAlpha=al||1;c.strokeStyle=col;c.lineWidth=w||2;c.lineCap='round';if(dash)c.setLineDash(dash);else if((w||2)>=1.4){/* rays glow like beams of light */c.shadowColor=col;c.shadowBlur=LIGHT?0:9;}c.beginPath();c.moveTo(X(x1),Y(y1));c.lineTo(X(x2),Y(y2));c.stroke();c.restore();}
 function rayArrow(x1,y1,x2,y2,col){const mx=(x1+x2)/2,my=(y1+y2)/2,l=Math.hypot(x2-x1,y2-y1);if(l*s<30)return;const ux=(x2-x1)/l,uy=(y2-y1)/l;arrow(c,X(mx-ux*1.2),Y(my-uy*1.2),X(mx+ux*1.2),Y(my+uy*1.2),col,2);}
-function drawElement(o,A){const col=C.cy;c.save();c.strokeStyle=col;c.fillStyle='rgba(76,201,240,.16)';c.lineWidth=2.5;
- if(!o.mir){const bulge=clamp(90/Math.abs(o.f),1.2,4)*(o.f>0?1:-1),top=Y(A),bot=Y(-A),x0=X(0),w0=o.f>0?1.2:3.6;
-  c.beginPath();c.moveTo(x0-w0,top);c.quadraticCurveTo(x0-w0-bulge*s*.9,oy,x0-w0,bot);c.lineTo(x0+w0,bot);c.quadraticCurveTo(x0+w0+bulge*s*.9,oy,x0+w0,top);c.closePath();c.fill();c.stroke();
-  if(o.f<0){c.beginPath();c.moveTo(x0-w0-4,top);c.lineTo(x0+w0+4,top);c.moveTo(x0-w0-4,bot);c.lineTo(x0+w0+4,bot);c.stroke();}}
- else{const R=2*Math.abs(o.f),sg=o.f>0?1:-1;c.beginPath();for(let y=-A;y<=A+1e-6;y+=A/30){const x=-sg*(R-Math.sqrt(R*R-y*y));y===-A?c.moveTo(X(x),Y(y)):c.lineTo(X(x),Y(y));}c.lineWidth=4;c.stroke();
-  c.lineWidth=1.2;c.strokeStyle=C.mu;for(let y=-A;y<=A;y+=2.2){const x=-sg*(R-Math.sqrt(R*R-y*y));c.beginPath();c.moveTo(X(x)+2,Y(y));c.lineTo(X(x)+9,Y(y)-6);c.stroke();}}
+/* The glass really changes with the focal length: the two faces are arcs of radius R = 3|f| (as for a glass with n = 2.5),
+   so a short focal length gives a fat, strongly curved lens and a long one a thin, flat lens. Mirrors have R = 2|f|. */
+const lensR=f=>3*Math.abs(f),apert=(o,A)=>Math.min(A,(o.mir?.9*2:.92*3)*Math.abs(o.f));
+function drawElement(o,A){const AL=apert(o,A);c.save();
+ if(!o.mir){const R=lensR(o.f),sag=R-Math.sqrt(R*R-AL*AL),phi=Math.asin(AL/R),Rs=R*s,cy=Y(0),conv=o.f>0,edge=.35,t0=conv?sag+edge:.45,hw=conv?t0:t0+sag;
+  c.beginPath();
+  if(conv){c.arc(X(R-t0),cy,Rs,Math.PI+phi,Math.PI-phi,true);c.arc(X(-(R-t0)),cy,Rs,phi,-phi,true);}
+  else{c.arc(X(-(t0+R)),cy,Rs,-phi,phi,false);c.arc(X(t0+R),cy,Rs,Math.PI-phi,Math.PI+phi,false);}
+  c.closePath();
+  const g=c.createLinearGradient(X(-hw),0,X(hw),0),a=LIGHT?1.6:1;g.addColorStop(0,'rgba(120,225,255,'+.34*a+')');g.addColorStop(.5,'rgba(190,240,255,'+(conv?.1:.2)*a+')');g.addColorStop(1,'rgba(70,170,240,'+.3*a+')');c.fillStyle=g;c.fill();
+  c.shadowColor=C.cy;c.shadowBlur=LIGHT?0:14;c.strokeStyle=C.cy;c.lineWidth=2.2;c.lineJoin='round';c.stroke();c.shadowBlur=0;
+  /* a reflection on the first face, and the plane where the thin-lens rays bend */
+  c.strokeStyle='rgba(255,255,255,.55)';c.lineWidth=1.5;c.beginPath();if(conv)c.arc(X(R-t0)+3,cy,Rs,Math.PI+phi*.8,Math.PI+phi*.15,true);else c.arc(X(-(t0+R))-3+6,cy,Rs,-phi*.8,-phi*.15,false);c.stroke();
+  c.setLineDash([3,5]);c.strokeStyle=fa(.3);c.lineWidth=1;c.beginPath();c.moveTo(X(0),Y(AL));c.lineTo(X(0),Y(-AL));c.stroke();c.setLineDash([]);
+  txt(c,(conv?L('lente convergente','converging lens'):L('lente divergente','diverging lens'))+' · f = '+nf(o.f,1)+' cm',X(0),Y(AL)-14,C.cy,11.5,'center',true);}
+ else{const R=2*Math.abs(o.f),sg=o.f>0?1:-1,th=1.5,xf=y=>-sg*(R-Math.sqrt(R*R-y*y)),N=40;
+  c.beginPath();for(let i=0;i<=N;i++){const y=-AL+2*AL*i/N;i?c.lineTo(X(xf(y)),Y(y)):c.moveTo(X(xf(y)),Y(y));}for(let i=N;i>=0;i--){const y=-AL+2*AL*i/N;c.lineTo(X(xf(y)+th),Y(y));}c.closePath();
+  const g=c.createLinearGradient(0,Y(AL),0,Y(-AL));g.addColorStop(0,LIGHT?'#aeb7cc':'#59627f');g.addColorStop(.5,LIGHT?'#7c869f':'#2c3350');g.addColorStop(1,LIGHT?'#aeb7cc':'#59627f');c.fillStyle=g;c.fill();
+  c.strokeStyle='rgba(0,0,0,.3)';c.lineWidth=1;for(let y=-AL+1;y<AL;y+=1.6){c.beginPath();c.moveTo(X(xf(y)+.25),Y(y));c.lineTo(X(xf(y)+th),Y(y+.9));c.stroke();}
+  c.beginPath();for(let i=0;i<=N;i++){const y=-AL+2*AL*i/N;i?c.lineTo(X(xf(y)),Y(y)):c.moveTo(X(xf(y)),Y(y));}c.shadowColor=C.cy;c.shadowBlur=LIGHT?0:14;c.strokeStyle=LIGHT?C.cy:'#d6f4ff';c.lineWidth=3;c.lineCap='round';c.stroke();c.shadowBlur=0;
+  txt(c,(o.f>0?L('specchio concavo','concave mirror'):L('specchio convesso','convex mirror'))+' · R = '+nf(R,1)+' cm',Math.min(X(th),W-104),Y(AL)-14,C.cy,11.5,'center',true);}
+ c.restore();return AL;}
+/* object and image are candles: the flame marks the tip, so an inverted image is obvious at a glance */
+function candle(x,h,col,al,virt){const x0=X(x),yb=Y(0),yt=Y(h),Hp=Math.abs(yt-yb),dir=yt<=yb?-1:1;c.save();c.globalAlpha=al||1;
+ if(Hp<5){c.fillStyle=col;c.beginPath();c.arc(x0,yb,3,0,7);c.fill();c.restore();return;}
+ const fl=clamp(Hp*.3,7,34),w=clamp(Hp*.1,5,11),ye=yt-dir*fl,yw=ye+dir*-Math.min(4,fl*.2);
+ if(virt)c.setLineDash([5,4]);
+ const g=c.createLinearGradient(x0-w/2,0,x0+w/2,0);g.addColorStop(0,col);g.addColorStop(.45,'rgba(255,255,255,'+(virt?.25:.85)+')');g.addColorStop(1,col);c.fillStyle=g;c.globalAlpha=(al||1)*(virt?.45:1);
+ c.beginPath();c.rect(x0-w/2,Math.min(yb,ye),w,Math.abs(ye-yb));c.fill();c.globalAlpha=al||1;c.strokeStyle=col;c.lineWidth=1.5;c.stroke();
+ c.setLineDash([]);c.strokeStyle='#333a55';c.lineWidth=1.3;c.beginPath();c.moveTo(x0,ye);c.lineTo(x0,ye+dir*fl*.22);c.stroke();
+ /* flame */
+ const fb=ye+dir*fl*.1,fw=fl*.36;c.beginPath();c.moveTo(x0,yt);c.bezierCurveTo(x0+fw*.5,yt-dir*fl*.35,x0+fw,yt-dir*fl*.62,x0+fw*.55,fb-dir*-fl*.0);c.quadraticCurveTo(x0,fb-dir*fl*.12+dir*-0,x0-fw*.55,fb);c.bezierCurveTo(x0-fw,yt-dir*fl*.62,x0-fw*.5,yt-dir*fl*.35,x0,yt);c.closePath();
+ const fg=c.createLinearGradient(0,yt,0,fb);fg.addColorStop(0,'#fff7c2');fg.addColorStop(.45,'#ffc94d');fg.addColorStop(1,'#ff7a1a');c.fillStyle=fg;c.shadowColor='#ffb347';c.shadowBlur=virt?6:18;c.globalAlpha=(al||1)*(virt?.6:1);c.fill();
  c.restore();}
-function objArrow(x,h,col,dash,al){c.save();c.globalAlpha=al||1;if(dash){c.setLineDash([6,5]);}arrow(c,X(x),Y(0),X(x),Y(h),col,4);c.restore();}
+function bench(o,AL){const ry=H-22;c.save();const g=c.createLinearGradient(0,ry,0,ry+10);g.addColorStop(0,LIGHT?'#eef1f7':'#aeb6cc');g.addColorStop(.5,LIGHT?'#b3bbcd':'#5a627c');g.addColorStop(1,LIGHT?'#8a92a6':'#2c3248');c.fillStyle=g;rr(c,6,ry,W-12,10,3);c.fill();
+ c.fillStyle=LIGHT?'rgba(0,0,0,.55)':'rgba(255,255,255,.6)';for(let k=Math.ceil(-ox/s/5)*5;k<(W-ox)/s;k+=5){const q=X(k);if(q<10||q>W-10)continue;c.fillRect(q-.5,ry,1,k%10===0?6:3);}
+ /* riders and posts holding the candle and the lens */
+ const post=(x,yTop)=>{const q=X(x);c.strokeStyle=LIGHT?'#7c869f':'#4a5270';c.lineWidth=3;c.beginPath();c.moveTo(q,yTop);c.lineTo(q,ry);c.stroke();c.fillStyle=LIGHT?'#59607a':'#2b3250';rr(c,q-13,ry-5,26,9,3);c.fill();c.fillStyle=C.yl;c.beginPath();c.arc(q+9,ry-.5,1.8,0,7);c.fill();};
+ post(-o.p,Y(Math.min(0,o.h))+2);post(o.mir?.75:0,o.mir?Y(0):Y(-AL)+1);c.restore();}
 function drawLens(){const o=optics(),A=Math.min(18,(oy-40)/s);
  ro('cap',L('Trascina l\'oggetto (base o punta) e i fuochi F','Drag the object (base or tip) and the focal points F'));
  /* axis */
  seg2((-ox)/s,0,(W-ox)/s,0,C.ax,1.2);
  for(let k=-80;k<=80;k+=10)if(k){c.fillStyle=C.mu;c.fillRect(X(k)-.5,Y(0)-3,1,6);}
- drawElement(o,A);
+ const AL=apert(o,A);bench(o,AL);drawElement(o,A);
  /* focal points */
  const Fs=o.mir?[[-o.f,'F'],[-2*o.f,'C']]:[[-o.f,'F'],[o.f,"F'"],[-2*o.f,'2F'],[2*o.f,"2F'"]];
  Fs.forEach(([x,n])=>{const big=n[0]==='F';c.fillStyle=big?C.yl:C.mu;c.beginPath();c.arc(X(x),Y(0),big?5:3.5,0,7);c.fill();txt(c,n,X(x),Y(0)+16,big?C.yl:C.mu,12,'center',true);});
@@ -219,18 +250,18 @@ function drawLens(){const o=optics(),A=Math.min(18,(oy-40)/s);
   /* 2 through the centre (lens) / to the vertex (mirror) */
   seg2(-p,h,0,0,Lc[1],2.2);rayArrow(-p,h,0,0,Lc[1]);out(0,p,-h,Lc[1]);
   /* 3 through (or towards) the focus, then parallel */
-  if(Math.abs(p-f)>.3){const y3=-h*f/(p-f);if(Math.abs(y3)<=A){seg2(-p,h,0,y3,Lc[2],2.2);rayArrow(-p,h,0,y3,Lc[2]);out(y3,1,0,Lc[2]);
+  if(Math.abs(p-f)>.3){const y3=-h*f/(p-f);if(Math.abs(y3)<=AL){seg2(-p,h,0,y3,Lc[2],2.2);rayArrow(-p,h,0,y3,Lc[2]);out(y3,1,0,Lc[2]);
    if(ext&&p<f)seg2(-f,0,-p,h,Lc[2],1.3,[5,5],.6);if(ext&&f<0&&!o.mir)seg2(0,y3,-f,0,Lc[2],1.3,[5,5],.6);if(ext&&f<0&&o.mir)seg2(0,y3,-f,0,Lc[2],1.3,[5,5],.6);}}
- }else{const n=13;for(let i=0;i<n;i++){const y=-A+2*A*i/(n-1),col=fa(.55);seg2(-p,h,0,y,C.yl,1.4,0,.55);
+ }else{const n=13;for(let i=0;i<n;i++){const y=-AL+2*AL*i/(n-1);seg2(-p,h,0,y,C.yl,1.4,0,.55);
    let dx,dy;if(o.inf){dx=p;dy=-h;}else if(o.q>0){dx=o.q;dy=o.hi-y;}else{dx=-o.q;dy=y-o.hi;}out(y,dx,dy,C.yl,.55);}}
  /* object and image */
- objArrow(-p,h,C.pk);txt(c,L('oggetto','object'),X(-p),Y(h)+(h>=0?-14:14),C.pk,12,'center',true);
- if(isFinite(o.q)&&Math.abs(o.xi)<200&&Math.abs(o.hi)<200){const real=o.q>0;objArrow(o.xi,o.hi,C.yl,!real,real?1:.75);
+ candle(-p,h,C.pk,1);txt(c,L('oggetto','object'),X(-p),Y(h)+(h>=0?-14:14),C.pk,12,'center',true);
+ if(isFinite(o.q)&&Math.abs(o.xi)<200&&Math.abs(o.hi)<200){const real=o.q>0;candle(o.xi,o.hi,C.yl,real?1:.8,!real);
   txt(c,real?L('immagine reale','real image'):L('immagine virtuale','virtual image'),X(o.xi),Y(o.hi)+(o.hi>=0?-14:14),C.yl,12,'center',true);}
  /* handles */
  for(const[x,y]of[[-p,0],[-p,h]]){c.strokeStyle=C.pk;c.lineWidth=2;c.beginPath();c.arc(X(x),Y(y),7,0,7);c.stroke();}
  /* distances under the axis */
- const yb=-Math.min(A+4,(H-oy-24)/s);seg2(-p,yb,0,yb,C.pk,1.2);txt(c,'p = '+nf(p,1)+' cm',X(-p/2),Y(yb)-10,C.pk,12,'center',true);
+ const yb=-Math.min(A+4,(H-oy-62)/s);seg2(-p,yb,0,yb,C.pk,1.2);txt(c,'p = '+nf(p,1)+' cm',X(-p/2),Y(yb)-10,C.pk,12,'center',true);
  if(isFinite(o.q)&&Math.abs(o.xi)<200){seg2(0,yb-3,o.xi,yb-3,C.yl,1.2,o.q<0?[5,4]:0);txt(c,'q = '+nf(o.q,1)+' cm',X(o.xi/2),Y(yb-3)+12,C.yl,12,'center',true);}
  /* readouts */
  if(o.inf){ro('rq','∞');ro('rm','∞');ro('rhi','∞');ro('rt',L('nessuna immagine (raggi paralleli)','no image (parallel rays)'));}

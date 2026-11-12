@@ -63,8 +63,10 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 <div class="seg" id="mode"><button data-v="free" class="on" data-en="Free body">Corpo libero</button><button data-v="hang" data-en="Spring scale">Dinamometro</button></div>
 </div>
 <div class="grp"><h3 data-en="Body">Corpo</h3>
-<select id="mat"><option value="custom" data-en="Custom material">Materiale a scelta</option><option value="240" data-en="Cork">Sughero</option><option value="550" data-en="Pine wood" selected>Legno di pino</option><option value="920" data-en="Ice">Ghiaccio</option><option value="1380" data-en="PVC">PVC</option><option value="2700" data-en="Aluminium">Alluminio</option><option value="mys" data-en="Mystery material ?">Materiale misterioso ?</option></select>
-<label class="sl"><span class="ln"><span data-en="Body density">Densità del corpo</span><output id="o_rb"></output></span><input type="range" id="rb" min="100" max="3000" step="10" value="550"></label>
+<div class="seg" id="shape"><button data-v="cube" class="on" data-en="Cube">Cubo</button><button data-v="sphere" data-en="Sphere">Sfera</button><button data-v="cyl" data-en="Cylinder">Cilindro</button><button data-v="boat" data-en="Boat">Barca</button></div>
+<p class="hint hidden" id="boatHint" data-en="A hollow hull: the walls are only 10% of its volume. Try steel!">Uno scafo cavo: le pareti sono solo il 10% del suo volume. Prova con l'acciaio!</p>
+<select id="mat"><option value="custom" data-en="Custom material">Materiale a scelta</option><option value="240" data-en="Cork">Sughero</option><option value="550" data-en="Pine wood" selected>Legno di pino</option><option value="920" data-en="Ice">Ghiaccio</option><option value="1380" data-en="PVC">PVC</option><option value="2700" data-en="Aluminium">Alluminio</option><option value="7800" data-en="Steel">Acciaio</option><option value="mys" data-en="Mystery material ?">Materiale misterioso ?</option></select>
+<label class="sl"><span class="ln"><span data-en="Body density">Densità del corpo</span><output id="o_rb"></output></span><input type="range" id="rb" min="100" max="8000" step="10" value="550"></label>
 <label class="sl"><span class="ln"><span data-en="Volume">Volume</span><output id="o_vol"></output></span><input type="range" id="vol" min="1" max="12" step="0.5" value="5"></label>
 </div>
 <div class="grp"><h3 data-en="Liquid and planet">Liquido e pianeta</h3>
@@ -73,6 +75,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 <label class="ck"><input type="checkbox" id="vec" checked><span data-en="Show forces">Mostra le forze</span></label>
 </div>
 <div class="grp"><h3 data-en="Measurements">Misure</h3>
+<div class="ro"><span data-en="Mass">Massa</span><b id="rM"></b></div>
 <div class="ro"><span data-en="Weight W">Peso P</span><b id="rP"></b></div>
 <div class="ro"><span data-en="Buoyant force F<sub>b</sub>">Spinta di Archimede S</span><b id="rS"></b></div>
 <div class="ro"><span data-en="Spring scale T">Dinamometro T</span><b id="rT"></b></div>
@@ -87,6 +90,8 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 <li data-en="…make aluminium float?">…far galleggiare l'alluminio?</li>
 <li data-en="…find the density of the mystery material with the spring scale?">…ricavare la densità del materiale misterioso con il dinamometro?</li>
 <li data-en="…say whether a boat floats higher on the Moon?">…dire se una barca sulla Luna galleggia più alta?</li>
+<li data-en="…make a steel boat float? Why does it float if steel is denser than water? And what happens when you push it under?">…far galleggiare una barca d'acciaio? Perché galleggia se l'acciaio è più denso dell'acqua? E che cosa succede se la spingi sotto?</li>
+<li data-en="…check whether the shape changes the buoyant force on a fully submerged body of the same volume?">…verificare se la forma cambia la spinta su un corpo tutto immerso, a parità di volume?</li>
 </ul></div></div>
 <script>
 'use strict';
@@ -154,58 +159,115 @@ try{if(localStorage.getItem('simTheme')==='light')setTheme(true);}catch(e){}
 
 </script>
 <script>
-const cv=$('#cv');let c,W,H,S3=400,cam,az=-.5,el=.36;
-const WT=.6,HT=.7,DZ=.2,AREA=.24,H0=.4,mysB=10*Math.round(30+Math.random()*250);
-let xb=0,yb=.8,vy=0,drag=null,hookY=.8;
-seg('mode');sel('mat');sel('liq');sel('g');check('vec');
+const cv=$('#cv');let c,W,H,S3=400,cam,az=-.5,el=.36,clock=0;
+const WT=.6,HT=.7,DZ=.2,AREA=.24,H0=.4,PHI=.1,mysB=10*Math.round(30+Math.random()*250); /* PHI: share of the boat's volume that is solid wall */
+let xb=0,yb=.8,vy=0,drag=null,hookY=.8,flooded=false,wob=0,bub=[],drops=[],wasIn=false;
+seg('mode');seg('shape');sel('mat');sel('liq');sel('g');check('vec');
 slider('rb',v=>nf(v,0)+' kg/m³');slider('vol',v=>nf(v,1)+' dm³');
 const rhoB=()=>P.mat==='mys'?mysB:P.rb;
 function onParam(id){if(id==='mat'&&P.mat!=='custom'&&P.mat!=='mys')setS('rb',+P.mat);if(id==='rb'){$('#mat').value='custom';P.mat='custom';}
- if(id==='mode'){hookY=Math.max(yb,.05);vy=0;xb=0;}}
-const side=()=>Math.cbrt(P.vol/1000),sub=(y,s)=>clamp((H0-y)/(1-s*s/AREA),0,s);
-pointer(cv,{down(p){const s=side(),m=cam.p(xb,yb+s/2,0),r=s*S3*.75+10;if(Math.abs(p.x-m[0])<r&&Math.abs(p.y-m[1])<r){drag={k:'b',x:p.x,y:p.y};vy=0;}else drag={k:'r',x:p.x,y:p.y};},
- move(p){if(!drag)return;const dx=p.x-drag.x,dy=p.y-drag.y,s=side();drag.x=p.x;drag.y=p.y;
+ if(id==='mode'){hookY=Math.max(yb,.05);vy=0;xb=0;}
+ if(id==='shape'){flooded=false;yb=P.shape==='boat'&&P.mode!=='hang'?H0+.03:Math.max(yb,.75);hookY=Math.max(hookY,.75);vy=0; /* the boat is set down gently: dropped from high up it would dive and fill */$('#boatHint').classList.toggle('hidden',P.shape!=='boat');}}
+/* ---- the body: size from its volume, and how much of it is under water when its base is d below the surface ---- */
+function body(){const V=P.vol/1000,sh=P.shape;
+ if(sh==='sphere'){const r=Math.cbrt(3*V/(4*Math.PI));return{V,h:2*r,hw:r,hz:r,r,Vs:d=>Math.PI*d*d*(3*r-d)/3,A:d=>Math.PI*(2*r*d-d*d)};}
+ if(sh==='cyl'){const r=Math.cbrt(V/(Math.PI*1.6));return{V,h:1.6*r,hw:r,hz:r,r,Vs:d=>Math.PI*r*r*d};}
+ if(sh==='boat'){const a=Math.cbrt(V/1.32),k=flooded?PHI:1;return{V,h:.6*a,hw:a,hz:.55*a,solid:PHI,Vs:d=>k*2*a*1.1*a*d};}
+ const s=Math.cbrt(V);return{V,h:s,hw:s/2,hz:s/2,Vs:d=>s*s*d};}
+/* liquid level with the body's base at height y: the liquid pushed aside raises the level (bisection) */
+function level(b,y){let lo=H0,hi=H0+b.V/AREA+1e-6;for(let i=0;i<26;i++){const m=(lo+hi)/2;(H0+b.Vs(clamp(m-y,0,b.h))/AREA>m)?lo=m:hi=m;}return(lo+hi)/2;}
+pointer(cv,{down(p){const b=body(),m=cam.p(xb,yb+b.h/2,0),r=Math.max(b.hw,b.h/2)*S3*1.3+10;if(Math.abs(p.x-m[0])<r&&Math.abs(p.y-m[1])<r){drag={k:'b',x:p.x,y:p.y};vy=0;}else drag={k:'r',x:p.x,y:p.y};},
+ move(p){if(!drag)return;const dx=p.x-drag.x,dy=p.y-drag.y,b=body();drag.x=p.x;drag.y=p.y;
   if(drag.k==='r'){az=clamp(az+dx*.008,-1.2,1.2);el=clamp(el+dy*.005,.12,.9);return;}
-  if(P.mode==='hang'){hookY=clamp(hookY-dy/(S3*cam.ce),0,.95);}else{yb=clamp(yb-dy/(S3*cam.ce),0,1.05);xb=clamp(xb+dx/(S3*Math.max(.4,cam.ca)),-.5,.5);if(yb<HT)xb=clamp(xb,-WT/2+s/2,WT/2-s/2);vy=0;}},
+  if(P.mode==='hang'){hookY=clamp(hookY-dy/(S3*cam.ce),0,.95);}else{yb=clamp(yb-dy/(S3*cam.ce),0,1.05);xb=clamp(xb+dx/(S3*Math.max(.4,cam.ca)),-.5,.5);if(yb<HT)xb=clamp(xb,-WT/2+b.hw,WT/2-b.hw);vy=0;}},
  up(){drag=null;}});
 function line3(a,b,col,w=1.5,dash){const p=cam.p(a[0],a[1],a[2]),q=cam.p(b[0],b[1],b[2]);c.save();c.strokeStyle=col;c.lineWidth=w;c.lineCap='round';if(dash)c.setLineDash(dash);c.beginPath();c.moveTo(p[0],p[1]);c.lineTo(q[0],q[1]);c.stroke();c.restore();}
-loop(dt=>{c=fit(cv);W=cv.W;H=cv.H;S3=Math.min(W/1.5,H/1.62);cam=cam3(W/2,H/2+.66*S3*Math.cos(el),S3,az,el);
- const s=side(),rb=rhoB(),rl=+P.liq,g=+P.g,m=rb*s**3,Pw=m*g,hang=P.mode==='hang',ymin=hang?hookY:0,held=drag&&drag.k==='b';
- if(hang)xb=0;else if(!held)xb=clamp(xb,-WT/2+s/2,WT/2-s/2);
- if(!held||hang){const h=dt/12,w=Math.sqrt(rl*g/(rb*s));for(let i=0;i<12;i++){const d=sub(yb,s);let a=(rl*g*s*s*d-Pw)/m;if(d>0)a-=vy*(1.2*w+2);vy+=a*h;yb+=vy*h;if(yb<=ymin){yb=ymin;if(vy<0)vy=0;}}}
- const d=sub(yb,s),Sb=rl*g*s*s*d,lev=H0+s*s*d/AREA,rest=!held&&yb<=ymin+1e-7&&Pw>Sb,Fc=rest?Pw-Sb:0,my=P.mat==='mys';
- const lc=rl>10000?[190,196,210]:rl>1200?[90,200,230]:rl>950?[64,150,255]:rl>800?[240,200,60]:[255,170,90];
- const bc=my?[125,91,214]:rb<1000?[150+rb*.06,110+rb*.03,70]:[190-Math.min(70,rb/35),196-Math.min(70,rb/35),214-Math.min(60,rb/40)];
+/* draw flat on a horizontal plane at height y, in (x,z) metres */
+const plane=(y,f)=>{const o=cam.p(0,y,0);c.save();c.transform(cam.ca*S3,-cam.sa*cam.se*S3,cam.sa*S3,cam.ca*cam.se*S3,o[0],o[1]);f();c.restore();};
+const rgba=(rgb,a)=>'rgba('+rgb.map(v=>clamp(v,0,255)|0)+','+a+')';
+function face(pts,g0,g1,stroke){const q=pts.map(p=>cam.p(p[0],p[1],p[2]));let y0=1e9,y1=-1e9;q.forEach(m=>{y0=Math.min(y0,m[1]);y1=Math.max(y1,m[1]);});const g=c.createLinearGradient(0,y0,0,y1);g.addColorStop(0,g0);g.addColorStop(1,g1);c.beginPath();q.forEach((m,i)=>i?c.lineTo(m[0],m[1]):c.moveTo(m[0],m[1]));c.closePath();c.fillStyle=g;c.fill();if(stroke){c.strokeStyle=stroke;c.lineWidth=1;c.stroke();}}
+/* ---- painters for the four shapes; y0..y1 is the slice to draw ---- */
+function sphere3(xc,yc,r,rgb,al){const p=cam.p(xc,yc,0),R=r*S3,g=c.createRadialGradient(p[0]-R*.38,p[1]-R*.42,R*.06,p[0],p[1],R);g.addColorStop(0,rgba(rgb.map(v=>v*1.55+40),al));g.addColorStop(.35,rgba(rgb,al));g.addColorStop(1,rgba(rgb.map(v=>v*.38),al));c.fillStyle=g;c.beginPath();c.arc(p[0],p[1],R,0,7);c.fill();
+ c.fillStyle='rgba(255,255,255,'+.55*al+')';c.beginPath();c.ellipse(p[0]-R*.4,p[1]-R*.5,R*.2,R*.11,-.6,0,7);c.fill();}
+function cyl3(xc,y0,y1,r,rgb,al,top){const p0=cam.p(xc,y0,0),p1=cam.p(xc,y1,0),rx=r*S3,ry=r*S3*cam.se,g=c.createLinearGradient(p0[0]-rx,0,p0[0]+rx,0);
+ g.addColorStop(0,rgba(rgb.map(v=>v*.45),al));g.addColorStop(.3,rgba(rgb.map(v=>v*1.2+20),al));g.addColorStop(.55,rgba(rgb,al));g.addColorStop(1,rgba(rgb.map(v=>v*.4),al));
+ c.beginPath();c.moveTo(p1[0]-rx,p1[1]);c.lineTo(p0[0]-rx,p0[1]);c.ellipse(p0[0],p0[1],rx,ry,0,Math.PI,0,true);c.lineTo(p1[0]+rx,p1[1]);c.ellipse(p1[0],p1[1],rx,ry,0,0,Math.PI,false);c.closePath();c.fillStyle=g;c.fill();
+ if(top){c.beginPath();c.ellipse(p1[0],p1[1],rx,ry,0,0,7);c.fillStyle=rgba(rgb.map(v=>v*1.18+14),al);c.fill();c.strokeStyle='rgba(0,0,0,.25)';c.lineWidth=1;c.stroke();
+  /* rings on the top, like a tin or a log */
+  c.strokeStyle='rgba(0,0,0,.14)';for(const k of[.72,.42]){c.beginPath();c.ellipse(p1[0],p1[1],rx*k,ry*k,0,0,7);c.stroke();}}}
+function grain(x0,x1,y0,y1,z,rgb,kind){/* a little texture on the front face */if(kind==='wood'){for(let i=1;i<5;i++){const y=y0+(y1-y0)*i/5;line3([x0+.004,y,z],[x1-.004,y+(i%2?.004:-.004),z],rgba(rgb.map(v=>v*.6),.55),1);}}
+ else if(kind==='cork'){const r=(i=>{let s=i;return()=>{s=(s*16807)%2147483647;return s/2147483647;};})(7);c.fillStyle=rgba(rgb.map(v=>v*.55),.6);for(let i=0;i<26;i++){const q=cam.p(x0+r()*(x1-x0),y0+r()*(y1-y0),z);c.beginPath();c.arc(q[0],q[1],1.4,0,7);c.fill();}}
+ else if(kind==='metal'){const a=cam.p(x0,y1,z),b=cam.p(x1,y0,z),g=c.createLinearGradient(a[0],a[1],b[0],b[1]);g.addColorStop(.3,'rgba(255,255,255,0)');g.addColorStop(.45,'rgba(255,255,255,.35)');g.addColorStop(.6,'rgba(255,255,255,0)');poly3(c,cam,[[x0,y0,z],[x1,y0,z],[x1,y1,z],[x0,y1,z]],g);}}
+function drawBody(b,y0,y1,st,lc){const x0=xb-b.hw,x1=xb+b.hw,sh=P.shape,al=st.al,edge=fa(.3);if(y1-y0<1e-5)return;
+ if(sh==='sphere'){sphere3(xb,yb+b.r,b.r,st.rgb,al);return;}
+ if(sh==='cyl'){cyl3(xb,y0,y1,b.r,st.rgb,al,true);return;}
+ box3(c,cam,x0,x1,y0,y1,-b.hz,b.hz,st.rgb,al,edge);grain(x0,x1,y0,y1,b.hz,st.rgb,st.kind);
+ if(sh==='boat'&&y1>=yb+b.h-1e-6){/* open top: the rim, the hollow inside, and water in it once it has flooded */const t=b.hw*.1,yt=yb+b.h,yi=yb+b.h*.25;
+  poly3(c,cam,[[x0+t,yt,-b.hz+t],[x1-t,yt,-b.hz+t],[x1-t,yt,b.hz-t],[x0+t,yt,b.hz-t]],rgba(st.rgb.map(v=>v*.3),1));
+  const xs=cam.sx>0?x0+t:x1-t;face([[xs,yi,-b.hz+t],[xs,yi,b.hz-t],[xs,yt,b.hz-t],[xs,yt,-b.hz+t]],rgba(st.rgb.map(v=>v*.62),1),rgba(st.rgb.map(v=>v*.4),1));
+  face([[x0+t,yi,-b.hz+t],[x1-t,yi,-b.hz+t],[x1-t,yt,-b.hz+t],[x0+t,yt,-b.hz+t]],rgba(st.rgb.map(v=>v*.78),1),rgba(st.rgb.map(v=>v*.5),1));
+  if(flooded)poly3(c,cam,[[x0+t,yt-.004,-b.hz+t],[x1-t,yt-.004,-b.hz+t],[x1-t,yt-.004,b.hz-t],[x0+t,yt-.004,b.hz-t]],rgba(lc,.75),'rgba(255,255,255,.5)');}}
+function style(rb,my){if(my)return{rgb:[125,91,214],al:1,kind:''};if(P.mat==='920')return{rgb:[190,228,250],al:.72,kind:'ice'};if(P.mat==='240')return{rgb:[196,160,112],al:1,kind:'cork'};
+ if(rb<1000)return{rgb:[150+rb*.06,110+rb*.03,70],al:1,kind:'wood'};if(rb>=6000)return{rgb:[120,134,158],al:1,kind:'metal'};if(rb>=2000)return{rgb:[176,184,200],al:1,kind:'metal'};return{rgb:[205,208,222],al:1,kind:''};}
+loop(dt=>{c=fit(cv);W=cv.W;H=cv.H;clock+=dt;S3=Math.min(W/1.5,H/1.62);cam=cam3(W/2,H/2+.66*S3*Math.cos(el),S3,az,el);
+ let b=body();const rb=rhoB(),rl=+P.liq,g=+P.g,m=rb*b.V*(b.solid||1),Pw=m*g,hang=P.mode==='hang',ymin=hang?hookY:0,held=drag&&drag.k==='b';
+ if(hang)xb=0;else if(!held)xb=clamp(xb,-WT/2+b.hw,WT/2-b.hw);
+ if(!held||hang){const h=dt/12,w=Math.sqrt(rl*g/(m/b.V*b.h));for(let i=0;i<12;i++){const d=clamp(level(b,yb)-yb,0,b.h);let a=(rl*g*b.Vs(d)-Pw)/m;if(d>0)a-=vy*(1.2*w+2);vy+=a*h;yb+=vy*h;if(yb<=ymin){yb=ymin;if(vy<0)vy=0;}}}
+ let lev=level(b,yb),d=clamp(lev-yb,0,b.h);
+ /* a boat pushed under its rim fills with water, and empties when it is lifted out */
+ if(P.shape==='boat'){if(!flooded&&lev>yb+b.h+1e-4){flooded=true;b=body();for(let i=0;i<40;i++)bub.push({x:xb+(Math.random()-.5)*2*b.hw,y:yb+Math.random()*b.h,z:(Math.random()-.5)*2*b.hz,v:.18+Math.random()*.3,r:1.5+Math.random()*3});}
+  else if(flooded&&yb>lev+.01){flooded=false;b=body();for(let i=0;i<26;i++)drops.push({x:xb+(Math.random()-.5)*2*b.hw,y:yb,z:(Math.random()-.5)*2*b.hz,vx:0,vy:-Math.random()*.4,vz:0});}
+  lev=level(b,yb);d=clamp(lev-yb,0,b.h);}
+ const Vs=b.Vs(d),Sb=rl*g*Vs,rest=!held&&yb<=ymin+1e-7&&Pw>Sb,Fc=rest?Pw-Sb:0,my=P.mat==='mys';
+ const lc=rl>10000?[190,196,210]:rl>1200?[90,200,230]:rl>950?[64,150,255]:rl>800?[240,200,60]:[255,170,90],merc=rl>10000,st=style(rb,my);
+ /* splash and ripples when the body breaks the surface */
+ const inNow=d>0;if(inNow&&!wasIn&&vy<-.25){const n=Math.min(26,6+Math.abs(vy)*14|0);for(let i=0;i<n;i++){const a=Math.random()*6.283,sp=.15+Math.random()*.35;drops.push({x:xb+Math.cos(a)*b.hw,y:lev,z:Math.sin(a)*b.hz*.9,vx:Math.cos(a)*sp,vy:.5+Math.random()*Math.abs(vy)*1.1,vz:Math.sin(a)*sp*.5});}}
+ wasIn=inNow;wob=clamp(wob*Math.exp(-dt*1.1)+(d>0&&d<b.h?Math.abs(vy)*dt*9:0),0,1);
+ if(d>0&&vy<-.03&&Math.random()<dt*30)bub.push({x:xb+(Math.random()-.5)*2*b.hw,y:yb+Math.random()*d*.5,z:(Math.random()-.5)*2*b.hz,v:.15+Math.random()*.25,r:1.2+Math.random()*2.4});
+ for(const q of bub){q.y+=q.v*dt;q.x+=Math.sin(clock*9+q.r*7)*dt*.02;}bub=bub.filter(q=>q.y<lev-.004).slice(-140);
+ for(const q of drops){q.vy-=g*dt;q.x+=q.vx*dt;q.y+=q.vy*dt;q.z+=q.vz*dt;}drops=drops.filter(q=>q.y>(Math.abs(q.x)<WT/2&&Math.abs(q.z)<DZ?lev-.01:-.03)).slice(-160);
  const X0=-WT/2,X1=WT/2,hx=cam.sx>0?X0:X1,fx=cam.sx>0?X1:X0;
- c.fillStyle=C.bg;c.fillRect(0,0,W,H);
- box3(c,cam,-.52,.52,-.035,0,-.36,.36,C.slab);
+ /* backdrop: a soft spotlight, the bench and the tank's shadow */
+ const bg=c.createRadialGradient(W/2,H*.42,40,W/2,H*.5,Math.max(W,H)*.75);bg.addColorStop(0,LIGHT?'#ffffff':'#17224a');bg.addColorStop(1,LIGHT?'#dfe6f5':'#070b18');c.fillStyle=bg;c.fillRect(0,0,W,H);
+ box3(c,cam,-.6,.6,-.05,0,-.42,.42,LIGHT?[196,160,116]:[72,52,34]);
+ plane(.001,()=>{const sg=c.createRadialGradient(.05,.03,.1,.05,.03,.5);sg.addColorStop(0,'rgba(0,0,0,.4)');sg.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=sg;c.fillRect(-.6,-.42,1.2,.84);});
  /* glass: back faces */
  const gl=fa(LIGHT?.07:.06);poly3(c,cam,[[X0,0,-DZ],[X1,0,-DZ],[X1,HT,-DZ],[X0,HT,-DZ]],gl,C.glass);poly3(c,cam,[[hx,0,-DZ],[hx,0,DZ],[hx,HT,DZ],[hx,HT,-DZ]],gl,C.glass);
- /* body below the surface, liquid, body above */
- const bx0=xb-s/2,bx1=xb+s/2,edge=fa(.3);
- if(d>0)box3(c,cam,bx0,bx1,yb,yb+d,-s/2,s/2,bc,1,edge);
- box3(c,cam,X0,X1,0,lev,-DZ,DZ,lc,LIGHT?.5:.46);
- poly3(c,cam,[[X0,lev,-DZ],[X1,lev,-DZ],[X1,lev,DZ],[X0,lev,DZ]],null,'rgba(255,255,255,.7)');
- if(d<s){box3(c,cam,bx0,bx1,yb+d,yb+s,-s/2,s/2,bc,1,edge);}
- if(my){const q=cam.p(xb,yb+s/2,s/2);txt(c,'?',q[0],q[1],'#fff',s*S3*.45,'center',1);}
- if(hang){line3([0,yb+s,0],[0,1.17,0],C.tx,1.5);}
- /* initial level + glass front */
- for(const[a,b]of[[[X0,H0,DZ],[X1,H0,DZ]],[[fx,H0,DZ],[fx,H0,-DZ]]])line3(a,b,fa(.55),1,[5,5]);
+ /* the whole body first, then the liquid over it, then the dry part again on top */
+ drawBody(b,yb,yb+b.h,st,lc);
+ for(const q of bub){const p=cam.p(q.x,q.y,q.z);c.strokeStyle='rgba(255,255,255,.7)';c.lineWidth=1;c.fillStyle='rgba(255,255,255,.18)';c.beginPath();c.arc(p[0],p[1],q.r,0,7);c.fill();c.stroke();}
+ const la=merc?.93:LIGHT?.5:.48,dark=lc.map(v=>v*(LIGHT?.7:.42)),xs=cam.sx>0?X1:X0;
+ face([[xs,0,-DZ],[xs,0,DZ],[xs,lev,DZ],[xs,lev,-DZ]],rgba(lc.map(v=>v*.8),la),rgba(dark.map(v=>v*.8),la+.12));
+ face([[X0,0,DZ],[X1,0,DZ],[X1,lev,DZ],[X0,lev,DZ]],rgba(lc,la),rgba(dark,la+.15));
+ poly3(c,cam,[[X0,lev,-DZ],[X1,lev,-DZ],[X1,lev,DZ],[X0,lev,DZ]],rgba(lc.map(v=>v*1.15+25),merc?.95:.42),'rgba(255,255,255,.7)');
+ /* light on the surface and rings spreading from the body */
+ plane(lev,()=>{c.beginPath();c.rect(X0,-DZ,WT,2*DZ);c.clip();c.lineWidth=.004;for(let i=0;i<5;i++){const yy=-DZ+((i*.11+clock*.02)%(2*DZ));c.strokeStyle='rgba(255,255,255,'+(merc?.25:.13)+')';c.beginPath();c.moveTo(X0,yy);c.bezierCurveTo(X0+.2,yy+.03*Math.sin(clock+i),X0+.4,yy-.03*Math.cos(clock*.8+i),X1,yy+.01);c.stroke();}
+  if(wob>.01&&d>0&&d<b.h)for(let i=0;i<3;i++){const u=((clock*.6+i/3)%1),R=Math.max(b.hw,b.hz)*(1+u*1.6);c.strokeStyle='rgba(255,255,255,'+(.75*wob*(1-u)).toFixed(3)+')';c.lineWidth=.005;c.beginPath();c.ellipse(xb,0,R*(b.hw/Math.max(b.hw,b.hz)),R*(b.hz/Math.max(b.hw,b.hz)),0,0,7);c.stroke();}});
+ if(d<b.h){if(P.shape==='sphere'){const rc=Math.sqrt(Math.max(0,b.r*b.r-(lev-yb-b.r)**2)),pc=cam.p(xb,lev,0);c.save();if(d>0){c.beginPath();c.rect(0,0,W,pc[1]);c.ellipse(pc[0],pc[1],rc*S3,rc*S3*cam.se,0,0,7);c.clip();}sphere3(xb,yb+b.r,b.r,st.rgb,st.al);c.restore();
+    if(d>0){c.strokeStyle='rgba(255,255,255,.75)';c.lineWidth=1.2;c.beginPath();c.ellipse(pc[0],pc[1],rc*S3,rc*S3*cam.se,0,0,Math.PI);c.stroke();}}
+  else{drawBody(b,yb+d,yb+b.h,st,lc);if(d>0&&P.shape==='cyl'){const pc=cam.p(xb,lev,0);c.strokeStyle='rgba(255,255,255,.75)';c.lineWidth=1.2;c.beginPath();c.ellipse(pc[0],pc[1],b.r*S3,b.r*S3*cam.se,0,0,Math.PI);c.stroke();}}}
+ if(my){const q=cam.p(xb,yb+b.h/2,b.hz);txt(c,'?',q[0],q[1],'#fff',b.h*S3*.45,'center',1);}
+ for(const q of drops){const p=cam.p(q.x,q.y,q.z);c.fillStyle=rgba(lc.map(v=>v*1.1+30),.9);c.beginPath();c.ellipse(p[0],p[1],2,3,0,0,7);c.fill();}
+ if(hang){line3([0,yb+b.h,0],[0,1.17,0],LIGHT?'#59607a':'#cdd4ee',1.6);const hk=cam.p(0,yb+b.h,0);c.strokeStyle=LIGHT?'#59607a':'#cdd4ee';c.lineWidth=2;c.beginPath();c.arc(hk[0],hk[1]-5,4,0,Math.PI*1.4);c.stroke();}
+ /* initial level + glass front, with reflections */
+ for(const[a,b2]of[[[X0,H0,DZ],[X1,H0,DZ]],[[fx,H0,DZ],[fx,H0,-DZ]]])line3(a,b2,fa(.55),1,[5,5]);
  poly3(c,cam,[[X0,0,DZ],[X1,0,DZ],[X1,HT,DZ],[X0,HT,DZ]],gl,C.glass);poly3(c,cam,[[fx,0,-DZ],[fx,0,DZ],[fx,HT,DZ],[fx,HT,-DZ]],gl,C.glass);
- c.lineWidth=2.5;for(const[a,b]of[[[X0,0,DZ],[X0,HT,DZ]],[[X1,0,DZ],[X1,HT,DZ]],[[X0,0,DZ],[X1,0,DZ]],[[fx,0,DZ],[fx,0,-DZ]],[[fx,0,-DZ],[fx,HT,-DZ]]])line3(a,b,C.glass,2.5);
+ poly3(c,cam,[[X0+.05,HT*.96,DZ],[X0+.11,HT*.96,DZ],[X0+.02,HT*.3,DZ],[X0+.02,HT*.52,DZ]],'rgba(255,255,255,.09)');poly3(c,cam,[[X1-.06,HT*.9,DZ],[X1-.03,HT*.9,DZ],[X1-.1,HT*.1,DZ],[X1-.13,HT*.1,DZ]],'rgba(255,255,255,.06)');
+ c.lineWidth=2.5;for(const[a,b2]of[[[X0,0,DZ],[X0,HT,DZ]],[[X1,0,DZ],[X1,HT,DZ]],[[X0,0,DZ],[X1,0,DZ]],[[fx,0,DZ],[fx,0,-DZ]],[[fx,0,-DZ],[fx,HT,-DZ]],[[X0,HT,DZ],[X1,HT,DZ]],[[fx,HT,DZ],[fx,HT,-DZ]]])line3(a,b2,C.glass,2.5);
  /* ruler on the front silhouette edge */
  for(let i=0;i<=14;i++){const y=i*.05,mj=i%2===0,a=cam.p(hx,y,DZ),dir=cam.sx>0?-1:1;c.strokeStyle=C.mu;c.lineWidth=1;c.beginPath();c.moveTo(a[0]+dir*5,a[1]);c.lineTo(a[0]+dir*(mj?14:10),a[1]);c.stroke();if(mj)txt(c,String(i*5),a[0]+dir*18,a[1],C.mu,10.5,dir>0?'left':'right');}
  {const a=cam.p(hx,HT,DZ),dir=cam.sx>0?-1:1;txt(c,'cm',a[0]+dir*18,a[1]-14,C.mu,10.5,dir>0?'left':'right');}
  if(hang){const q=cam.p(0,1.17,0),dw=Math.max(120,.34*S3),dh=Math.max(40,.14*S3);c.fillStyle=C.panel;rr(c,q[0]-dw/2,q[1]-dh,dw,dh,8);c.fill();c.strokeStyle=C.gr;c.lineWidth=2;c.stroke();txt(c,'T = '+nf(Fc,1)+' N',q[0],q[1]-dh/2,C.gr,clamp(dh*.36,13,20),'center',1);}
+ if(P.shape==='boat'&&flooded){const q=cam.p(xb,yb+b.h,0);bubble(c,q[0]-70,q[1]-58,[L('Ha imbarcato acqua!','It has flooded!'),L('sollevala fuori per svuotarla','lift it out to empty it')],C.pk);}
  /* forces */
- if(P.vec){const fs=110/Math.max(Pw,rl*g*s**3),q=cam.p(xb,yb+s/2,s/2),cx=q[0],cyb=q[1];
+ if(P.vec){const fs=110/Math.max(Pw,rl*g*b.V),q=cam.p(xb,yb+b.h/2,b.hz),cx=q[0],cyb=q[1];
   arrow(c,cx-9,cyb,cx-9,cyb+Pw*fs,C.rd,4);txt(c,L('P','W'),cx-22,cyb+Pw*fs-6,C.rd,14,'center',1);
-  if(Sb>0){const y0=cam.p(xb,yb+d/2,s/2)[1];arrow(c,cx+9,y0,cx+9,y0-Sb*fs,C.cy,4);txt(c,L('S','Fb'),cx+24,y0-Sb*fs+6,C.cy,14,'center',1);}
-  if(Fc>0){if(hang){const t=cam.p(xb,yb+s,0);arrow(c,t[0],t[1],t[0],t[1]-Fc*fs,C.gr,4);txt(c,'T',t[0]-13,t[1]-Fc*fs+6,C.gr,14,'center',1);}else{const t=cam.p(xb-s*.3,yb,s/2);arrow(c,t[0],t[1],t[0],t[1]-Fc*fs,C.gr,4);txt(c,'N',t[0]-13,t[1]-Fc*fs+6,C.gr,14,'center',1);}}}
+  if(Sb>0){const y0=cam.p(xb,yb+d/2,b.hz)[1];arrow(c,cx+9,y0,cx+9,y0-Sb*fs,C.cy,4);txt(c,L('S','Fb'),cx+24,y0-Sb*fs+6,C.cy,14,'center',1);}
+  if(Fc>0){if(hang){const t=cam.p(xb,yb+b.h,0);arrow(c,t[0],t[1],t[0],t[1]-Fc*fs,C.gr,4);txt(c,'T',t[0]-13,t[1]-Fc*fs+6,C.gr,14,'center',1);}else{const t=cam.p(xb-b.hw*.6,yb,b.hz);arrow(c,t[0],t[1],t[0],t[1]-Fc*fs,C.gr,4);txt(c,'N',t[0]-13,t[1]-Fc*fs+6,C.gr,14,'center',1);}}}
  txt(c,L('trascina il corpo · trascina lo sfondo per ruotare','drag the body · drag the background to rotate'),12,H-14,C.mu,11);
  $('#rb').parentElement.style.display=my?'none':'';
- ro('rP',nf(Pw,1)+' N');ro('rS',nf(Sb,1)+' N');ro('rT',hang?nf(Fc,1)+' N':'–');ro('rN',hang?'–':nf(Fc,1)+' N');ro('rI',nf(s*s*d*1000,2)+' dm³');ro('rF',nf(d/s*100,0)+' %');
+ ro('rP',nf(Pw,1)+' N');ro('rS',nf(Sb,1)+' N');ro('rT',hang?nf(Fc,1)+' N':'–');ro('rN',hang?'–':nf(Fc,1)+' N');ro('rI',nf(Vs*1000,2)+' dm³');ro('rF',nf(d/b.h*100,0)+' %');ro('rM',nf(m,2)+' kg');
 });
-applyLang();
+onParam('shape');applyLang();
 </script>
 </body></html>
