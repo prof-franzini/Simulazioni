@@ -39,7 +39,7 @@ select{width:100%;background:var(--bg);color:var(--tx);border:1px solid var(--bd
 .tb{width:100%;border-collapse:collapse;font-size:13px}.tb th{font-weight:500;color:var(--mu);font-size:11px;text-align:right;padding:2px 3px}
 .tb td{text-align:right;padding:4px 3px;font-variant-numeric:tabular-nums;border-top:1px dashed var(--bd)}.tb td:first-child{text-align:left;font-weight:700}
 .hint{font-size:12px;color:var(--mu);margin:4px 0 0}
-.c-cy{color:var(--cy)!important}.c-pk{color:var(--pk)!important}.c-yl{color:var(--yl)!important}.c-gr{color:var(--gr)!important}
+.c-cy{color:var(--cy)!important}.c-pk{color:var(--pk)!important}.c-yl{color:var(--yl)!important}.c-gr{color:var(--gr)!important}.c-or{color:#ff9f43!important}
 .hidden{display:none!important}
 #q{position:fixed;inset:0;background:rgba(4,7,16,.6);display:flex;align-items:center;justify-content:center;z-index:9;padding:20px}
 #q .box{background:var(--card);border:1px solid var(--bd2);border-radius:16px;max-width:520px;padding:20px 24px;box-shadow:0 20px 60px #0006}
@@ -68,6 +68,10 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 <label class="sl"><span class="ln"><span data-en="Angular velocity ω">Velocità angolare ω</span><output id="o_om"></output></span><input type="range" id="om" min="0.5" max="5" step="0.5" value="1"></label>
 <label class="sl"><span class="ln"><span data-en="Initial phase φ">Fase iniziale φ</span><output id="o_ph"></output></span><input type="range" id="ph" min="0" max="8" step="1" value="0"></label>
 </div>
+<div class="grp"><h3 data-en="Graph">Grafico</h3>
+<div class="seg" id="gq"><button data-v="x" class="on" data-en="Position">Posizione</button><button data-v="v" data-en="Velocity">Velocità</button><button data-v="a" data-en="Acceleration">Accelerazione</button></div>
+<label class="ck"><input type="checkbox" id="vecs"><span data-en="Velocity and acceleration vectors">Vettori velocità e accelerazione</span></label>
+</div>
 <div class="grp"><h3 data-en="Show">Mostra</h3>
 <label class="ck"><input type="checkbox" id="spring" checked><span data-en="Mass on a spring">Molla con massa</span></label>
 <label class="ck"><input type="checkbox" id="link" checked><span data-en="Projection line">Linea di proiezione</span></label>
@@ -77,6 +81,14 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 <div class="ro"><span data-en="Frequency f">Frequenza f</span><b id="rf"></b></div>
 <div class="ro"><span data-en="Current position">Posizione attuale</span><b id="rv"></b></div>
 <div class="ro"><span data-en="Angle">Angolo</span><b id="ra"></b></div>
+<div class="ro"><span data-en="Velocity">Velocità</span><b id="rvv" class="c-pk"></b></div>
+<div class="ro"><span data-en="Acceleration">Accelerazione</span><b id="raa" class="c-yl"></b></div>
+</div>
+<div class="grp"><h3 data-en="Energy (mass 1 kg on the spring)">Energia (massa di 1 kg sulla molla)</h3>
+<canvas id="eb" class="gc" style="height:120px"></canvas>
+<div class="ro"><span data-en="Kinetic energy">Energia cinetica</span><b id="rK" class="c-cy"></b></div>
+<div class="ro"><span data-en="Elastic energy">Energia elastica</span><b id="rU" class="c-or"></b></div>
+<div class="ro"><span data-en="Total energy">Energia totale</span><b id="rE"></b></div>
 </div>
 </aside></main>
 <div id="q" class="hidden"><div class="box"><h2 data-en="Can you…?">Riesci a…?</h2><ul>
@@ -84,11 +96,13 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 <li data-en="…say whether the period depends on the radius?">…dire se il periodo dipende dal raggio?</li>
 <li data-en="…find a phase that turns the sine graph into the cosine graph?">…trovare una fase che trasforma il grafico del seno in quello del coseno?</li>
 <li data-en="…say where the mass is fastest, and where it stops for an instant?">…dire dove la massa è più veloce, e dove si ferma per un istante?</li>
+<li data-en="…find where the velocity is largest, and where the acceleration is? (Turn on the vectors.)">…trovare dove la velocità è massima, e dove lo è l'accelerazione? (Accendi i vettori.)</li>
+<li data-en="…explain why kinetic and elastic energy swap places but their sum never changes?">…spiegare perché energia cinetica ed elastica si scambiano il posto ma la loro somma non cambia mai?</li>
 </ul></div></div>
 <script>
 'use strict';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
-let LANG='it';
+let LANG='it';try{if(localStorage.getItem('simLang')==='en')LANG='en';}catch(e){}
 const L=(it,en)=>LANG==='it'?it:en;
 const FONT='system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
 const THEMES={dark:{bg:'#0a0f1f',grid:'#172040',grid2:'#263159',ax:'#4a568a',tx:'#e8ecff',mu:'#8d97bd',panel:'rgba(13,19,40,.9)',gnd:'#1a2342',wall:'#34416f',glass:'#8fa0d8',wire:'#8494cf',fg:'255,255,255',line:'140,215,255',base:[14,20,44],pos:[255,60,120],neg:[50,150,255],ramp:['#2a3a78','#1c2757'],road:[40,48,88],slab:[30,38,72],cy:'#4cc9f0',pk:'#ff4d8d',yl:'#ffd166',gr:'#2ee6a6',or:'#ff9f43',pu:'#b69cff',rd:'#ff5d5d',bl:'#5b8cff'},
@@ -144,7 +158,7 @@ function box3(c,cam,x0,x1,y0,y1,z0,z1,rgb,al=1,stroke){const xs=cam.sx>0?x1:x0;c
  poly3(c,cam,[[xs,y0,z0],[xs,y0,z1],[xs,y1,z1],[xs,y1,z0]],shade(rgb,.62),stroke,al);poly3(c,cam,[[x0,y0,z1],[x1,y0,z1],[x1,y1,z1],[x0,y1,z1]],shade(rgb,.84),stroke,al);poly3(c,cam,[[x0,y1,z0],[x1,y1,z0],[x1,y1,z1],[x0,y1,z1]],shade(rgb,1.1),stroke,al);}
 let LIGHT=false;function setTheme(l){LIGHT=l;Object.assign(C,THEMES[l?'light':'dark']);document.body.classList.toggle('light',l);$('#thm').textContent=l?'☾':'☀';try{localStorage.setItem('simTheme',l?'light':'dark');}catch(e){}if(typeof onTheme==='function')onTheme();}
 $('#thm').onclick=()=>setTheme(!LIGHT);
-$('#lang').onclick=()=>{LANG=LANG==='it'?'en':'it';applyLang();};
+$('#lang').onclick=()=>{LANG=LANG==='it'?'en':'it';try{localStorage.setItem('simLang',LANG);}catch(e){}applyLang();};
 $('#qbtn').onclick=()=>$('#q').classList.remove('hidden');
 $('#q').onclick=()=>$('#q').classList.add('hidden');
 try{if(localStorage.getItem('simTheme')==='light')setTheme(true);}catch(e){}
@@ -152,14 +166,14 @@ try{if(localStorage.getItem('simTheme')==='light')setTheme(true);}catch(e){}
 </script>
 <script>
 const cv=$('#cv');let c,W,H,th=0,t=0,play=true,trail=[];
-seg('fn');slider('r',v=>nf(v,1)+' m');slider('om',v=>nf(v,1)+' rad/s');const PH=['0','π/4','π/2','3π/4','π','5π/4','3π/2','7π/4','2π'];slider('ph',v=>PH[v]);check('spring');check('link');
+seg('fn');slider('r',v=>nf(v,1)+' m');slider('om',v=>nf(v,1)+' rad/s');const PH=['0','π/4','π/2','3π/4','π','5π/4','3π/2','7π/4','2π'];slider('ph',v=>PH[v]);check('spring');check('link');seg('gq');check('vecs');const eb=$('#eb');
 $('#play').onclick=()=>play=!play;$('#reset').onclick=()=>{t=0;th=0;trail=[];};
 function onParam(id){if(id==='fn')trail=[];}
 function coil(x1,y1,x2,y2,n,amp,col){const dx=x2-x1,dy=y2-y1,l=Math.hypot(dx,dy)||1,nx=-dy/l,ny=dx/l;c.strokeStyle=col;c.lineWidth=2;c.lineJoin='round';c.beginPath();c.moveTo(x1,y1);for(let i=0;i<n;i++){const f=(i+.5)/n,sg=i%2?-1:1;c.lineTo(x1+dx*f+nx*amp*sg,y1+dy*f+ny*amp*sg);}c.lineTo(x2,y2);c.stroke();}
 function dash(x1,y1,x2,y2,col){c.save();c.setLineDash([5,5]);c.strokeStyle=col;c.lineWidth=1.3;c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();c.restore();}
 loop(dt=>{c=fit(cv);W=cv.W;H=cv.H;if(play){t+=dt;th+=P.om*dt;}
- const sin=P.fn==='sin',ph=th+P.ph*Math.PI/4,val=P.r*(sin?Math.sin(ph):Math.cos(ph));
- if(play){trail.push([t,val]);while(trail.length&&trail[0][0]<t-11)trail.shift();}
+ const sin=P.fn==='sin',ph=th+P.ph*Math.PI/4,val=P.r*(sin?Math.sin(ph):Math.cos(ph)),vel=P.r*P.om*(sin?Math.cos(ph):-Math.sin(ph)),acc=-P.om*P.om*val;
+ if(play){trail.push([t,val,vel,acc]);while(trail.length&&trail[0][0]<t-11)trail.shift();}
  const wide=W>700,LW=wide?Math.min(W*.44,H*1.05):W,LH=wide?H:H*.52,u=Math.min(LW,LH)*.185,cx=LW/2,cy=(wide?H/2:LH/2)-(sin?0:u*.35);
  c.fillStyle=C.bg;c.fillRect(0,0,W,H);
  /* circle panel */
@@ -171,20 +185,33 @@ loop(dt=>{c=fit(cv);W=cv.W;H=cv.H;if(play){t+=dt;th+=P.om*dt;}
  const a2=((ph%(2*Math.PI))+2*Math.PI)%(2*Math.PI);c.strokeStyle=C.yl;c.lineWidth=1.5;c.beginPath();c.arc(cx,cy,Math.min(22,R*.6),0,-a2,true);c.stroke();
  c.strokeStyle=C.tx;c.lineWidth=2;c.beginPath();c.moveTo(cx,cy);c.lineTo(px,py);c.stroke();
  const qx=sin?cx:px,qy=sin?py:cy;if(P.link)dash(px,py,qx,qy,C.pk);
+ if(P.vecs){const kv=u*.45/Math.max(1,P.om*.6),ka=u*.45/Math.max(1,P.om*P.om*.6),vx=-P.r*P.om*Math.sin(ph),vy=P.r*P.om*Math.cos(ph);
+  arrow(c,px,py,px+vx*kv,py-vy*kv,C.pk,2.6);arrow(c,px,py,px-P.r*P.om*P.om*Math.cos(ph)*ka,py+P.r*P.om*P.om*Math.sin(ph)*ka,C.yl,2.6);
+  /* the projected point moves with the component of the same vectors */
+  if(sin){arrow(c,qx,qy,qx,qy-vel*kv,C.pk,3.2);arrow(c,qx+10,qy,qx+10,qy-acc*ka,C.yl,3.2);}else{arrow(c,qx,qy,qx+vel*kv,qy,C.pk,3.2);arrow(c,qx,qy+10,qx+acc*ka,qy+10,C.yl,3.2);}}
  c.fillStyle=C.cy;c.beginPath();c.arc(qx,qy,6,0,7);c.fill();c.fillStyle=C.pk;c.beginPath();c.arc(px,py,8,0,7);c.fill();
  /* graph */
  const sp=P.spring&&sin&&wide,gx=wide?LW+(sp?92:30):48,gw=W-gx-18,gcy=wide?cy:LH+(H-LH)/2-6,gu=wide?u:(H-LH)/2/2.7,tS=Math.max(0,t-9);
- c.lineWidth=1;for(const k of[-2,-1,0,1,2]){c.strokeStyle=k?C.grid:C.ax;c.beginPath();c.moveTo(gx,gcy-k*gu);c.lineTo(gx+gw,gcy-k*gu);c.stroke();txt(c,String(k),gx-7,gcy-k*gu,C.mu,10.5,'right');}
+ const qi=P.gq==='x'?1:P.gq==='v'?2:3,amp=P.r*Math.pow(P.om,qi-1),qcol=[0,C.cy,C.pk,C.yl][qi];
+ /* position keeps the circle's scale (so the projection line lines up); velocity and acceleration get their own */
+ const ym=qi===1?2.4:Math.max(.5,amp*1.25),ys=2.4*gu/ym,stp=qi===1?1:nice(ym,2.5);
+ c.lineWidth=1;for(let v=-Math.floor(ym/stp)*stp;v<=ym+1e-9;v+=stp){const k=Math.abs(v)<1e-9;c.strokeStyle=k?C.ax:C.grid;c.beginPath();c.moveTo(gx,gcy-v*ys);c.lineTo(gx+gw,gcy-v*ys);c.stroke();txt(c,tick(k?0:v,stp),gx-7,gcy-v*ys,C.mu,10.5,'right');}
  for(let k=Math.ceil(tS);k<=tS+10;k++){const x=gx+(k-tS)/10*gw;c.strokeStyle=C.grid;c.beginPath();c.moveTo(x,gcy-2.4*gu);c.lineTo(x,gcy+2.4*gu);c.stroke();txt(c,String(k),x,gcy+2.4*gu+11,C.mu,10.5,'center');}
- c.strokeStyle=C.ax;c.beginPath();c.moveTo(gx,gcy-2.5*gu);c.lineTo(gx,gcy+2.5*gu);c.stroke();txt(c,sin?'y (m)':'x (m)',gx+6,gcy-2.5*gu-2,C.tx,11.5,'left',1);txt(c,'t (s)',gx+gw,gcy+2.4*gu+25,C.tx,11.5,'right',1);
- c.strokeStyle=C.cy;c.lineWidth=2.4;c.lineJoin='round';c.beginPath();let st=false;for(const p of trail){if(p[0]<tS)continue;const x=gx+(p[0]-tS)/10*gw,y=gcy-p[1]*gu;st?c.lineTo(x,y):c.moveTo(x,y);st=true;}c.stroke();
- const dx=gx+(t-tS)/10*gw,dy=gcy-val*gu;if(P.link&&sin&&wide)dash(qx,qy,dx,dy,C.cy);
- c.fillStyle=C.cy;c.beginPath();c.arc(dx,dy,6,0,7);c.fill();
+ c.strokeStyle=C.ax;c.beginPath();c.moveTo(gx,gcy-2.5*gu);c.lineTo(gx,gcy+2.5*gu);c.stroke();const ax_=sin?'y':'x';txt(c,qi===1?ax_+' (m)':qi===2?'v'+(sin?'ᵧ':'ₓ')+' (m/s)':'a'+(sin?'ᵧ':'ₓ')+' (m/s²)',gx+6,gcy-2.5*gu-2,qcol,11.5,'left',1);txt(c,'t (s)',gx+gw,gcy+2.4*gu+25,C.tx,11.5,'right',1);
+ if(qi>1){/* grey: the position, rescaled to the same height, to compare where the peaks fall */c.strokeStyle=fa(.3);c.lineWidth=1.4;c.setLineDash([4,4]);c.beginPath();let s0=false;for(const p of trail){if(p[0]<tS)continue;const x=gx+(p[0]-tS)/10*gw,y=gcy-p[1]/P.r*amp*ys;s0?c.lineTo(x,y):c.moveTo(x,y);s0=true;}c.stroke();c.setLineDash([]);txt(c,L('tratteggio: la posizione, per confronto','dashed: the position, for comparison'),gx+gw,gcy-2.5*gu-2,C.mu,11,'right');}
+ c.strokeStyle=qcol;c.lineWidth=2.4;c.lineJoin='round';c.beginPath();let st=false;for(const p of trail){if(p[0]<tS)continue;const x=gx+(p[0]-tS)/10*gw,y=gcy-p[qi]*ys;st?c.lineTo(x,y):c.moveTo(x,y);st=true;}c.stroke();
+ const cur=[0,val,vel,acc][qi],dx=gx+(t-tS)/10*gw,dy=gcy-cur*ys;if(P.link&&sin&&wide&&qi===1)dash(qx,qy,dx,dy,C.cy);
+ c.fillStyle=qcol;c.beginPath();c.arc(dx,dy,6,0,7);c.fill();
  /* spring */
  if(P.spring){if(sin){if(wide){const sx=LW+44,top=cy-2.8*u;c.fillStyle=C.mu;c.fillRect(sx-18,top-4,36,4);coil(sx,top,sx,qy-13,12,9,C.mu);c.fillStyle=C.or;rr(c,sx-15,qy-13,30,26,5);c.fill();}}
   else{const sy=cy+2.75*u,lx=cx-2.55*u;c.fillStyle=C.mu;c.fillRect(lx-4,sy-18,4,36);coil(lx,sy,qx-13,sy,12,9,C.mu);c.fillStyle=C.or;rr(c,qx-13,sy-15,26,30,5);c.fill();if(P.link)dash(qx,qy,qx,sy-15,C.cy);}}
  $('#play').textContent=play?'❚❚':'▶';
- ro('rT',nf(2*Math.PI/P.om,2)+' s');ro('rf',nf(P.om/2/Math.PI,3)+' Hz');ro('rv',(sin?'y = ':'x = ')+nf(val,2)+' m');ro('ra',nf(a2*180/Math.PI,0)+'°');
+ ro('rT',nf(2*Math.PI/P.om,2)+' s');ro('rf',nf(P.om/2/Math.PI,3)+' Hz');ro('rv',(sin?'y = ':'x = ')+nf(val,2)+' m');ro('ra',nf(a2*180/Math.PI,0)+'°');ro('rvv',nf(vel,2)+' m/s');ro('raa',nf(acc,2)+' m/s²');
+ /* energy of a 1 kg mass: k = m·ω², the total stays the same */
+ const K=.5*vel*vel,U=.5*P.om*P.om*val*val,E=.5*P.om*P.om*P.r*P.r;ro('rK',nf(K,2)+' J');ro('rU',nf(U,2)+' J');ro('rE',nf(E,2)+' J');
+ {const e=fit(eb),w=eb.W,h=eb.H,bw=Math.min(54,(w-60)/3),base=h-20,sc=(h-40)/Math.max(E,1e-9);e.clearRect(0,0,w,h);
+  [[K,C.cy,'K'],[U,'#ff9f43','U'],[E,C.tx,L('tot','tot')]].forEach((q,i)=>{const x=30+i*(bw+18);e.fillStyle=q[1];rr(e,x,base-q[0]*sc,bw,q[0]*sc,4);e.fill();txt(e,q[2],x+bw/2,h-8,q[1],11,'center',1);});
+  e.strokeStyle=C.ax;e.beginPath();e.moveTo(20,base);e.lineTo(w-10,base);e.stroke();}
 });
 applyLang();
 </script>
