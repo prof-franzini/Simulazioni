@@ -65,12 +65,12 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 </div>
 <div id="uiA">
 <div class="grp"><h3 data-en="Build the vessels">Costruisci i vasi</h3>
-<select id="v0"></select><select id="v1"></select><select id="v2"></select><select id="v3"></select>
+<div class="row" style="flex-wrap:nowrap;align-items:center;margin:2px 0"><select id="v0" style="flex:1;min-width:0"></select><label class="ck" style="margin:0;flex:none"><input type="checkbox" id="k0"><span data-en="stopper">tappo</span></label></div><div class="row" style="flex-wrap:nowrap;align-items:center;margin:2px 0"><select id="v1" style="flex:1;min-width:0"></select><label class="ck" style="margin:0;flex:none"><input type="checkbox" id="k1"><span data-en="stopper">tappo</span></label></div><div class="row" style="flex-wrap:nowrap;align-items:center;margin:2px 0"><select id="v2" style="flex:1;min-width:0"></select><label class="ck" style="margin:0;flex:none"><input type="checkbox" id="k2"><span data-en="stopper">tappo</span></label></div><div class="row" style="flex-wrap:nowrap;align-items:center;margin:2px 0"><select id="v3" style="flex:1;min-width:0"></select><label class="ck" style="margin:0;flex:none"><input type="checkbox" id="k3"><span data-en="stopper">tappo</span></label></div>
 <span class="lb" data-en="Liquid">Liquido</span>
 <select id="liqA"><option value="water" data-en="Water">Acqua</option><option value="oil" data-en="Olive oil">Olio d'oliva</option><option value="gly" data-en="Glycerine">Glicerina</option><option value="hg" data-en="Mercury">Mercurio</option></select>
 <label class="ck"><input type="checkbox" id="open" checked><span data-en="Valves open (vessels connected)">Valvole aperte (vasi collegati)</span></label>
 <div class="row"><button class="btn pri" id="pourA" data-en="Pour">Versa</button><button class="btn" id="emptyA" data-en="Empty">Svuota</button></div>
-<p class="hint" data-en="Tap a vessel to move the tap over it and pour. Drag the background to rotate.">Tocca un vaso per spostarci sopra il rubinetto e versare. Trascina lo sfondo per ruotare.</p>
+<p class="hint" data-en="Tap a vessel to move the tap over it and pour. Drag the background to rotate. A stopper traps the air: watch what the liquid does.">Tocca un vaso per spostarci sopra il rubinetto e versare. Trascina lo sfondo per ruotare. Un tappo intrappola l'aria: guarda che cosa fa il liquido.</p>
 </div>
 <div class="grp"><h3 data-en="Levels">Livelli</h3>
 <table class="tb"><tr><th data-en="vessel">vaso</th><th data-en="level">livello</th><th data-en="p at the bottom">p sul fondo</th></tr>
@@ -185,24 +185,33 @@ try{if(localStorage.getItem('simTheme')==='light')setTheme(true);}catch(e){}
 </script>
 <script>
 const cv=$('#cv');let c,W,H,clock=0;
-const LQ={benz:{r:720,col:[255,170,90],n:['Benzina','Petrol']},oil:{r:920,col:[240,200,60],n:['Olio','Oil']},eth:{r:789,col:[190,160,255],n:['Alcol','Ethanol']},water:{r:1000,col:[64,150,255],n:['Acqua','Water']},gly:{r:1260,col:[110,230,200],n:['Glicerina','Glycerine']},hg:{r:13600,col:[190,196,210],n:['Mercurio','Mercury']}};
+const LQ={benz:{r:720,col:[255,170,90],n:['Benzina','Petrol']},oil:{r:920,col:[240,200,60],n:['Olio','Oil']},eth:{r:789,col:[190,160,255],n:['Alcol','Ethanol']},water:{r:1000,col:[64,150,255],n:['Acqua','Water']},gly:{r:1260,col:[110,230,200],n:['Glicerina','Glycerine']},miele:{r:1420,col:[214,128,20],n:['Miele','Honey']},hg:{r:13600,col:[190,196,210],n:['Mercurio','Mercury']}};
 const rgba=(rgb,a)=>'rgba('+rgb.map(v=>clamp(v,0,255)|0)+','+a+')',PATM=()=>P.atm?101.325:0;
 seg('mode');sel('g');check('atm');
 /* =====================================================================================================
    1 · COMMUNICATING VESSELS, in 3D: four vessels of any shape joined by a pipe; a tap pours into one of them
    ===================================================================================================== */
-const SH={cil:{f:u=>.035,n:['Cilindro','Cylinder']},stretto:{f:u=>.016,n:['Tubo stretto','Narrow tube']},largo:{f:u=>.055,n:['Cilindro largo','Wide cylinder']},cono:{f:u=>.015+.045*u,n:['Svasato (largo in alto)','Flared (wide at the top)']},imbuto:{f:u=>.058-.043*u,n:['Rastremato (stretto in alto)','Tapered (narrow at the top)']},ampolla:{f:u=>.016+.042*Math.exp(-(((u-.32)/.2)**2)),n:['Ampolla','Flask']}};
+const SH={cil:{f:u=>.035,n:['Cilindro','Cylinder']},stretto:{f:u=>.016,n:['Tubo stretto','Narrow tube']},largo:{f:u=>.055,n:['Cilindro largo','Wide cylinder']},cono:{f:u=>.015+.045*u,n:['Svasato (largo in alto)','Flared (wide at the top)']},imbuto:{f:u=>.058-.043*u,n:['Rastremato (stretto in alto)','Tapered (narrow at the top)']},ampolla:{f:u=>.016+.042*Math.exp(-(((u-.32)/.2)**2)),n:['Ampolla','Flask']},
+ /* thin tubes: ctr(u) is how far the tube's axis is from the vessel's centre line, at height u */
+ elica:{rt:.0105,ctr:u=>[.036*Math.cos(u*6*Math.PI),.036*Math.sin(u*6*Math.PI)],n:['Tubo a elica','Helical tube']},inclinato:{rt:.014,ctr:u=>[(u-.5)*.1,0],n:['Tubo inclinato','Slanted tube']},zigzag:{rt:.012,ctr:u=>[.032*(4*Math.abs((u*2.5)%1-.5)-1),0],n:['Tubo a zig-zag','Zigzag tube']}};
 const XS=[-.24,-.08,.08,.24],HV=.3,NS=60,QP=.0005,KP=.012; /* tap flow (m³/s) and how easily the pipe lets liquid through */
-const A={az:-.32,el:.3,vol:[0,0,0,0],pour:-1,sel:0,drain:false,tab:[],down:null,moved:0,rings:[],drops:[],bub:[]};let S3=600,cam;
+const A={az:-.32,el:.3,vol:[0,0,0,0],pour:-1,sel:0,drain:false,tab:[],down:null,moved:0,rings:[],drops:[],bub:[],n:[0,0,0,0],msg:0};const P0=101.325; /* A.n: amount of air trapped under a stopper (kPa·m³) */let S3=600,cam;
 function fillShapes(){[0,1,2,3].forEach(i=>{const e=$('#v'+i),v=e.value||['largo','stretto','ampolla','cono'][i];e.innerHTML=Object.keys(SH).map(k=>'<option value="'+k+'">'+(i+1)+' · '+L(SH[k].n[0],SH[k].n[1])+'</option>').join('');e.value=v;});}
-fillShapes();[0,1,2,3].forEach(i=>sel('v'+i));sel('liqA');check('open');
-function buildTab(){A.tab=[0,1,2,3].map(i=>{const f=SH[P['v'+i]].f,cum=[0];for(let k=0;k<NS;k++){const r=f((k+.5)/NS);cum.push(cum[k]+Math.PI*r*r*HV/NS);}return{f,cum,max:cum[NS]};});A.vol=A.vol.map((v,i)=>Math.min(v,A.tab[i].max));}
+fillShapes();[0,1,2,3].forEach(i=>{sel('v'+i);check('k'+i);});sel('liqA');check('open');
+function buildTab(){A.tab=[0,1,2,3].map(i=>{const sh=SH[P['v'+i]],cum=[0];let f=sh.f;
+  if(sh.ctr){/* a winding tube holds more liquid per centimetre of height: the same cross-section, a longer path */const dy=HV/NS;f=u=>{const a=sh.ctr(Math.max(0,u-.5/NS)),b=sh.ctr(Math.min(1,u+.5/NS));return sh.rt*Math.sqrt(Math.hypot(b[0]-a[0],b[1]-a[1],dy)/dy);};}
+  for(let k=0;k<NS;k++){const r=f((k+.5)/NS);cum.push(cum[k]+Math.PI*r*r*HV/NS);}return{f,cum,max:cum[NS],sh};});A.vol=A.vol.map((v,i)=>Math.min(v,A.tab[i].max));[0,1,2,3].forEach(i=>{if(P['k'+i])A.n[i]=P0*(A.tab[i].max-A.vol[i]);});}
+const mouth=i=>A.tab[i].sh.ctr?A.tab[i].sh.ctr(1):[0,0];
+/* air under a stopper is squeezed as the liquid rises (Boyle's law), and pushes back */
+const pGas=i=>P['k'+i]?A.n[i]/Math.max(1e-9,A.tab[i].max-A.vol[i]):P0;
 buildTab();
 function hOf(i){const cum=A.tab[i].cum,v=A.vol[i];if(v<=0)return 0;if(v>=cum[NS])return HV;let lo=0,hi=NS;while(hi-lo>1){const m=(lo+hi)>>1;cum[m]<=v?lo=m:hi=m;}return(lo+(v-cum[lo])/(cum[hi]-cum[lo]))*HV/NS;}
 function stepA(dt){for(let k=0;k<6;k++){const h=dt/6;
   if(A.pour>=0){const i=A.pour;A.vol[i]+=QP*h;if(A.vol[i]>=A.tab[i].max){A.vol[i]=A.tab[i].max;A.pour=-1;}}
-  if(P.open)for(let i=0;i<3;i++){let q=KP*(hOf(i)-hOf(i+1))*h;q=q>0?Math.min(q,A.vol[i],A.tab[i+1].max-A.vol[i+1]):-Math.min(-q,A.vol[i+1],A.tab[i].max-A.vol[i]);A.vol[i]-=q;A.vol[i+1]+=q;}
-  if(A.drain){let tot=0;for(let i=0;i<4;i++){A.vol[i]=Math.max(0,A.vol[i]-.0009*h);tot+=A.vol[i];}if(tot<1e-8)A.drain=false;}}
+  /* liquid moves along the pipe until the pressure at the bottom is the same on both sides: p(air above) + ρ·g·h */
+  if(P.open){const rg=LQ[P.liqA].r*(+P.g),head=i=>hOf(i)+(pGas(i)-P0)*1000/rg,comp=i=>{const r=A.tab[i].f(hOf(i)/HV),a=Math.PI*r*r;return P['k'+i]?1/(1/a+pGas(i)*1000/(rg*Math.max(1e-9,A.tab[i].max-A.vol[i]))):a;};
+   for(let i=0;i<3;i++){const s_=1/comp(i)+1/comp(i+1);let q=(head(i)-head(i+1))/s_*(1-Math.exp(-KP*s_*h));q=q>0?Math.min(q,A.vol[i],A.tab[i+1].max-A.vol[i+1]):-Math.min(-q,A.vol[i+1],A.tab[i].max-A.vol[i]);A.vol[i]-=q;A.vol[i+1]+=q;}}
+  if(A.drain){let tot=0;for(let i=0;i<4;i++){if(P['k'+i])continue;A.vol[i]=Math.max(0,A.vol[i]-.0009*h);tot+=A.vol[i];}if(tot<1e-8)A.drain=false;}}
  /* effects where the jet hits the surface */
  if(A.pour>=0){const i=A.pour,h=hOf(i);if(Math.random()<dt*14)A.rings.push({i,t:0});if(Math.random()<dt*40)A.drops.push({i,x:(Math.random()-.5)*.02,y:h,vx:(Math.random()-.5)*.25,vy:.25+Math.random()*.5});
   if(Math.random()<dt*30)A.bub.push({i,x:(Math.random()-.5)*.02,y:h-.01-Math.random()*.05,v:.08+Math.random()*.1,r:1+Math.random()*2.2});}
@@ -210,7 +219,19 @@ function stepA(dt){for(let k=0;k<6;k++){const h=dt/6;
  for(const d of A.drops){d.vy-=(+P.g)*dt;d.x+=d.vx*dt;d.y+=d.vy*dt;}A.drops=A.drops.filter(d=>d.y>hOf(d.i)-.004).slice(-60);
  for(const b of A.bub)b.y+=b.v*dt;A.bub=A.bub.filter(b=>b.y<hOf(b.i)-.003).slice(-60);}
 function side(i,a,b){const n=Math.max(2,Math.ceil((b-a)/HV*30)),Lp=[],Rp=[];for(let k=0;k<=n;k++){const y=a+(b-a)*k/n,p=cam.p(XS[i],y,0),r=A.tab[i].f(y/HV)*S3;Lp.push([p[0]-r,p[1]]);Rp.push([p[0]+r,p[1]]);}return[Lp,Rp];}
-function vessel(i,lc){const f=A.tab[i].f,h=hOf(i),x=XS[i],p0=cam.p(x,0,0),p1=cam.p(x,HV,0),r0=f(0)*S3,r1=f(1)*S3,se=cam.se,[Lg,Rg]=side(i,0,HV);
+function stopper(i,r1){const m=mouth(i),q=cam.p(XS[i]+m[0],HV,m[1]),w=r1+3,g=c.createLinearGradient(q[0]-w,0,q[0]+w,0);g.addColorStop(0,'#6b4320');g.addColorStop(.4,'#c08a4e');g.addColorStop(1,'#56340f');c.fillStyle=g;
+ c.beginPath();c.moveTo(q[0]-w*.82,q[1]+6);c.lineTo(q[0]-w-2,q[1]-11);c.lineTo(q[0]+w+2,q[1]-11);c.lineTo(q[0]+w*.82,q[1]+6);c.closePath();c.fill();c.beginPath();c.ellipse(q[0],q[1]-11,w+2,(w+2)*cam.se,0,0,7);c.fillStyle='#cf9c62';c.fill();c.strokeStyle='rgba(0,0,0,.35)';c.lineWidth=1;c.stroke();}
+function tag(i,dy,h){const t=cam.p(XS[i],HV,0),cap=P['k'+i];c.save();c.shadowColor='rgba(0,0,0,.6)';c.shadowBlur=3;txt(c,String(i+1),t[0],t[1]-dy-26-(cap?14:0),i===A.sel?C.yl:C.mu,13,'center',1);txt(c,nf(h*100,1)+' cm',t[0],t[1]-dy-11-(cap?14:0),C.tx,11.5,'center',1);
+ if(cap)txt(c,L('aria ','air ')+nf(pGas(i),1)+' kPa',t[0],t[1]-dy-11,C.pk,11,'center',1);c.restore();}
+/* a thin tube: drawn piece by piece, far pieces first, filled up to the level */
+function vesselTube(i,lc){const sh=A.tab[i].sh,h=hOf(i),x=XS[i],N=96,seg=[],w=2*sh.rt*S3;let a=[x,0,0];
+ for(let k=0;k<=N;k++){const u=k/N,o=sh.ctr(u),b=[x+o[0],u*HV,o[1]];seg.push({a,b,y:(a[1]+b[1])/2,d:-(a[0]+b[0])/2*cam.sa+(a[2]+b[2])/2*cam.ca});a=b;}
+ seg.sort((p,q)=>p.d-q.d);c.lineCap='round';const empty=LIGHT?'rgba(246,248,253,.92)':'rgba(16,24,52,.92)',full=rgba(lc,P.liqA==='hg'?.98:.92);
+ for(const s_ of seg){const p=cam.p(...s_.a),q=cam.p(...s_.b),ln=(col,lw)=>{c.strokeStyle=col;c.lineWidth=lw;c.beginPath();c.moveTo(p[0],p[1]);c.lineTo(q[0],q[1]);c.stroke();};
+  ln(C.glass,w+2.6);ln(s_.y<h?full:empty,Math.max(1,w-.4));c.lineCap='butt';ln('rgba(255,255,255,.22)',Math.max(1,w*.28));c.lineCap='round';}
+ if(A.pour===i){const m=mouth(i),top=cam.p(x+m[0],HV+.085,m[1]),bot=cam.p(x+m[0],HV,m[1]);c.strokeStyle=rgba(lc.map(v=>v*1.1+30),.95);c.lineWidth=Math.max(3,w*.6);c.beginPath();c.moveTo(top[0],top[1]);c.lineTo(bot[0]+Math.sin(clock*20),bot[1]);c.stroke();}
+ if(P['k'+i])stopper(i,w/2);tag(i,w/2,h);}
+function vessel(i,lc){if(A.tab[i].sh.ctr)return vesselTube(i,lc);const f=A.tab[i].f,h=hOf(i),x=XS[i],p0=cam.p(x,0,0),p1=cam.p(x,HV,0),r0=f(0)*S3,r1=f(1)*S3,se=cam.se,[Lg,Rg]=side(i,0,HV);
  /* glass body */
  c.beginPath();Lg.forEach((m,k)=>k?c.lineTo(m[0],m[1]):c.moveTo(m[0],m[1]));c.ellipse(p1[0],p1[1],r1,r1*se,0,Math.PI,2*Math.PI);for(let k=Rg.length-1;k>=0;k--)c.lineTo(Rg[k][0],Rg[k][1]);c.ellipse(p0[0],p0[1],r0,r0*se,0,0,Math.PI);c.closePath();c.fillStyle=fa(LIGHT?.06:.05);c.fill();
  c.strokeStyle=fa(.25);c.lineWidth=1;c.beginPath();c.ellipse(p1[0],p1[1],r1,r1*se,0,Math.PI,2*Math.PI);c.stroke();
@@ -231,8 +252,7 @@ function vessel(i,lc){const f=A.tab[i].f,h=hOf(i),x=XS[i],p0=cam.p(x,0,0),p1=cam
  c.strokeStyle=C.glass;c.lineWidth=2;c.lineJoin='round';for(const P_ of[Lg,Rg]){c.beginPath();P_.forEach((m,k)=>k?c.lineTo(m[0],m[1]):c.moveTo(m[0],m[1]));c.stroke();}
  c.beginPath();c.ellipse(p1[0],p1[1],r1,r1*se,0,0,Math.PI);c.stroke();c.beginPath();c.ellipse(p0[0],p0[1],r0,r0*se,0,0,Math.PI);c.stroke();
  c.strokeStyle='rgba(255,255,255,.28)';c.lineWidth=Math.max(1.5,.004*S3);c.lineCap='round';c.beginPath();Lg.forEach((m,k)=>{const xx=m[0]+Math.max(3,(p0[0]-m[0])*.22);k?c.lineTo(xx,m[1]):c.moveTo(xx,m[1]);});c.stroke();
- /* level tag */
- const tag=cam.p(x,HV,0);c.save();c.shadowColor='rgba(0,0,0,.6)';c.shadowBlur=3;txt(c,String(i+1),tag[0],tag[1]-r1*se-26,i===A.sel?C.yl:C.mu,13,'center',1);txt(c,nf(h*100,1)+' cm',tag[0],tag[1]-r1*se-11,C.tx,11.5,'center',1);c.restore();}
+ if(P['k'+i])stopper(i,r1);tag(i,r1*se+(P['k'+i]?8:0),h);}
 function drawA(dt){S3=Math.min(W/.82,H/.66);cam=cam3(W/2,H*.5+.2*S3*Math.cos(A.el),S3,A.az,A.el);stepA(dt);const lc=LQ[P.liqA].col,any=A.vol.some(v=>v>1e-7);
  const bg=c.createRadialGradient(W/2,H*.4,40,W/2,H*.5,Math.max(W,H)*.75);bg.addColorStop(0,LIGHT?'#ffffff':'#17224a');bg.addColorStop(1,LIGHT?'#dfe6f5':'#070b18');c.fillStyle=bg;c.fillRect(0,0,W,H);
  box3(c,cam,-.37,.37,-.085,-.062,-.14,.14,LIGHT?[196,160,116]:[72,52,34]);
@@ -244,16 +264,18 @@ function drawA(dt){S3=Math.min(W/.82,H/.66);cam=cam3(W/2,H*.5+.2*S3*Math.cos(A.e
  for(let i=0;i<3;i++){const q=cam.p((XS[i]+XS[i+1])/2,-.036,0),on=P.open;c.fillStyle=LIGHT?'#59607a':'#2b3250';rr(c,q[0]-5,q[1]-pw-3,10,2*pw+6,2);c.fill();c.save();c.translate(q[0],q[1]-pw-9);c.rotate(on?0:Math.PI/2);c.fillStyle=on?C.gr:C.rd;rr(c,-9,-3,18,6,3);c.fill();c.restore();c.fillStyle=LIGHT?'#59607a':'#2b3250';c.fillRect(q[0]-1.5,q[1]-pw-9,3,7);}
  const order=[0,1,2,3].sort((a,b)=>(-XS[a]*cam.sa)-(-XS[b]*cam.sa));for(const i of order)vessel(i,lc);
  /* the tap, hanging from above over the chosen vessel */
- {const q=cam.p(XS[A.sel],HV+.085,0),m=(y0,y1)=>{const g=c.createLinearGradient(q[0]-9,0,q[0]+9,0);g.addColorStop(0,LIGHT?'#7b849c':'#4a5270');g.addColorStop(.4,LIGHT?'#f2f4f9':'#c9d0e6');g.addColorStop(1,LIGHT?'#6b748c':'#333a55');return g;};
+ {const mo=mouth(A.sel),q=cam.p(XS[A.sel]+mo[0],HV+.085,mo[1]),m=(y0,y1)=>{const g=c.createLinearGradient(q[0]-9,0,q[0]+9,0);g.addColorStop(0,LIGHT?'#7b849c':'#4a5270');g.addColorStop(.4,LIGHT?'#f2f4f9':'#c9d0e6');g.addColorStop(1,LIGHT?'#6b748c':'#333a55');return g;};
   c.fillStyle=m();c.fillRect(q[0]-6,0,12,q[1]-22);rr(c,q[0]-10,q[1]-24,20,14,4);c.fill();c.beginPath();c.moveTo(q[0]-7,q[1]-10);c.lineTo(q[0]+7,q[1]-10);c.lineTo(q[0]+5,q[1]);c.lineTo(q[0]-5,q[1]);c.closePath();c.fill();
   c.fillStyle=A.pour>=0?C.gr:C.rd;c.save();c.translate(q[0]+16,q[1]-17);c.rotate(A.pour>=0?Math.PI/2:0);rr(c,-9,-3.5,18,7,3.5);c.fill();c.restore();}
  /* all the free surfaces lie on one horizontal line once the liquid is at rest */
- if(P.open&&any&&A.pour<0&&!A.drain){const hs=[0,1,2,3].map(hOf),mx=Math.max(...hs),mn=Math.min(...hs);if(mx-mn<.002){const a=cam.p(-.33,mx,0),b=cam.p(.33,mx,0);c.save();c.setLineDash([6,6]);c.strokeStyle=C.yl;c.lineWidth=1.5;c.beginPath();c.moveTo(a[0],a[1]);c.lineTo(b[0],b[1]);c.stroke();c.restore();c.save();c.shadowColor='rgba(0,0,0,.7)';c.shadowBlur=4;txt(c,L('stesso livello in tutti i vasi','same level in every vessel'),W/2,cam.p(0,HV+.085,0)[1],C.yl,12.5,'center',1);c.restore();}}
- const g=+P.g,r=LQ[P.liqA].r;[0,1,2,3].forEach(i=>{const h=hOf(i);ro('ah'+i,nf(h*100,1)+' cm');ro('ap'+i,nf(PATM()+r*g*h/1000,2)+' kPa');});
+ if(P.open&&any&&A.pour<0&&!A.drain){const hs=[0,1,2,3].map(hOf),mx=Math.max(...hs),mn=Math.min(...hs);if(mx-mn<.002&&![0,1,2,3].some(i=>P['k'+i])){const a=cam.p(-.33,mx,0),b=cam.p(.33,mx,0);c.save();c.setLineDash([6,6]);c.strokeStyle=C.yl;c.lineWidth=1.5;c.beginPath();c.moveTo(a[0],a[1]);c.lineTo(b[0],b[1]);c.stroke();c.restore();c.save();c.shadowColor='rgba(0,0,0,.7)';c.shadowBlur=4;txt(c,L('stesso livello in tutti i vasi','same level in every vessel'),W/2,cam.p(0,HV+.085,0)[1],C.yl,12.5,'center',1);c.restore();}}
+ const g=+P.g,r=LQ[P.liqA].r;[0,1,2,3].forEach(i=>{const h=hOf(i);ro('ah'+i,nf(h*100,1)+' cm');ro('ap'+i,nf(PATM()+pGas(i)-P0+r*g*h/1000,2)+' kPa');});
+ if(A.msg>0){A.msg-=dt;const q=cam.p(XS[A.sel],HV+.12,0);bubble(c,q[0]-80,q[1]-30,[L('C\'è il tappo!','It has a stopper!'),L('toglilo per versare qui','remove it to pour here')],C.pk);}
  const pb=$('#pourA'),lbl=A.pour>=0?L('Ferma','Stop'):L('Versa nel vaso ','Pour into vessel ')+(A.sel+1);if(pb.textContent!==lbl)pb.textContent=lbl;}
-$('#pourA').onclick=()=>{A.drain=false;A.pour=A.pour>=0?-1:(A.vol[A.sel]<A.tab[A.sel].max-1e-7?A.sel:-1);};$('#emptyA').onclick=()=>{A.pour=-1;A.drain=true;};
+const canPour=i=>{if(P['k'+i]){A.msg=2.2;return false;}return A.vol[i]<A.tab[i].max-1e-7;};
+$('#pourA').onclick=()=>{A.drain=false;A.pour=A.pour>=0?-1:(canPour(A.sel)?A.sel:-1);};$('#emptyA').onclick=()=>{A.pour=-1;A.drain=true;};
 const hA={down(p){A.down=p;A.moved=0;},move(p){if(!A.down)return;const dx=p.x-A.down.x,dy=p.y-A.down.y;A.moved+=Math.abs(dx)+Math.abs(dy);if(A.moved>6){A.az=clamp(A.az+dx*.008,-1,1);A.el=clamp(A.el+dy*.005,.1,.8);}A.down=p;},
- up(p){if(A.down&&A.moved<=6){for(let i=0;i<4;i++){const q=cam.p(XS[i],HV/2,0);if(Math.abs(p.x-q[0])<.062*S3&&Math.abs(p.y-q[1])<HV*S3*.7){A.drain=false;if(A.pour===i)A.pour=-1;else{A.sel=i;A.pour=A.vol[i]<A.tab[i].max-1e-7?i:-1;}break;}}}A.down=null;}};
+ up(p){if(A.down&&A.moved<=6){for(let i=0;i<4;i++){const q=cam.p(XS[i],HV/2,0);if(Math.abs(p.x-q[0])<.062*S3&&Math.abs(p.y-q[1])<HV*S3*.7){A.drain=false;if(A.pour===i)A.pour=-1;else{A.sel=i;A.pour=canPour(i)?i:-1;}break;}}}A.down=null;}};
 /* =====================================================================================================
    2 · STEVIN'S LAW, a 2D cross-section: drag the sensor, pressure against depth
    ===================================================================================================== */
@@ -295,7 +317,7 @@ function drawB(){const wide=W>760;TW=wide?Math.round(W*.58):W;TH=wide?H:Math.rou
 /* =====================================================================================================
    3 · ONE VESSEL, SEVERAL LIQUIDS in layers: the pressure graph bends at every boundary
    ===================================================================================================== */
-const MID=['benz','oil','water','gly','hg'],HMAX=2.5,STEP=.25;
+const MID=['benz','oil','water','gly','miele','hg'],HMAX=2.5,STEP=.25;
 const M={tgt:{},cur:{},anim:null,sx:.5,sy:.4,drag:false,fx:[],full:0,g:{}};
 function fillPours(){$('#pours').innerHTML=MID.map(k=>'<button class="btn" data-k="'+k+'" style="flex:1 1 45%;border-left:5px solid rgb('+LQ[k].col+')">'+L(LQ[k].n[0],LQ[k].n[1])+' <span style="opacity:.6;font-size:11px">'+LQ[k].r+'</span></button>').join('');}
 fillPours();$('#pours').onclick=e=>{const b=e.target.closest('button');if(!b||M.anim)return;const k=b.dataset.k,tot=MID.reduce((a,i)=>a+(M.tgt[i]||0),0);if(tot+STEP>HMAX+1e-9){M.full=2;return;}M.tgt[k]=(M.tgt[k]||0)+STEP;M.anim={k,t:0};};
@@ -334,14 +356,23 @@ function drawC(dt){const wide=W>760,tw_=wide?Math.round(W*.52):W,th_=wide?H:Math
  c.save();c.fillStyle=C.bg;c.strokeStyle=C.yl;c.lineWidth=3;c.beginPath();c.arc(sx,sy,10,0,7);c.fill();c.stroke();c.fillStyle=C.yl;c.beginPath();c.arc(sx,sy,3.5,0,7);c.fill();c.restore();
  bubble(c,sx+22,sy-58,['p = '+nf(m.p,1)+' kPa','h = '+nf(m.h,2)+' m']);
  ro('ch',nf(m.h,2)+' m');ro('cl',m.liq?L(LQ[m.liq].n[0],LQ[m.liq].n[1]):L('aria','air'));ro('cp',nf(m.p,1)+' kPa');
- /* pressure against depth: one straight piece per liquid, steeper where the liquid is denser */
- const ser=[];let pmax=Math.max(150,m.p*1.1);for(let i=ly.length-1;i>=0;i--){const l=ly[i],a=pAt(l.y1,ly),b=pAt(l.y0,ly);ser.push({pts:[[top-l.y1,a.p],[top-l.y0,b.p]],col:'rgb('+LQ[l.k].col+')',w:3.2});pmax=Math.max(pmax,b.p*1.08);}
- if(m.h>0)ser.push({pts:[[m.h,m.p]],col:C.tx,dots:true,r:6});
- const opt={xmin:0,xmax:Math.max(1,Math.ceil(top*2)/2),ymin:0,ymax:pmax,xl:L('profondità h (m)','depth h (m)'),yl:'p (kPa)',series:ser},gm=wide?chart(c,tw_+4,12,W-tw_-16,H-24,opt):chart(c,10,th_+4,W-20,H-th_-14,opt);
- ly.slice().reverse().forEach((l,i)=>{const y=gm.py+14+i*17;c.fillStyle='rgb('+LQ[l.k].col+')';c.fillRect(gm.px+8,y-2,14,4);txt(c,L(LQ[l.k].n[0],LQ[l.k].n[1]),gm.px+28,y,C.tx,12);});}
+ /* pressure against depth: one straight piece per liquid. The scale starts at the pressure on the surface and ends at the bottom,
+    so the pieces fill the graph and their different slopes (ρ·g) stand out; each piece is labelled with its slope. */
+ const g_=+P.g,pt=PATM(),pb=ly.length?pAt(0,ly).p:pt,xm=Math.max(.5,Math.ceil(top*4)/4),y0=Math.floor(pt/5)*5,y1=Math.max(y0+10,y0+(pb-y0)*1.12);
+ const opt={xmin:0,xmax:xm,ymin:y0,ymax:y1,xl:L('profondità h (m)','depth h (m)'),yl:'p (kPa)',series:[]},gm=wide?chart(c,tw_+4,12,W-tw_-16,H-24,opt):chart(c,10,th_+4,W-20,H-th_-14,opt);
+ c.save();c.beginPath();c.rect(gm.px,gm.py,gm.pw,gm.ph);c.clip();
+ for(let i=ly.length-1;i>=0;i--){const l=ly[i],col=LQ[l.k].col,d0=top-l.y1,d1=top-l.y0,a=pAt(l.y1,ly).p,b=pAt(l.y0,ly).p,X0=gm.X(d0),X1=gm.X(d1),Y0=gm.Y(a),Y1=gm.Y(b);
+  c.fillStyle=rgba(col,.13);c.fillRect(X0,gm.py,X1-X0,gm.ph); /* the band of depth this liquid occupies */
+  c.strokeStyle=rgba(col,.5);c.setLineDash([4,4]);c.lineWidth=1.2;c.beginPath();c.moveTo(X0,Y0);c.lineTo(X1,Y0);c.lineTo(X1,Y1);c.stroke();c.setLineDash([]); /* slope triangle: Δh across, Δp up */
+  c.strokeStyle='rgb('+col+')';c.lineWidth=4;c.lineCap='round';c.beginPath();c.moveTo(X0,Y0);c.lineTo(X1,Y1);c.stroke();c.fillStyle=C.tx;for(const[xx,yy]of[[X0,Y0],[X1,Y1]]){c.beginPath();c.arc(xx,yy,3.4,0,7);c.fill();}
+  if(X1-X0>34){const sl=LQ[l.k].r*g_/1000;c.save();c.shadowColor=LIGHT?'rgba(255,255,255,.9)':'rgba(0,0,0,.8)';c.shadowBlur=4;txt(c,nf(sl,1)+' kPa/m',(X0+X1)/2,Math.max(gm.py+12,Math.min(Y0,Y1)-12),'rgb('+col.map(v=>LIGHT?v*.6|0:Math.min(255,v+40|0))+')',12,'center',1);c.restore();}}
+ if(m.h>0){c.fillStyle=C.tx;c.strokeStyle=C.bg;c.lineWidth=2;c.beginPath();c.arc(gm.X(m.h),gm.Y(m.p),6.5,0,7);c.fill();c.stroke();}
+ c.restore();
+ if(ly.length)txt(c,L('pendenza = ρ·g: più denso, più ripido','slope = ρ·g: the denser, the steeper'),gm.px+gm.pw-6,gm.py+gm.ph-10,C.mu,11.5,'right');}
 /* ===================================================================================================== */
 const HINT={vasi:['Versa il liquido in un vaso: con le valvole aperte arriva alla stessa altezza in tutti, qualunque forma abbiano.','Pour liquid into one vessel: with the valves open it reaches the same height in all of them, whatever their shape.'],stev:['Trascina il sensore nel liquido: la pressione dipende solo dalla profondità.','Drag the sensor through the liquid: the pressure depends only on the depth.'],multi:['Un solo recipiente, più liquidi a strati: guarda come cambia la pendenza del grafico.','One vessel, several liquids in layers: watch how the slope of the graph changes.']};
 function onParam(id){if(id==='liq')reveal=false;if(/^v\d$/.test(id))buildTab();
+ if(/^k\d$/.test(id)){const i=+id[1];A.n[i]=P0*(A.tab[i].max-A.vol[i]);if(A.pour===i)A.pour=-1;} /* the stopper closes in the air that is there now */
  if(id==='mode'){$('#uiA').classList.toggle('hidden',P.mode!=='vasi');$('#uiB').classList.toggle('hidden',P.mode!=='stev');$('#uiC').classList.toggle('hidden',P.mode!=='multi');$('#mhint').textContent=L(...HINT[P.mode]);A.pour=-1;}}
 function onLang(){fillShapes();fillPours();$('#mhint').textContent=L(...HINT[P.mode]);refreshUI();}
 const H_=()=>P.mode==='vasi'?hA:P.mode==='stev'?hB:hC;
