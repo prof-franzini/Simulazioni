@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Photoelectric effect</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; color: #dfe6f2;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; -webkit-text-size-adjust: 100%; }
+  canvas#c { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+  canvas#c:active { cursor: grabbing; }
+  #vig { position: fixed; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(0,0,0,.55) 100%); }
+  .ui { transition: opacity .6s; }
+  body.clean .ui { opacity: 0; pointer-events: none; }
+
+  #head { position: fixed; left: calc(28px + env(safe-area-inset-left)); top: calc(24px + env(safe-area-inset-top));
+    max-width: 370px; pointer-events: none; text-shadow: 0 0 12px rgba(0,0,0,.9); }
+  #head b { display: block; font-size: 15px; letter-spacing: .3em; font-weight: 500; color: #fff; text-transform: uppercase; }
+  #cap { margin: 10px 0 14px; font-size: 12px; line-height: 1.6; color: #b9c6dc; letter-spacing: .02em; min-height: 3.2em; }
+  #tele { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; line-height: 1.9; }
+  #tele span { color: #8fa3c2; }
+  #tele i { font-style: normal; color: #ffd9a8; margin-right: 10px; text-transform: none; letter-spacing: .08em; }
+  #tele em { font-style: normal; color: #7fe8ff; }
+  #tele em.no { color: #ff9a8a; }
+
+  #hint { position: fixed; right: calc(26px + env(safe-area-inset-right)); top: calc(22px + env(safe-area-inset-top));
+    font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: #7f90ab; text-align: right; line-height: 1.9; }
+  #hint .touch { display: none; }
+  #key { margin-top: 6px; }
+  #key u { text-decoration: none; display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin: 0 6px 0 12px; }
+
+  #plot { position: fixed; left: calc(28px + env(safe-area-inset-left)); bottom: calc(24px + env(safe-area-inset-bottom));
+    width: 270px; height: 160px; pointer-events: none; }
+
+  #ctl { position: fixed; right: calc(24px + env(safe-area-inset-right)); bottom: calc(24px + env(safe-area-inset-bottom));
+    display: flex; flex-direction: column; gap: 10px; align-items: flex-end;
+    font-size: 11px; letter-spacing: .12em; text-transform: uppercase; }
+  .row { display: flex; gap: 10px; align-items: center; }
+  button { font: inherit; letter-spacing: inherit; text-transform: inherit; color: #dfe6f2; cursor: pointer;
+    background: rgba(10,14,22,.5); border: 1px solid rgba(190,210,255,.25); border-radius: 999px; padding: 7px 14px;
+    -webkit-tap-highlight-color: transparent; white-space: nowrap; }
+  button:hover { background: rgba(60,80,120,.5); }
+  .seg { display: flex; border: 1px solid rgba(190,210,255,.25); border-radius: 999px; overflow: hidden;
+    background: rgba(10,14,22,.5); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+  .seg button { border: 0; border-radius: 0; background: transparent; color: #8fa3c2; padding: 7px 13px; }
+  .seg button.on { background: rgba(120,160,255,.3); color: #fff; }
+  input[type=range] { width: 96px; accent-color: #9cc0ff; margin: 0; }
+  .wide input { width: 240px; }
+  label { color: #8fa3c2; min-width: 74px; text-align: right; }
+  output { color: #ffd9a8; min-width: 62px; text-align: right; text-transform: none; }
+
+  .tag { position: fixed; left: 0; top: 0; pointer-events: none; font-size: 9px; letter-spacing: .18em; text-transform: uppercase;
+    color: #a9bad6; white-space: nowrap; text-shadow: 0 0 6px #000, 0 0 2px #000; will-change: transform; }
+  .tag::before { content: ""; display: inline-block; width: 14px; height: 1px; background: rgba(170,190,230,.6); vertical-align: middle; margin-right: 6px; }
+  .tag s { text-decoration: none; text-transform: none; color: #ffd9a8; }
+
+  #info { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; padding: 18px;
+    background: rgba(0,0,0,.55); z-index: 5; }
+  #info.open { display: flex; }
+  #card { max-width: 560px; max-height: 84vh; overflow: auto; background: rgba(9,13,22,.94); border: 1px solid rgba(190,210,255,.22);
+    border-radius: 14px; padding: 22px 24px; font-size: 12.5px; line-height: 1.65; color: #c5d0e3; -webkit-overflow-scrolling: touch; }
+  #card h2 { margin: 0 0 4px; font-size: 13px; letter-spacing: .3em; text-transform: uppercase; font-weight: 500; color: #fff; }
+  #card h3 { margin: 18px 0 4px; font-size: 10.5px; letter-spacing: .2em; text-transform: uppercase; font-weight: 500; color: #9cc0ff; }
+  #card p { margin: 0 0 8px; }
+  #card .f { color: #ffd9a8; }
+  #card button { margin-top: 10px; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; }
+  #err { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; text-align: center; padding: 24px; }
+
+  @media (pointer: coarse) {
+    #hint .mouse { display: none; } #hint .touch { display: inline; }
+    button { padding: 10px 15px; } .seg button { padding: 10px 13px; } input[type=range] { height: 28px; }
+  }
+  @media (max-width: 720px) {
+    #hint { display: none; }
+    #head { left: calc(16px + env(safe-area-inset-left)); right: calc(16px + env(safe-area-inset-right)); top: calc(14px + env(safe-area-inset-top)); max-width: 440px; }
+    #head b { font-size: 13px; letter-spacing: .22em; }
+    #cap { font-size: 11.5px; margin: 7px 0 9px; line-height: 1.5; }
+    #tele { font-size: 10px; line-height: 1.75; letter-spacing: .1em; }
+    #ctl { left: calc(12px + env(safe-area-inset-left)); right: calc(12px + env(safe-area-inset-right)); bottom: calc(12px + env(safe-area-inset-bottom));
+      align-items: stretch; gap: 6px; font-size: 10px; letter-spacing: .08em; }
+    .row { gap: 8px; }
+    .seg { flex: 1; } .seg button { flex: 1; padding: 10px 2px; }
+    .wide input { flex: 1; width: auto; min-width: 60px; }
+    label { min-width: 62px; text-align: left; }
+    #rowE button { flex: 1; padding: 10px 4px; }
+    #rowE label, #speed { display: none; }
+    #plot { left: auto; right: calc(12px + env(safe-area-inset-right)); bottom: calc(232px + env(safe-area-inset-bottom)); width: 168px; height: 104px; }
+  }
+  @media (max-height: 480px) and (orientation: landscape) {
+    #cap, #plot, #tags { display: none; } #head b { margin-bottom: 8px; letter-spacing: .16em; }
+    #head { max-width: 400px; right: auto; }
+    #ctl { left: auto; width: 370px; gap: 4px; }
+    .seg button, #rowE button { padding-top: 6px; padding-bottom: 6px; }
+    input[type=range] { height: 22px; }
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="vig"></div>
+
+<div id="head" class="ui">
+  <b>Photoelectric effect</b>
+  <p id="cap"></p>
+  <div id="tele"></div>
+</div>
+
+<div id="hint" class="ui">
+  <span class="mouse">Drag to orbit · scroll to zoom · H hides interface</span><span class="touch">Drag to orbit · pinch to zoom</span>
+  <div id="key"><u id="keyPh" style="background:#7fb6ff"></u>Photons<u style="background:#7fe8ff"></u>Electrons</div>
+</div>
+
+<div id="tags" class="ui"></div>
+<canvas id="plot" class="ui"></canvas>
+
+<div id="ctl" class="ui">
+  <div class="row seg" id="metals">
+    <button data-m="0">Cesium</button><button data-m="1">Sodium</button><button data-m="2">Zinc</button><button data-m="3">Copper</button>
+  </div>
+  <div class="row wide"><label for="wl">Colour</label><input id="wl" type="range" min="200" max="750" step="1" value="450"><output id="wlOut"></output></div>
+  <div class="row wide"><label for="inten">Brightness</label><input id="inten" type="range" min="0" max="100" step="1" value="55"><output id="intenOut"></output></div>
+  <div class="row wide"><label for="volt">Voltage</label><input id="volt" type="range" min="-5" max="5" step="0.05" value="1"><output id="voltOut"></output></div>
+  <div class="row" id="rowE">
+    <label for="speed">Time</label>
+    <input id="speed" type="range" min="0.1" max="3" step="0.1" value="1">
+    <button id="play">Pause</button>
+    <button id="about">Info</button>
+    <button id="hide">Hide UI</button>
+  </div>
+</div>
+
+<div id="info">
+  <div id="card">
+    <h2>Light arrives in packets</h2>
+    <p>Shine light on a clean metal and electrons can be knocked out of it. Around 1900 this looked simple, but the details did not fit the idea of light as a smooth wave. Einstein explained them in 1905 by treating light as a stream of packets, photons, each carrying an energy set only by its colour: <span class="f">E = h f</span>. It earned him the 1921 Nobel Prize.</p>
+    <h3>Three things a wave cannot explain</h3>
+    <p><b>A threshold.</b> Below a certain frequency no electron leaves, however bright the light. One photon must bring at least the <em>work function</em> W, the energy that binds an electron to the metal. Photons do not team up.</p>
+    <p><b>Colour sets the energy.</b> Above the threshold the fastest electrons leave with <span class="f">K<sub>max</sub> = h f − W</span>. Bluer light gives faster electrons. Brighter light does not.</p>
+    <p><b>Brightness sets the number.</b> More intense light means more photons per second, so more electrons and a larger current, each with the same energy as before.</p>
+    <h3>Try it</h3>
+    <p>Pick zinc and slide the colour from red to ultraviolet: nothing happens until about 288 nm. Then make the voltage negative. The collector now repels the electrons, and the current falls to zero at the <em>stopping voltage</em>, which in volts equals K<sub>max</sub> in electron-volts. This is how K<sub>max</sub> is measured.</p>
+    <h3>The graph</h3>
+    <p>K<sub>max</sub> against frequency is a straight line for every metal. The lines are parallel: their slope is Planck's constant h. Where a line meets the axis is that metal's threshold frequency.</p>
+    <h3>About the model</h3>
+    <p>Work functions: cesium 2.1 eV, sodium 2.3 eV, zinc 4.3 eV, copper 4.7 eV (typical values; real surfaces vary). Every photon above the threshold frees one electron here, while in a real tube only a small fraction do. Electrons leave with a spread of energies and directions up to K<sub>max</sub> and move in a uniform field between the plates. Ultraviolet light is invisible; it is drawn violet.</p>
+    <button id="closeInfo">Close</button>
+  </div>
+</div>
+<div id="err">This scene needs WebGL, which isn't available in this browser.</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const fail = () => { $('err').style.display = 'flex'; };
+  if (!window.THREE) return fail();
+  const canvas = $('c');
+  let renderer;
+  try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true }); } catch (e) { return fail(); }
+  let pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+  renderer.setPixelRatio(pixelRatio);
+  renderer.setClearColor(0x000000, 1);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 500);
+  const FOV = 42;
+
+  // ---------------- physics ----------------
+  const HC = 1239.84;                                    // photon energy in eV = HC / wavelength in nm
+  const METALS = [
+    { name: 'Cesium', W: 2.1, col: 0xc9b98a }, { name: 'Sodium', W: 2.3, col: 0xc8ccd2 },
+    { name: 'Zinc', W: 4.3, col: 0x9aa7b5 }, { name: 'Copper', W: 4.7, col: 0xc87a4a }
+  ];
+  const GAP = 8, XC = -GAP/2, XA = GAP/2, PLATE_R = 1.6, TUBE_R = 2.3;
+  const KV = 2.6;                                        // scene speed of a 1 eV electron; energy in eV = (v / KV)^2
+  let metal = 1, lambda = 450, inten = 0.55, volt = 1;
+  const Ephoton = () => HC/lambda, Kmax = () => Ephoton() - METALS[metal].W;
+
+  function lightColor(nm) {                              // approximate colour of a wavelength; ultraviolet is drawn violet
+    let r = 0, g = 0, b = 0;
+    if (nm < 380) { r = 0.52; g = 0.30; b = 1; }
+    else if (nm < 440) { r = (440 - nm)/60*0.9; b = 1; }
+    else if (nm < 490) { g = (nm - 440)/50; b = 1; }
+    else if (nm < 510) { g = 1; b = (510 - nm)/20; }
+    else if (nm < 580) { r = (nm - 510)/70; g = 1; }
+    else if (nm < 645) { r = 1; g = (645 - nm)/65; }
+    else { r = 1; }
+    const k = nm > 700 ? 0.45 + 0.55*(750 - nm)/50 : 1;
+    return new THREE.Color(Math.min(1, r*k + 0.06), Math.min(1, g*k + 0.06), Math.min(1, b*k + 0.06));
+  }
+
+  // ---------------- apparatus ----------------
+  scene.add(new THREE.AmbientLight(0x8090b0, 0.75));
+  const key = new THREE.DirectionalLight(0xffffff, 0.9); key.position.set(3, 6, 8); scene.add(key);
+  const std = (color, o) => new THREE.MeshStandardMaterial(Object.assign({ color, roughness: 0.45, metalness: 0.35 }, o || {}));
+
+  // glass tube: only the edges catch the light
+  const glassMat = new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
+    vertexShader: `varying vec3 vN; varying vec3 vV; void main(){ vec4 mv = modelViewMatrix*vec4(position,1.0); vN = normalize(normalMatrix*normal); vV = normalize(-mv.xyz); gl_Position = projectionMatrix*mv; }`,
+    fragmentShader: `precision highp float; varying vec3 vN; varying vec3 vV;
+      void main(){ float f = pow(1.0 - abs(dot(normalize(vN), normalize(vV))), 3.0); gl_FragColor = vec4(vec3(0.45,0.62,0.95)*(0.03 + 0.5*f), 1.0); }`
+  });
+  const tube = new THREE.Mesh(new THREE.CylinderGeometry(TUBE_R, TUBE_R, 10, 64, 1, true), glassMat); tube.rotation.z = Math.PI/2; scene.add(tube);
+  [-1, 1].forEach(s => { const cap = new THREE.Mesh(new THREE.SphereGeometry(TUBE_R, 48, 16, 0, Math.PI*2, 0, Math.PI/2), glassMat);
+    cap.rotation.z = -s*Math.PI/2; cap.scale.y = 0.45; cap.position.x = s*5; scene.add(cap); });
+
+  const cathMat = std(METALS[metal].col, { emissive: 0x000000 });
+  const cathode = new THREE.Mesh(new THREE.CylinderGeometry(PLATE_R, PLATE_R, 0.16, 64), cathMat); cathode.rotation.z = Math.PI/2; cathode.position.x = XC - 0.08; scene.add(cathode);
+  const anodeMat = std(0x8a93a6, { emissive: 0x0a3040, emissiveIntensity: 0 });
+  const anode = new THREE.Mesh(new THREE.CylinderGeometry(PLATE_R*1.15, PLATE_R*1.15, 0.12, 64), anodeMat); anode.rotation.z = Math.PI/2; anode.position.x = XA + 0.06; scene.add(anode);
+  [XC - 0.9, XA + 0.9].forEach(x => { const r = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.7, 12), std(0x6c7484)); r.rotation.z = Math.PI/2; r.position.x = x; scene.add(r); });
+
+  // circuit: collector -> ammeter -> battery -> cathode
+  const WIRE = [[XA + 1.7, 0, 0], [6.4, 0, 0], [6.4, -3.7, 0], [-6.4, -3.7, 0], [-6.4, 0, 0], [XC - 1.7, 0, 0]].map(p => new THREE.Vector3(p[0], p[1], p[2]));
+  scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(WIRE), new THREE.LineBasicMaterial({ color: 0x7a8296 })));
+  const wireLen = [0]; for (let i = 1; i < WIRE.length; i++) wireLen.push(wireLen[i - 1] + WIRE[i].distanceTo(WIRE[i - 1]));
+  function onWire(u, out) { const d = u*wireLen[wireLen.length - 1]; let i = 1; while (i < WIRE.length - 1 && wireLen[i] < d) i++;
+    return out.copy(WIRE[i - 1]).lerp(WIRE[i], (d - wireLen[i - 1])/(wireLen[i] - wireLen[i - 1])); }
+  const battery = new THREE.Group(); battery.position.set(-2.6, -3.7, 0); scene.add(battery);
+  const bBody = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.36, 1.5, 24), std(0x2a3040)); bBody.rotation.z = Math.PI/2; battery.add(bBody);
+  const bPos = new THREE.Mesh(new THREE.CylinderGeometry(0.37, 0.37, 0.3, 24), std(0xd0503c)); bPos.rotation.z = Math.PI/2; battery.add(bPos);
+  const meter = new THREE.Group(); meter.position.set(2.6, -3.7, 0); scene.add(meter);
+  meter.add(new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.75, 0.2, 40), std(0x1a2030)).rotateX(Math.PI/2));
+  meter.add(new THREE.Mesh(new THREE.TorusGeometry(0.75, 0.035, 8, 48), std(0x9aa4b8)));
+  const needle = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.6, 0.02), new THREE.MeshBasicMaterial({ color: 0x7fe8ff })); needle.geometry.translate(0, 0.3, 0); needle.position.set(0, -0.25, 0.12); meter.add(needle);
+  for (let i = -2; i <= 2; i++) { const t = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.09, 0.02), new THREE.MeshBasicMaterial({ color: 0x8fa3c2 }));
+    const a = i*0.5; t.position.set(-Math.sin(a)*0.62, -0.25 + Math.cos(a)*0.62, 0.11); t.rotation.z = a; meter.add(t); }
+
+  // lamp and beam
+  const LAMP = new THREE.Vector3(1.6, 4.9, 3.4), HIT = new THREE.Vector3(XC, 0, 0);
+  const beamDir = HIT.clone().sub(LAMP), beamLen = beamDir.length(); beamDir.normalize();
+  const qBeam = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), beamDir.clone().negate());
+  const lamp = new THREE.Group(); lamp.position.copy(LAMP).addScaledVector(beamDir, -0.7); lamp.quaternion.copy(qBeam); scene.add(lamp);
+  lamp.add(new THREE.Mesh(new THREE.CylinderGeometry(0.95, 0.7, 1.4, 32, 1, true), std(0x30384a, { side: THREE.DoubleSide })));
+  const lensMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  const lens = new THREE.Mesh(new THREE.CircleGeometry(0.9, 32), lensMat); lens.rotation.x = Math.PI/2; lens.position.y = -0.55; lamp.add(lens);
+  const beamMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.1, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+  const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.35, beamLen, 40, 1, true), beamMat);
+  beam.position.copy(LAMP).addScaledVector(beamDir, beamLen/2); beam.quaternion.copy(qBeam); scene.add(beam);
+
+  // ---------------- point clouds ----------------
+  const uPx = { value: 1000 };
+  function cloud(n, size, color) {
+    const pos = new Float32Array(n*3), al = new Float32Array(n), g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3).setUsage(THREE.DynamicDrawUsage));
+    g.setAttribute('aA', new THREE.BufferAttribute(al, 1).setUsage(THREE.DynamicDrawUsage));
+    const u = { uPx, uSize: { value: size }, uCol: { value: new THREE.Color(color) } };
+    const p = new THREE.Points(g, new THREE.ShaderMaterial({ uniforms: u, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+      vertexShader: `attribute float aA; uniform float uPx, uSize; varying float vA; void main(){ vA = aA; vec4 mv = modelViewMatrix*vec4(position,1.0);
+        gl_Position = projectionMatrix*mv; gl_PointSize = aA > 0.0 ? max(uSize*uPx/-mv.z, 2.5) : 0.0; }`,
+      fragmentShader: `precision highp float; uniform vec3 uCol; varying float vA; void main(){ float d = length(gl_PointCoord - 0.5)*2.0;
+        float a = pow(max(1.0 - d, 0.0), 1.6); gl_FragColor = vec4(uCol*a*vA + vec3(1.0)*pow(a, 6.0)*vA*0.5, 1.0); }` }));
+    p.frustumCulled = false; scene.add(p);
+    return { n, pos, al, g, u, next: 0 };
+  }
+  const NPH = 500, NEL = 1400, NW = 46;
+  const ph = cloud(NPH, 0.20, 0xffffff), el = cloud(NEL, 0.19, 0x58dcff), wd = cloud(NW, 0.13, 0x58dcff);
+  const phS = new Float32Array(NPH), phL = new Float32Array(NPH), phA = new Float32Array(NPH*3), phD = new Float32Array(NPH*3), phP = new Float32Array(NPH);
+  const elV = new Float32Array(NEL*3), elT = new Float32Array(NEL);
+  const bx = new THREE.Vector3(), by = new THREE.Vector3();          // two directions across the beam
+  bx.crossVectors(beamDir, new THREE.Vector3(0, 1, 0)).normalize(); by.crossVectors(beamDir, bx);
+  function slot(c) { for (let k = 0; k < c.n; k++) { const i = (c.next + k) % c.n; if (c.al[i] === 0) { c.next = i + 1; return i; } } return -1; }
+
+  function emitPhoton() {
+    const i = slot(ph); if (i < 0) return;
+    const r = 0.85*Math.sqrt(Math.random()), a = Math.random()*6.283, r2 = PLATE_R*0.86*Math.sqrt(Math.random()), a2 = Math.random()*6.283;
+    const sx = LAMP.x + (bx.x*Math.cos(a) + by.x*Math.sin(a))*r, sy = LAMP.y + (bx.y*Math.cos(a) + by.y*Math.sin(a))*r, sz = LAMP.z + (bx.z*Math.cos(a) + by.z*Math.sin(a))*r;
+    const dx = XC - sx, dy = r2*Math.cos(a2) - sy, dz = r2*Math.sin(a2) - sz, L = Math.hypot(dx, dy, dz);
+    phA[i*3] = sx; phA[i*3 + 1] = sy; phA[i*3 + 2] = sz; phD[i*3] = dx/L; phD[i*3 + 1] = dy/L; phD[i*3 + 2] = dz/L;
+    phS[i] = 0; phL[i] = L; phP[i] = Math.random()*6.283; ph.al[i] = 1;
+  }
+  function emitElectron(y, z) {
+    const K = Kmax(); if (K <= 0) return;
+    const i = slot(el); if (i < 0) return;
+    const E = K*(1 - 0.7*Math.pow(Math.random(), 2)), v = KV*Math.sqrt(E);          // energies up to Kmax
+    const st = 0.32*Math.sqrt(Math.random()), ct = Math.sqrt(1 - st*st), a = Math.random()*6.283;
+    el.pos[i*3] = XC + 0.02; el.pos[i*3 + 1] = y; el.pos[i*3 + 2] = z;
+    elV[i*3] = v*ct; elV[i*3 + 1] = v*st*Math.cos(a); elV[i*3 + 2] = v*st*Math.sin(a); elT[i] = 0; el.al[i] = 1;
+  }
+
+  // ---------------- labels ----------------
+  const tags = [], tmpV = new THREE.Vector3();
+  function tag(x, y, z) { const e = document.createElement('div'); e.className = 'tag'; $('tags').appendChild(e);
+    const t = { el: e, p: new THREE.Vector3(x, y, z), shown: true, w: 0, text: '' }; tags.push(t); return t; }
+  function setTag(t, html) { if (t.text !== html) { t.text = html; t.el.innerHTML = html; t.w = t.el.offsetWidth + 10; } }
+  const tLamp = tag(LAMP.x + 0.9, LAMP.y + 0.5, LAMP.z), tCath = tag(XC, PLATE_R + 0.15, 0), tAn = tag(XA, PLATE_R*1.15 + 0.15, 0),
+        tBat = tag(-2.6, -3.25, 0), tMet = tag(2.6, -2.85, 0);
+  setTag(tAn, 'Collector'); setTag(tMet, 'Ammeter');
+
+  // ---------------- graph: Kmax against frequency ----------------
+  const plot = $('plot'), pc = plot.getContext('2d');
+  function drawPlot() {
+    const w = plot.clientWidth, h = plot.clientHeight; if (!w) return;
+    const d = Math.min(window.devicePixelRatio || 1, 2); plot.width = w*d; plot.height = h*d; pc.setTransform(d, 0, 0, d, 0, 0);
+    const L = 26, R = w - 8, T = 8, Bm = h - 20, FM = 16, KM = 4.5, small = w < 200;
+    const X = f => L + (R - L)*f/FM, Y = k => Bm - (Bm - T)*k/KM, HEV = 0.41357;       // h in eV per 10^14 Hz
+    pc.clearRect(0, 0, w, h); pc.fillStyle = 'rgba(6,9,16,.55)'; pc.fillRect(0, 0, w, h);
+    pc.font = (small ? 8 : 9) + 'px ui-monospace, Menlo, monospace'; pc.lineWidth = 1;
+    pc.strokeStyle = 'rgba(190,210,255,.35)'; pc.beginPath(); pc.moveTo(L, T); pc.lineTo(L, Bm); pc.lineTo(R, Bm); pc.stroke();
+    pc.fillStyle = '#8fa3c2'; pc.textAlign = 'right'; pc.fillText('f (10¹⁴ Hz)', R, h - 5); pc.textAlign = 'left'; pc.fillText(small ? 'Kmax eV' : 'Kmax (eV)', L + 5, T + 8);
+    pc.textAlign = 'center'; [5, 10, 15].forEach(f => { pc.fillText(f, X(f), Bm + 10); pc.beginPath(); pc.moveTo(X(f), Bm); pc.lineTo(X(f), Bm - 3); pc.stroke(); });
+    pc.textAlign = 'right'; [2, 4].forEach(k => { pc.fillText(k, L - 4, Y(k) + 3); pc.beginPath(); pc.moveTo(L, Y(k)); pc.lineTo(L + 3, Y(k)); pc.stroke(); });
+    METALS.forEach((m, i) => { const f0 = m.W/HEV, f1 = Math.min(FM, (KM + m.W)/HEV);
+      pc.strokeStyle = i === metal ? '#ffd9a8' : 'rgba(143,163,194,.35)'; pc.lineWidth = i === metal ? 1.6 : 1;
+      pc.beginPath(); pc.moveTo(X(f0), Y(0)); pc.lineTo(X(f1), Y(HEV*f1 - m.W)); pc.stroke(); });
+    const f = 2997.92/lambda, K = Math.max(0, Kmax()), c = lightColor(lambda);
+    pc.strokeStyle = 'rgba(' + [c.r, c.g, c.b].map(v => Math.round(Math.min(1, v)*255)).join(',') + ',.7)'; pc.setLineDash([3, 3]);
+    pc.beginPath(); pc.moveTo(X(f), Bm); pc.lineTo(X(f), T); pc.stroke(); pc.setLineDash([]);
+    pc.fillStyle = K > 0 ? '#7fe8ff' : '#ff9a8a'; pc.beginPath(); pc.arc(X(f), Y(Math.min(K, KM)), 3.5, 0, 6.3); pc.fill();
+  }
+
+  // ---------------- controls ----------------
+  const cam = { az: 1.9, el: 0.6, dist: 28 }, tgt = { az: Math.PI/2 - 0.42, el: 0.22, dist: 21 };
+  let playing = true, speed = 1, idle = 0, dirty = true, lastCap = '';
+  function refresh() {
+    const c = lightColor(lambda), uv = lambda < 380, ir = lambda > 700;
+    ph.u.uCol.value.copy(c); beamMat.color.copy(c); lensMat.color.copy(c).multiplyScalar(0.25 + 0.75*inten); $('keyPh').style.background = '#' + c.getHexString();
+    beamMat.opacity = 0.02 + 0.16*inten;
+    cathMat.color.setHex(METALS[metal].col);
+    $('wlOut').textContent = lambda + ' nm'; $('intenOut').textContent = Math.round(inten*100) + ' %'; $('voltOut').textContent = (volt > 0 ? '+' : volt < 0 ? '−' : '') + Math.abs(volt).toFixed(2) + ' V';
+    document.querySelectorAll('#metals button').forEach(b => b.classList.toggle('on', +b.dataset.m === metal));
+    setTag(tLamp, 'Lamp <s>' + lambda + ' nm' + (uv ? ' · UV' : ir ? ' · deep red' : '') + '</s>');
+    setTag(tCath, METALS[metal].name + ' plate');
+    setTag(tBat, 'Battery <s>' + $('voltOut').textContent + '</s>');
+    bPos.position.x = volt >= 0 ? 0.62 : -0.62;                        // red end marks the positive pole
+    dirty = true; drawPlot();
+  }
+  $('wl').oninput = e => { lambda = +e.target.value; refresh(); };
+  $('inten').oninput = e => { inten = +e.target.value/100; refresh(); };
+  $('volt').oninput = e => { volt = +e.target.value; refresh(); };
+  document.querySelectorAll('#metals button').forEach(b => { b.onclick = () => { metal = +b.dataset.m; el.al.fill(0); refresh(); }; });
+  $('play').onclick = () => { playing = !playing; $('play').textContent = playing ? 'Pause' : 'Play'; };
+  $('speed').oninput = e => { speed = +e.target.value; };
+  const toggleUI = () => document.body.classList.toggle('clean');
+  $('hide').onclick = toggleUI;
+  const toggleInfo = () => $('info').classList.toggle('open');
+  $('about').onclick = toggleInfo; $('closeInfo').onclick = toggleInfo;
+  $('info').addEventListener('click', e => { if (e.target === $('info')) toggleInfo(); });
+  window.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
+    if (e.key === 'h' || e.key === 'H') toggleUI();
+    if (e.key === ' ') { e.preventDefault(); $('play').click(); }
+    if (e.key === 'Escape') $('info').classList.remove('open');
+  });
+  const ptrs = new Map(); let pinch = 0;
+  canvas.addEventListener('pointerdown', e => {
+    if (document.body.classList.contains('clean') && e.pointerType !== 'mouse') toggleUI();
+    try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+    ptrs.set(e.pointerId, [e.clientX, e.clientY]); pinch = 0; idle = 0;
+  });
+  canvas.addEventListener('pointermove', e => {
+    const p = ptrs.get(e.pointerId); if (!p) return; idle = 0;
+    if (ptrs.size === 1) { tgt.az += (e.clientX - p[0])*0.006; tgt.el = Math.max(-0.6, Math.min(1.45, tgt.el + (e.clientY - p[1])*0.006)); }
+    p[0] = e.clientX; p[1] = e.clientY;
+    if (ptrs.size === 2) { const a = Array.from(ptrs.values()), d = Math.hypot(a[0][0] - a[1][0], a[0][1] - a[1][1]);
+      if (pinch) tgt.dist = Math.max(6, Math.min(50, tgt.dist*pinch/d)); pinch = d; }
+  });
+  const end = e => { ptrs.delete(e.pointerId); pinch = 0; };
+  canvas.addEventListener('pointerup', end); canvas.addEventListener('pointercancel', end);
+  canvas.addEventListener('contextmenu', e => e.preventDefault());
+  canvas.addEventListener('wheel', e => { e.preventDefault(); idle = 0; tgt.dist = Math.max(6, Math.min(50, tgt.dist*Math.exp(e.deltaY*0.001))); }, { passive: false });
+
+  let vw = 1, vh = 1;
+  function resize() {
+    vw = window.innerWidth; vh = window.innerHeight;
+    renderer.setPixelRatio(pixelRatio); renderer.setSize(vw, vh, false);
+    camera.aspect = vw/vh;
+    if (vw <= 720 && vh > vw) camera.setViewOffset(vw, vh, 0, vh*0.07, vw, vh);
+    else if (vh <= 480) camera.setViewOffset(vw, vh, vw*0.14, vh*0.10, vw, vh); else camera.clearViewOffset();
+    camera.updateProjectionMatrix(); drawPlot();
+  }
+  window.addEventListener('resize', resize); window.addEventListener('orientationchange', () => setTimeout(resize, 200)); resize();
+
+  // ---------------- telemetry ----------------
+  let lastTele = 0, rate = 0, hits = 0;
+  function telemetry() {
+    const E = Ephoton(), M = METALS[metal], K = E - M.W;
+    let h = '';
+    const row = (a, v, c, d) => { h += '<div><span>' + a + '</span> <i>' + v + '</i>' + (c ? '<span>' + c + '</span> <i>' + d + '</i>' : '') + '</div>'; };
+    row('Photon energy', E.toFixed(2) + ' eV', 'Needed', M.W.toFixed(1) + ' eV');
+    row('Threshold', Math.round(HC/M.W) + ' nm', 'Max energy', K > 0 ? K.toFixed(2) + ' eV' : '–');
+    row('Stopping voltage', K > 0 ? '−' + K.toFixed(2) + ' V' : '–', 'Current', Math.round(rate) + ' e/s');
+    let s, cap;
+    if (inten === 0) { s = '<span>Lamp off</span>'; cap = 'The lamp is off. Raise the brightness to send photons onto the metal plate.'; }
+    else if (K <= 0) { s = '<em class="no">No electrons · photon energy too low</em>';
+      cap = 'Each photon carries too little energy to free an electron. Making the light brighter only sends more photons that are just as weak. Move the colour towards violet.'; }
+    else if (volt <= -K) { s = '<em class="no">All electrons turned back</em>';
+      cap = 'The collector is negative enough to stop even the fastest electrons. This stopping voltage measures their kinetic energy directly.'; }
+    else { s = '<em>Electrons leave with up to ' + K.toFixed(2) + ' eV</em>';
+      cap = volt < 0 ? 'The negative collector pushes the electrons back. Only the fastest still arrive, so the current drops.'
+                     : 'One photon frees one electron. The colour decides how fast the electrons leave; the brightness decides how many.'; }
+    $('tele').innerHTML = h + '<div>' + s + '</div>';
+    if (cap !== lastCap) { lastCap = cap; $('cap').textContent = cap; }
+  }
+
+  // ---------------- animation ----------------
+  let prev = performance.now(), frames = 0, slow = 0, acc = 0, wireU = 0, time = 0;
+  function frame(now) {
+    const raw = Math.min(0.05, (now - prev)/1000); prev = now;
+    const dt = playing ? raw*speed : 0; time += dt;
+
+    if (dt > 0) {
+      // photons: the wiggle is shorter for bluer light
+      acc += dt*70*inten; while (acc >= 1) { acc -= 1; emitPhoton(); }
+      const wave = 0.35 + (lambda - 200)/550*1.1, kx = 6.283/wave;
+      for (let i = 0; i < NPH; i++) if (ph.al[i] > 0) {
+        phS[i] += dt*9; const s = phS[i], j = i*3;
+        if (s >= phL[i]) { ph.al[i] = 0; emitElectron(phA[j + 1] + phD[j + 1]*phL[i], phA[j + 2] + phD[j + 2]*phL[i]); continue; }
+        const wgl = 0.11*Math.sin(kx*s + phP[i]);
+        ph.pos[j] = phA[j] + phD[j]*s + bx.x*wgl; ph.pos[j + 1] = phA[j + 1] + phD[j + 1]*s + bx.y*wgl; ph.pos[j + 2] = phA[j + 2] + phD[j + 2]*s + bx.z*wgl;
+        ph.al[i] = Math.min(1, s*1.5)*0.9;
+      }
+      // electrons: uniform field between the plates; gaining 1 eV per volt crossed
+      const ax = KV*KV/2*volt/GAP, ra2 = Math.pow(PLATE_R*1.15, 2), rt2 = TUBE_R*TUBE_R*0.92;
+      for (let i = 0; i < NEL; i++) if (el.al[i] > 0) {
+        const j = i*3; elV[j] += ax*dt;
+        el.pos[j] += elV[j]*dt; el.pos[j + 1] += elV[j + 1]*dt; el.pos[j + 2] += elV[j + 2]*dt; elT[i] += dt;
+        const x = el.pos[j], r2 = el.pos[j + 1]*el.pos[j + 1] + el.pos[j + 2]*el.pos[j + 2];
+        if (x >= XA) { if (r2 < ra2) { hits++; el.al[i] = 0; } else if (x > XA + 0.8) el.al[i] = 0; }
+        else if (x < XC || r2 > rt2 || elT[i] > 16) el.al[i] = 0;
+        else el.al[i] = Math.min(1, elT[i]*6);
+      }
+      rate += (hits/dt - rate)*(1 - Math.exp(-dt*1.2)); hits = 0;
+      // electrons drifting round the circuit
+      wireU = (wireU + dt*rate*0.004) % 1;
+      const wa = Math.min(0.9, rate/14);
+      for (let i = 0; i < NW; i++) { onWire((wireU + i/NW) % 1, tmpV); wd.pos[i*3] = tmpV.x; wd.pos[i*3 + 1] = tmpV.y; wd.pos[i*3 + 2] = tmpV.z; wd.al[i] = wa; }
+      [ph, el, wd].forEach(c => { c.g.attributes.position.needsUpdate = true; c.g.attributes.aA.needsUpdate = true; });
+    }
+    needle.rotation.z += ((1 - Math.min(1, rate/70)*2) - needle.rotation.z)*Math.min(1, raw*6);
+    anodeMat.emissiveIntensity = Math.min(1.5, rate/40);
+
+    // camera
+    idle += raw; if (idle > 9 && playing && !ptrs.size) tgt.az += raw*0.03*Math.cos(now*0.00018);
+    const k = 1 - Math.exp(-raw*4);
+    cam.az += (tgt.az - cam.az)*k; cam.el += (tgt.el - cam.el)*k; cam.dist += (tgt.dist - cam.dist)*k;
+    const ce = Math.cos(cam.el), cy = 0.1;
+    camera.position.set(cam.dist*ce*Math.cos(cam.az), cy + cam.dist*Math.sin(cam.el), cam.dist*ce*Math.sin(cam.az));
+    camera.lookAt(0, cy, 0);
+    const vf = camera.aspect < 1 ? Math.min(100, 2*Math.atan(Math.tan(FOV*Math.PI/360)/camera.aspect)*180/Math.PI) : FOV;
+    if (Math.abs(vf - camera.fov) > 0.01) { camera.fov = vf; camera.updateProjectionMatrix(); }
+    uPx.value = vh*pixelRatio/(2*Math.tan(camera.fov*Math.PI/360));
+
+    for (const t of tags) {
+      const w = tmpV.copy(t.p).project(camera);
+      const show = w.z < 1 && Math.abs(w.x) < 0.95 && Math.abs(w.y) < 0.95 && (w.x*0.5 + 0.5)*vw + t.w < vw;
+      if (show) t.el.style.transform = 'translate(' + ((w.x*0.5 + 0.5)*vw + 6).toFixed(1) + 'px,' + ((-w.y*0.5 + 0.5)*vh - 6).toFixed(1) + 'px)';
+      if (show !== t.shown) { t.shown = show; t.el.style.display = show ? '' : 'none'; }
+    }
+    if (dirty || now - lastTele > 200) { lastTele = now; dirty = false; telemetry(); }
+    renderer.render(scene, camera);
+
+    frames++; if (raw > 0.045) slow++;
+    if (frames === 90) { if (slow > 45 && pixelRatio > 0.75) { pixelRatio = Math.max(0.75, pixelRatio*0.75); resize(); } frames = 0; slow = 0; }
+    requestAnimationFrame(frame);
+  }
+  if (window.innerHeight > window.innerWidth) tgt.dist = 19;
+  refresh();
+  window.peDebug = { set: (m, l, i, v) => { metal = m; lambda = l; inten = i; volt = v; $('wl').value = l; $('inten').value = i*100; $('volt').value = v; el.al.fill(0); refresh(); }, tgt, get rate() { return rate; } };
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

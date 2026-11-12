@@ -30,9 +30,9 @@
   <link rel="manifest" href="manifest.json" />
 
   <style>
-    :root{--bg0:#070b18;--hd:linear-gradient(90deg,#101a3d,#0a0f1f 70%);--card:#121a36;--bd:#1c2548;--bd2:#2a3566;--tx:#e8ecff;--mu:#8d97bd;--ac:#4cc9f0;--glow:rgba(76,201,240,.18)}
-    body.light{--bg0:#e9edf7;--hd:linear-gradient(90deg,#dfe7fb,#f6f8fd 70%);--card:#ffffff;--bd:#d5dcee;--bd2:#bcc6e0;--tx:#16203f;--mu:#5c6890;--ac:#0a8fc0;--glow:rgba(10,143,192,.16)}
-    html{-webkit-text-size-adjust:100%;text-size-adjust:100%}*{box-sizing:border-box}
+    :root{--bg0:#070b18;--hd:linear-gradient(90deg,#101a3d,#0a0f1f 70%);--card:#121a36;--bd:#1c2548;--bd2:#2a3566;--tx:#e8ecff;--mu:#8d97bd;--ac:#4cc9f0;--glow:rgba(76,201,240,.18);--tile:#0c1330;--new:#2ee6a6;--upd:#ffd166}
+    body.light{--bg0:#e9edf7;--hd:linear-gradient(90deg,#dfe7fb,#f6f8fd 70%);--card:#ffffff;--bd:#d5dcee;--bd2:#bcc6e0;--tx:#16203f;--mu:#5c6890;--ac:#0a8fc0;--glow:rgba(10,143,192,.16);--tile:#eef2fb;--new:#0c9f6e;--upd:#b06a00}
+    html{-webkit-text-size-adjust:100%;text-size-adjust:100%;scroll-behavior:smooth}*{box-sizing:border-box}
     body{margin:0;font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg0);color:var(--tx);min-height:100vh}
     header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 22px;border-bottom:1px solid var(--bd);background:var(--hd)}
     .tag{font-size:11px;text-transform:uppercase;letter-spacing:1.6px;color:var(--ac);display:block}
@@ -41,17 +41,32 @@
     .hb button{width:40px;height:36px;border-radius:9px;border:1px solid var(--bd2);background:var(--card);color:var(--tx);font:600 13px system-ui;cursor:pointer}
     .hb button:hover{border-color:var(--ac)}
     main{max-width:1080px;margin:0 auto;padding:22px 22px 10px}
-    .intro{color:var(--mu);margin:0 0 6px;font-size:15.5px}
-    h2{font-size:11.5px;text-transform:uppercase;letter-spacing:1.5px;color:var(--mu);font-weight:600;margin:28px 0 12px}
-    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
-    .card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px 16px 15px;text-decoration:none;color:var(--tx);display:flex;flex-direction:column;gap:6px;transition:transform .15s ease,box-shadow .2s ease,border-color .2s ease}
+    .intro{color:var(--mu);margin:0 0 14px;font-size:15.5px}
+    .tools{position:sticky;top:0;z-index:3;background:var(--bg0);padding:8px 0 10px;display:flex;flex-direction:column;gap:10px}
+    #find{width:100%;padding:11px 14px;border-radius:11px;border:1px solid var(--bd2);background:var(--card);color:var(--tx);font:inherit;outline:none}
+    #find:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--glow)}#find::placeholder{color:var(--mu)}
+    nav{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}nav::-webkit-scrollbar{display:none}
+    nav a{flex:none;font-size:12.5px;color:var(--mu);text-decoration:none;border:1px solid var(--bd);border-radius:999px;padding:5px 12px;background:var(--card);white-space:nowrap}
+    nav a:hover{color:var(--tx);border-color:var(--ac)}
+    section{scroll-margin-top:112px}
+    h2{font-size:11.5px;text-transform:uppercase;letter-spacing:1.5px;color:var(--mu);font-weight:600;margin:26px 0 12px;display:flex;align-items:center;gap:10px}
+    h2::after{content:"";flex:1;height:1px;background:var(--bd)}h2 em{font-style:normal;color:var(--ac);letter-spacing:0}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+    .card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:13px 14px;text-decoration:none;color:var(--tx);display:flex;gap:13px;align-items:flex-start;transition:transform .15s ease,box-shadow .2s ease,border-color .2s ease}
     .card:hover,.card:focus-visible{transform:translateY(-3px);border-color:var(--ac);box-shadow:0 8px 26px var(--glow);outline:none}
-    .card .em{font-size:30px;line-height:1}
-    .card b{font-size:16.5px;font-weight:650}
+    .card .em{flex:none;width:48px;height:48px;border-radius:12px;background:var(--tile);border:1px solid var(--bd);display:grid;place-items:center;font-size:25px;line-height:1}
+    .card .tx{display:flex;flex-direction:column;gap:4px;min-width:0}
+    .card b{font-size:16px;font-weight:650}
     .card span{font-size:13.5px;color:var(--mu)}
+    .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+    .chips i{font-style:normal;font-size:10.5px;letter-spacing:.6px;text-transform:uppercase;border-radius:999px;padding:2px 8px;border:1px solid var(--bd2);color:var(--mu)}
+    .chips .t3{color:var(--ac);border-color:var(--ac)}.chips .tn{color:var(--new);border-color:var(--new)}.chips .tu{color:var(--upd);border-color:var(--upd)}
+    #none{color:var(--mu);margin:28px 0;display:none}
+    .hidden{display:none!important}
     footer{max-width:1080px;margin:0 auto;padding:26px 22px 34px;font-size:13px;color:var(--mu)}
-    @media(pointer:coarse){.hb button{width:42px;height:40px}}@media(max-width:600px){header{padding:12px 14px}.tag{font-size:10px}main{padding:16px 14px 6px}h1{font-size:20px}}
-    @media(prefers-reduced-motion:reduce){.card{transition:none}}
+    @media(pointer:coarse){.hb button{width:42px;height:40px}}
+    @media(max-width:600px){header{padding:12px 14px}.tag{font-size:10px}main{padding:16px 14px 6px}h1{font-size:20px}.grid{grid-template-columns:1fr}section{scroll-margin-top:104px}}
+    @media(prefers-reduced-motion:reduce){.card{transition:none}html{scroll-behavior:auto}}
   </style>
 </head>
 <body>
@@ -61,61 +76,73 @@
   </header>
 
   <main>
-    <p class="intro" data-en="Welcome to the interactive simulations! Pick a topic to open its simulation.">Benvenuti nel portale delle simulazioni interattive! Scegli un argomento per aprire la simulazione.</p>
-
-    <h2 data-en="Vectors and motion">Vettori e moto</h2>
-    <div class="grid">
-      <a class="card" href="vettori.html" target="_blank"><div class="em">🧭</div><b data-en="Vectors">Vettori</b><span data-en="Sum, difference, components and a space mission">Somma, differenza, componenti e una missione spaziale</span></a>
-      <a class="card" href="mru.html" target="_blank"><div class="em">🚙</div><b data-en="Uniform linear motion">Il moto rettilineo uniforme</b><span data-en="Drive the car and watch the graphs build">Guida l'auto e guarda nascere i grafici</span></a>
-      <a class="card" href="moto_rettilineo.html" target="_blank"><div class="em">🏁</div><b data-en="Linear motion: two cars">Moto rettilineo: due auto</b><span data-en="Uniform and accelerated motion compared, in 3D">Moto uniforme e accelerato a confronto, in 3D</span></a>
-      <a class="card" href="moto_parabolico.html" target="_blank"><div class="em">🏹</div><b data-en="Projectile motion">Il moto parabolico</b><span data-en="Speed, angle, launch height and a target to hit">Velocità, angolo, altezza e un bersaglio da colpire</span></a>
-      <a class="card" href="moto_armonico.html" target="_blank"><div class="em">🌀</div><b data-en="Harmonic oscillation">Oscillazione armonica</b><span data-en="From circular motion to the sine wave">Dal moto circolare alla sinusoide</span></a>
+    <p class="intro" data-en="Welcome to the interactive simulations! 19 simulations to explore: pick a topic or search by name.">Benvenuti nel portale delle simulazioni interattive! 19 simulazioni da esplorare: scegli un argomento o cerca per nome.</p>
+    <div class="tools">
+      <input id="find" type="search" placeholder="Cerca una simulazione…" data-ph-en="Search a simulation…" aria-label="Cerca / Search">
+      <nav><a href="#moto" data-en="Vectors and motion">Vettori e moto</a><a href="#forze" data-en="Forces and fluids">Forze e fluidi</a><a href="#onde" data-en="Waves">Onde</a><a href="#spazio" data-en="Gravitation and space">Gravitazione e spazio</a><a href="#elettricita" data-en="Electricity">Elettricità</a><a href="#magnetismo" data-en="Magnetism">Magnetismo</a><a href="#moderna" data-en="Modern physics">Fisica moderna</a></nav>
     </div>
 
-    <h2 data-en="Forces and fluids">Forze e fluidi</h2>
+    <section id="moto"><h2><span data-en="Vectors and motion">Vettori e moto</span><em>5</em></h2>
     <div class="grid">
-      <a class="card" href="forze_piano_inclinato.html" target="_blank"><div class="em">📐</div><b data-en="Forces and the inclined plane">Forze e piano inclinato</b><span data-en="Weight, normal force and friction">Peso, reazione vincolare e attrito</span></a>
-      <a class="card" href="stevino.html" target="_blank"><div class="em">💧</div><b data-en="Pressure in fluids">Pressione nei fluidi</b><span data-en="Stevin's law and communicating vessels">Legge di Stevino e vasi comunicanti</span></a>
-      <a class="card" href="archimede.html" target="_blank"><div class="em">🧊</div><b data-en="Buoyancy">Galleggiamento</b><span data-en="Archimedes' principle in 3D">Il principio di Archimede in 3D</span></a>
-    </div>
-
-    <h2 data-en="Waves">Onde</h2>
+      <a class="card" href="vettori.html" target="_blank"><div class="em">🧭</div><div class="tx"><b data-en="Vectors">Vettori</b><span data-en="Sum, difference, components and a space mission">Somma, differenza, componenti e una missione spaziale</span></div></a>
+      <a class="card" href="mru.html" target="_blank"><div class="em">🚙</div><div class="tx"><b data-en="Uniform linear motion">Il moto rettilineo uniforme</b><span data-en="Drive the car and watch the graphs build">Guida l'auto e guarda nascere i grafici</span></div></a>
+      <a class="card" href="moto_rettilineo.html" target="_blank"><div class="em">🏁</div><div class="tx"><b data-en="Linear motion: two cars">Moto rettilineo: due auto</b><span data-en="Uniform and accelerated motion compared, in 3D">Moto uniforme e accelerato a confronto, in 3D</span><div class="chips"><i class="t3" data-en="3D">3D</i></div></div></a>
+      <a class="card" href="moto_parabolico.html" target="_blank"><div class="em">🏹</div><div class="tx"><b data-en="Projectile motion">Il moto parabolico</b><span data-en="Speed, angle, launch height and a target to hit">Velocità, angolo, altezza e un bersaglio da colpire</span></div></a>
+      <a class="card" href="moto_armonico.html" target="_blank"><div class="em">🌀</div><div class="tx"><b data-en="Harmonic oscillation">Oscillazione armonica</b><span data-en="From circular motion to the sine wave">Dal moto circolare alla sinusoide</span></div></a>
+    </div></section>
+    <section id="forze"><h2><span data-en="Forces and fluids">Forze e fluidi</span><em>3</em></h2>
     <div class="grid">
-      <a class="card" href="Interferenza_onde.html" target="_blank"><div class="em">🌊</div><b data-en="Interference of waves">Interferenza tra onde</b><span data-en="Pulses that cross and standing waves">Impulsi che si incrociano e onde stazionarie</span></a>
-    </div>
-
-    <h2 data-en="Gravitation and space">Gravitazione e spazio</h2>
+      <a class="card" href="forze_piano_inclinato.html" target="_blank"><div class="em">📐</div><div class="tx"><b data-en="Forces and the inclined plane">Forze e piano inclinato</b><span data-en="Weight, normal force and friction">Peso, reazione vincolare e attrito</span></div></a>
+      <a class="card" href="stevino.html" target="_blank"><div class="em">💧</div><div class="tx"><b data-en="Pressure in fluids">Pressione nei fluidi</b><span data-en="Stevin&#x27;s law and communicating vessels">Legge di Stevino e vasi comunicanti</span></div></a>
+      <a class="card" href="archimede.html" target="_blank"><div class="em">🧊</div><div class="tx"><b data-en="Buoyancy">Galleggiamento</b><span data-en="Archimedes&#x27; principle in 3D">Il principio di Archimede in 3D</span><div class="chips"><i class="t3" data-en="3D">3D</i></div></div></a>
+    </div></section>
+    <section id="onde"><h2><span data-en="Waves">Onde</span><em>1</em></h2>
     <div class="grid">
-      <a class="card" href="solar_system.html" target="_blank"><div class="em">🪐</div><b data-en="Solar system simulation">Simulazione del sistema solare</b><span data-en="Planets, orbits and periods around the Sun">Pianeti, orbite e periodi attorno al Sole</span></a>
-      <a class="card" href="low_earth_orbit.html" target="_blank"><div class="em">🛰️</div><b data-en="Low Earth orbit">Orbita terrestre bassa</b><span data-en="Satellites and orbital speed around the Earth">Satelliti e velocità orbitale attorno alla Terra</span></a>
-    </div>
-
-    <h2 data-en="Electricity">Elettricità</h2>
+      <a class="card" href="Interferenza_onde.html" target="_blank"><div class="em">🌊</div><div class="tx"><b data-en="Interference of waves">Interferenza tra onde</b><span data-en="Pulses that cross and standing waves">Impulsi che si incrociano e onde stazionarie</span></div></a>
+    </div></section>
+    <section id="spazio"><h2><span data-en="Gravitation and space">Gravitazione e spazio</span><em>2</em></h2>
     <div class="grid">
-      <a class="card" href="coulomb.html" target="_blank"><div class="em">⚡</div><b data-en="Coulomb's law">Legge di Coulomb</b><span data-en="Forces between two or more charges">Forze tra due o più cariche</span></a>
-      <a class="card" href="campo_elettrico.html" target="_blank"><div class="em">🧲</div><b data-en="Electric field">Campo elettrico</b><span data-en="Field lines, vectors and test charges">Linee di campo, vettori e cariche di prova</span></a>
-      <a class="card" href="potenziale_elettrico.html" target="_blank"><div class="em">⛰️</div><b data-en="Potential and potential energy">Potenziale ed energia potenziale</b><span data-en="Equipotential lines and a 3D landscape">Linee equipotenziali e paesaggio 3D</span></a>
-      <a class="card" href="circuiti.html" target="_blank"><div class="em">💡</div><b data-en="Electric circuits">Circuiti elettrici</b><span data-en="Ohm's and Kirchhoff's laws">Leggi di Ohm e di Kirchhoff</span></a>
-    </div>
-
-    <h2 data-en="Magnetism">Magnetismo</h2>
+      <a class="card" href="solar_system.html" target="_blank"><div class="em">🪐</div><div class="tx"><b data-en="Solar system simulation">Simulazione del sistema solare</b><span data-en="Planets, orbits and periods around the Sun">Pianeti, orbite e periodi attorno al Sole</span></div></a>
+      <a class="card" href="low_earth_orbit.html" target="_blank"><div class="em">🛰️</div><div class="tx"><b data-en="Low Earth orbit">Orbita terrestre bassa</b><span data-en="Satellites and orbital speed around the Earth">Satelliti e velocità orbitale attorno alla Terra</span><div class="chips"><i class="t3" data-en="3D">3D</i></div></div></a>
+    </div></section>
+    <section id="elettricita"><h2><span data-en="Electricity">Elettricità</span><em>4</em></h2>
     <div class="grid">
-      <a class="card" href="magnetosphere.html" target="_blank"><div class="em">🌌</div><b data-en="Magnetosphere and aurora">Magnetosfera e aurora</b><span data-en="Charged particles in the Earth's magnetic field, in 3D">Particelle cariche nel campo magnetico terrestre, in 3D</span></a>
-    </div>
-
-    <h2 data-en="Modern physics">Fisica moderna</h2>
+      <a class="card" href="coulomb.html" target="_blank"><div class="em">⚡</div><div class="tx"><b data-en="Coulomb&#x27;s law">Legge di Coulomb</b><span data-en="Forces between two or more charges">Forze tra due o più cariche</span></div></a>
+      <a class="card" href="campo_elettrico.html" target="_blank"><div class="em">🧲</div><div class="tx"><b data-en="Electric field">Campo elettrico</b><span data-en="Field lines, vectors and test charges">Linee di campo, vettori e cariche di prova</span></div></a>
+      <a class="card" href="potenziale_elettrico.html" target="_blank"><div class="em">⛰️</div><div class="tx"><b data-en="Potential and potential energy">Potenziale ed energia potenziale</b><span data-en="Equipotential lines, a 3D landscape and the atom&#x27;s potential well">Linee equipotenziali, paesaggio 3D e la buca di potenziale dell'atomo</span><div class="chips"><i class="t3" data-en="3D">3D</i><i class="tu" data-en="Updated">Aggiornata</i></div></div></a>
+      <a class="card" href="circuiti.html" target="_blank"><div class="em">💡</div><div class="tx"><b data-en="Electric circuits">Circuiti elettrici</b><span data-en="Ohm&#x27;s and Kirchhoff&#x27;s laws">Leggi di Ohm e di Kirchhoff</span></div></a>
+    </div></section>
+    <section id="magnetismo"><h2><span data-en="Magnetism">Magnetismo</span><em>1</em></h2>
     <div class="grid">
-      <a class="card" href="bose_einstein_condensate.html" target="_blank"><div class="em">❄️</div><b data-en="Bose–Einstein condensate">Condensato di Bose-Einstein</b><span data-en="Cool a gas of atoms until it becomes a single matter wave">Raffredda un gas di atomi finché diventa un'unica onda di materia</span></a>
-    </div>
+      <a class="card" href="magnetosphere.html" target="_blank"><div class="em">🌌</div><div class="tx"><b data-en="Magnetosphere and aurora">Magnetosfera e aurora</b><span data-en="Charged particles in the Earth&#x27;s magnetic field">Particelle cariche nel campo magnetico terrestre</span><div class="chips"><i class="t3" data-en="3D">3D</i><i class="tn" data-en="New">Nuova</i><i class="te" data-en="English only">In inglese</i></div></div></a>
+    </div></section>
+    <section id="moderna"><h2><span data-en="Modern physics">Fisica moderna</span><em>3</em></h2>
+    <div class="grid">
+      <a class="card" href="photoelectric_effect.html" target="_blank"><div class="em">🔦</div><div class="tx"><b data-en="Photoelectric effect">Effetto fotoelettrico</b><span data-en="Photons, threshold frequency and stopping voltage">Fotoni, frequenza di soglia e potenziale d'arresto</span><div class="chips"><i class="t3" data-en="3D">3D</i><i class="tn" data-en="New">Nuova</i><i class="te" data-en="English only">In inglese</i></div></div></a>
+      <a class="card" href="hydrogen_atom.html" target="_blank"><div class="em">⚛️</div><div class="tx"><b data-en="Hydrogen atom">Atomo di idrogeno</b><span data-en="Orbitals, energy levels and spectral lines">Orbitali, livelli energetici e righe spettrali</span><div class="chips"><i class="t3" data-en="3D">3D</i><i class="tn" data-en="New">Nuova</i><i class="te" data-en="English only">In inglese</i></div></div></a>
+      <a class="card" href="bose_einstein_condensate.html" target="_blank"><div class="em">❄️</div><div class="tx"><b data-en="Bose–Einstein condensate">Condensato di Bose-Einstein</b><span data-en="Cool a gas of atoms until it becomes a single matter wave">Raffredda un gas di atomi finché diventa un'unica onda di materia</span><div class="chips"><i class="t3" data-en="3D">3D</i><i class="tn" data-en="New">Nuova</i><i class="te" data-en="English only">In inglese</i></div></div></a>
+    </div></section>
+    <p id="none" data-en="No simulation matches your search.">Nessuna simulazione corrisponde alla ricerca.</p>
   </main>
 
   <footer><p data-en="Made for teaching – © 2025">Realizzato per uso didattico – © 2025</p></footer>
 
 <script>
 (function(){
-  var lang='it',light=false,thm=document.getElementById('thm'),lb=document.getElementById('lang');
+  var lang='it',light=false,thm=document.getElementById('thm'),lb=document.getElementById('lang'),find=document.getElementById('find');
   function setTheme(l){light=l;document.body.classList.toggle('light',l);thm.textContent=l?'☾':'☀';try{localStorage.setItem('simTheme',l?'light':'dark');}catch(e){}}
-  function setLang(){document.querySelectorAll('[data-en]').forEach(function(e){if(e.dataset.it===undefined)e.dataset.it=e.innerHTML;e.innerHTML=lang==='it'?e.dataset.it:e.dataset.en;});document.documentElement.lang=lang;lb.textContent=lang==='it'?'EN':'IT';}
+  function setLang(){document.querySelectorAll('[data-en]').forEach(function(e){if(e.dataset.it===undefined)e.dataset.it=e.innerHTML;e.innerHTML=lang==='it'?e.dataset.it:e.dataset.en;});
+    if(find.dataset.phIt===undefined)find.dataset.phIt=find.placeholder;find.placeholder=lang==='it'?find.dataset.phIt:find.dataset.phEn;
+    document.documentElement.lang=lang;lb.textContent=lang==='it'?'EN':'IT';filter();}
+  // search looks at the Italian and English text of each card, ignoring accents
+  function norm(s){return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
+  function filter(){var q=norm(find.value.trim()),any=false;
+    document.querySelectorAll('section').forEach(function(s){var n=0;
+      s.querySelectorAll('.card').forEach(function(c){if(c.dataset.k===undefined){var t=c.textContent;c.querySelectorAll('[data-en]').forEach(function(e){t+=' '+e.dataset.en;});c.dataset.k=norm(t);}
+        var ok=!q||c.dataset.k.indexOf(q)>=0;c.classList.toggle('hidden',!ok);if(ok)n++;});
+      s.classList.toggle('hidden',!n);if(n)any=true;});
+    document.getElementById('none').style.display=any?'none':'block';}
+  find.addEventListener('input',filter);
   thm.onclick=function(){setTheme(!light);};lb.onclick=function(){lang=lang==='it'?'en':'it';setLang();};
   try{if(localStorage.getItem('simTheme')==='light')setTheme(true);}catch(e){}
 })();

@@ -57,8 +57,10 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 <body>
 <header><div><span class="tag" data-en="Physics · Electrostatics">Fisica · Elettrostatica</span><h1 data-en="Electric potential and potential energy">Potenziale ed energia potenziale elettrica</h1></div>
 <div class="hb"><a href="index.html" title="Tutte le simulazioni / All simulations">⌂</a><button id="qbtn" title="Sfide / Challenges">?</button><button id="thm" title="Tema chiaro-scuro / Light-dark theme">☀</button><button id="lang" title="Lingua / Language">EN</button></div></header>
-<main><div class="stage two"><div class="pane"><span class="cap" data-en="Map · drag charges and probes">Mappa · trascina cariche e sonde</span><canvas id="cv"></canvas></div><div class="pane"><span class="cap" data-en="Potential landscape · drag to rotate">Paesaggio del potenziale · trascina per ruotare</span><canvas id="cv3"></canvas></div></div>
+<main><div class="stage two"><div class="pane"><span class="cap capc" data-en="Map · drag charges and probes">Mappa · trascina cariche e sonde</span><span class="cap capa hidden" data-en="Atom seen from above · tap an orbit">Atomo visto dall'alto · tocca un'orbita</span><canvas id="cv"></canvas></div><div class="pane"><span class="cap capc" data-en="Potential landscape · drag to rotate">Paesaggio del potenziale · trascina per ruotare</span><span class="cap capa hidden" data-en="Potential well of the electron · drag to rotate">Buca di potenziale dell'elettrone · trascina per ruotare</span><canvas id="cv3"></canvas></div></div>
 <aside>
+<div class="grp"><h3 data-en="Mode">Modalità</h3><div class="seg" id="mode"><button data-v="ch" class="on" data-en="Charges">Cariche</button><button data-v="at" data-en="Hydrogen atom">Atomo di idrogeno</button></div></div>
+<div id="gCh">
 <div class="grp"><h3 data-en="Source charges">Cariche sorgenti</h3>
 <span class="lb" data-en="Preset layouts">Disposizioni predefinite</span>
 <select id="pre"><option value="dip" data-en="Dipole">Dipolo</option><option value="p1" data-en="One infinite plane">Un piano infinito</option><option value="p2" data-en="Two infinite planes">Due piani infiniti</option><option value="quad" data-en="Quadrupole">Quadrupolo</option></select>
@@ -82,6 +84,22 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 <div class="ro"><span data-en="Potential energy of q at B">Energia potenziale di q in B</span><b id="rUB"></b></div>
 <div class="ro"><span data-en="Work done by the field on q from A to B">Lavoro del campo su q da A a B</span><b id="rL"></b></div>
 </div>
+</div>
+<div id="gAt" class="hidden">
+<div class="grp"><h3 data-en="Energy level">Livello di energia</h3>
+<div class="seg" id="lvl"><button data-v="1">n = 1</button><button data-v="2" class="on">n = 2</button><button data-v="3">n = 3</button><button data-v="4">n = 4</button></div>
+<p class="hint" data-en="The proton digs a well in the electron's potential energy, U = −e·V. Each Bohr orbit is a circle on the wall of the well: the lower the circle, the more tightly the electron is bound. In the 3D view distances from the centre are compressed so that all orbits fit; the map on the left is to scale.">Il protone scava una buca nell'energia potenziale dell'elettrone, U = −e·V. Ogni orbita di Bohr è un cerchio sulla parete della buca: più il cerchio è in basso, più l'elettrone è legato. Nella vista 3D le distanze dal centro sono compresse per far stare tutte le orbite; la mappa a sinistra è in scala.</p>
+</div>
+<div class="grp"><h3 data-en="Electron on the orbit">Elettrone sull'orbita</h3>
+<div class="ro"><span data-en="Orbit radius r">Raggio dell'orbita r</span><b id="rR"></b></div>
+<div class="ro"><span data-en="Potential energy U">Energia potenziale U</span><b id="rU" class="c-pk"></b></div>
+<div class="ro"><span data-en="Kinetic energy K">Energia cinetica K</span><b id="rK" class="c-yl"></b></div>
+<div class="ro"><span data-en="Total energy E = U + K">Energia totale E = U + K</span><b id="rE"></b></div>
+<div class="ro"><span data-en="Energy to free it">Energia per liberarlo</span><b id="rI"></b></div>
+<div class="ro"><span data-en="Last photon">Ultimo fotone</span><b id="rPh" class="c-gr"></b></div>
+<p class="hint" data-en="On the orbit the circle sits at depth U, twice the total energy E: the other half is kinetic energy. Bohr model: radius ∝ n², energy ∝ −1/n², period ∝ n³. In quantum mechanics the electron has no definite orbit; the energy levels stay the same.">Sull'orbita il cerchio sta alla profondità U, che è il doppio dell'energia totale E: l'altra metà è energia cinetica. Modello di Bohr: raggio ∝ n², energia ∝ −1/n², periodo ∝ n³. Nella meccanica quantistica l'elettrone non ha un'orbita definita; i livelli di energia restano gli stessi.</p>
+</div>
+</div>
 </aside></main>
 <div id="q" class="hidden"><div class="box"><h2 data-en="Can you…?">Riesci a…?</h2><ul>
 <li data-en="…move probe B without changing its potential? What path are you following?">…spostare la sonda B senza far cambiare il suo potenziale? Che percorso stai seguendo?</li>
@@ -89,6 +107,8 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 <li data-en="…find a point where the potential is zero but the field is not? And the other way round?">…trovare un punto in cui il potenziale è zero ma il campo no? E viceversa?</li>
 <li data-en="…predict which way a negative test charge goes: uphill or downhill? And what happens to its potential energy?">…prevedere dove va una carica di prova negativa: in salita o in discesa? E che cosa succede alla sua energia potenziale?</li>
 <li data-en="…check whether the work from A to B depends on the path? Which numbers do you need?">…verificare se il lavoro da A a B dipende dal percorso? Quali numeri ti servono?</li>
+<li data-en="…(atom) say why the total energy is negative, and how it compares with the potential energy on every orbit?">…(atomo) dire perché l'energia totale è negativa e che rapporto ha con l'energia potenziale su ogni orbita?</li>
+<li data-en="…(atom) find which jump between levels gives the most energetic photon?">…(atomo) trovare quale salto tra livelli dà il fotone più energetico?</li>
 </ul></div></div>
 <script>
 'use strict';
@@ -162,9 +182,14 @@ let ch=[{x:-.2,y:0,q:3},{x:.2,y:0,q:-3}],sel_=ch[0],drag=null,dirty=true,lw=0,lh
 const A={x:-.36,y:.22},B={x:.36,y:.22},off=document.createElement('canvas'),V3=new Float32Array(NX*NY),PX=new Float32Array(NX*NY),PY=new Float32Array(NX*NY),PD=new Float32Array(NX*NY),ord=[];
 for(let j=0;j<NY-1;j++)for(let i=0;i<NX-1;i++)ord.push(j*NX+i);
 slider('qs',v=>sel_&&sel_.pl?'σ = '+(v>0?'+':'')+nf(2*v,0)+' nC/m²':(v>0?'+':'')+nf(v,0)+' nC');sel('pre');
-const PRE={dip:[{x:-.2,y:0,q:3},{x:.2,y:0,q:-3}],p1:[{pl:1,x:0,y:0,q:3}],p2:[{pl:1,x:-.2,y:0,q:3},{pl:1,x:.2,y:0,q:-3}],quad:[{x:-.15,y:.15,q:3},{x:.15,y:.15,q:-3},{x:.15,y:-.15,q:3},{x:-.15,y:-.15,q:-3}]};slider('qt',v=>(v>0?'+':'')+nf(v,0)+' nC');check('eq');check('fld');
+const PRE={dip:[{x:-.2,y:0,q:3},{x:.2,y:0,q:-3}],p1:[{pl:1,x:0,y:0,q:3}],p2:[{pl:1,x:-.2,y:0,q:3},{pl:1,x:.2,y:0,q:-3}],quad:[{x:-.15,y:.15,q:3},{x:.15,y:.15,q:-3},{x:.15,y:-.15,q:3},{x:-.15,y:-.15,q:-3}]};slider('qt',v=>(v>0?'+':'')+nf(v,0)+' nC');check('eq');check('fld');seg('mode');seg('lvl');
+/* --- hydrogen atom mode: lengths in Bohr radii (a0), energies in eV --- */
+const AT={n:2,th:0,ph:null},A0NM=.0529,AUM=.4/17,AU3=.6/19,NR=34,NS=56,AR=[],AQ=[],AX=new Float32Array((NR+1)*NS),AY=new Float32Array((NR+1)*NS),AD=new Float32Array((NR+1)*NS);
+for(let i=0;i<=NR;i++)AR.push(Math.pow(Math.sqrt(.85)+(Math.sqrt(19)-Math.sqrt(.85))*i/NR,2));for(let i=0;i<NR;i++)for(let j=0;j<NS;j++)AQ.push(i*NS+j);
+const Ua=r=>-27.211/Math.max(r,.85),zU=u=>u/32*.8,RW=r=>Math.sqrt(r/19)*.6,RI=w=>w*w/.36*19,zA=r=>r>19.01?-1e9:zU(Ua(r)),sg=(v,d)=>(v>0?'+':'')+nf(v,d);
+function jump(n){if(n===AT.n)return;const e=13.606*Math.abs(1/(n*n)-1/(AT.n*AT.n));AT.ph={e,nm:1239.84/e,emit:n<AT.n,t:5,a:AT.th};AT.n=n;}
 function onTheme(){dirty=true;}
-function onParam(id){if(id==='qs'&&sel_){sel_.q=P.qs;dirty=true;}if(id==='pre'){ch=PRE[P.pre].map(z=>Object.assign({},z));sel_=ch[0];setS('qs',sel_.q);tp=null;dirty=true;const w=P.pre==='p2'?.12:P.pre==='p1'?.2:.36;A.x=-w;B.x=w;A.y=B.y=.22;}}
+function onParam(id){if(id==='mode'){const a=P.mode==='at';$('#gCh').classList.toggle('hidden',a);$('#gAt').classList.toggle('hidden',!a);$$('.capc').forEach(e=>e.classList.toggle('hidden',a));$$('.capa').forEach(e=>e.classList.toggle('hidden',!a));cv.style.cursor=a?'pointer':'crosshair';dirty=true;}if(id==='lvl')jump(+P.lvl);if(id==='qs'&&sel_){sel_.q=P.qs;dirty=true;}if(id==='pre'){ch=PRE[P.pre].map(z=>Object.assign({},z));sel_=ch[0];setS('qs',sel_.q);tp=null;dirty=true;const w=P.pre==='p2'?.12:P.pre==='p1'?.2:.36;A.x=-w;B.x=w;A.y=B.y=.22;}}
 function add(s){const z={x:(Math.random()-.5)*.4,y:(Math.random()-.5)*.3,q:3*s};ch.push(z);sel_=z;setS('qs',z.q);dirty=true;}
 $('#addp').onclick=()=>add(1);$('#addn').onclick=()=>add(-1);$('#del').onclick=()=>{ch=ch.filter(z=>z!==sel_);sel_=ch[ch.length-1]||null;if(sel_)setS('qs',sel_.q);dirty=true;};
 $('#go').onclick=()=>{tp={x:A.x,y:A.y,vx:0,vy:0,q:P.qt,tr:[],dead:false};};$('#stop').onclick=()=>tp=null;
@@ -180,7 +205,7 @@ function rebuild(){const gw=1.2*sc,gh=.8*sc,nx=Math.max(20,Math.round(gw/5)),ny=
   for(let q=0;q+3<p.length;q+=4)segs.push(x0+p[q]*gx,y0+p[q+1]*gy,x0+p[q+2]*gx,y0+p[q+3]*gy);}
  for(let j=0;j<NY;j++)for(let i=0;i<NX;i++)V3[j*NX+i]=V(-DX+i*1.2/(NX-1),DY-j*.8/(NY-1));
  off.nw=w;off.nh=h;dirty=false;}
-pointer(cv,{down(p){drag=null;for(const z of[A,B])if(Math.hypot(p.x-X(z.x),p.y-Y(z.y))<16*TS){drag=z;return;}for(const z of ch)if(z.pl?Math.abs(p.x-X(z.x))<12*TS:Math.hypot(p.x-X(z.x),p.y-Y(z.y))<22*TS){drag=z;sel_=z;setS('qs',z.q);return;}for(const z of[A,B])if(Math.hypot(p.x-X(z.x),p.y-Y(z.y))<24*TS){drag=z;return;}},
+pointer(cv,{down(p){drag=null;if(P.mode==='at'){const r=Math.hypot(p.x-ox,p.y-oy)/(sc*AUM);let b=1;for(let k=2;k<=4;k++)if(Math.abs(r-k*k)<Math.abs(r-b*b))b=k;$('#lvl').children[b-1].click();return;}for(const z of[A,B])if(Math.hypot(p.x-X(z.x),p.y-Y(z.y))<16*TS){drag=z;return;}for(const z of ch)if(z.pl?Math.abs(p.x-X(z.x))<12*TS:Math.hypot(p.x-X(z.x),p.y-Y(z.y))<22*TS){drag=z;sel_=z;setS('qs',z.q);return;}for(const z of[A,B])if(Math.hypot(p.x-X(z.x),p.y-Y(z.y))<24*TS){drag=z;return;}},
  move(p){if(!drag)return;drag.x=clamp((p.x-ox)/sc,-DX+.02,DX-.02);if(!drag.pl)drag.y=clamp((oy-p.y)/sc,-DY+.02,DY-.02);if(drag!==A&&drag!==B)dirty=true;},up(){drag=null;}});
 pointer(cv3,{down(p){rot=p;},move(p){if(!rot)return;az+=(p.x-rot.x)*.01;el=clamp(el+(p.y-rot.y)*.008,.12,1.5);rot=p;},up(){rot=null;}});
 function stepTp(dt){if(!tp||tp.dead)return;const n=24,h=dt/n,k=tp.q/(MASS*1e9);for(let i=0;i<n;i++){let e=E(tp.x,tp.y);const ax=k*e[0],ay=k*e[1];tp.x+=tp.vx*h+.5*ax*h*h;tp.y+=tp.vy*h+.5*ay*h*h;e=E(tp.x,tp.y);tp.vx+=.5*(ax+k*e[0])*h;tp.vy+=.5*(ay+k*e[1])*h;
@@ -196,7 +221,42 @@ function draw3(){const k=fit(cv3),w=cv3.W,h=cv3.H;k.fillStyle=C.bg;k.fillRect(0,
  if(tp){k.strokeStyle=C.yl;k.lineWidth=1.5;k.globalAlpha=.7;k.beginPath();for(let i=0;i<tp.tr.length;i+=2){const q=tp.tr[i],p=pr(q[0],q[1],zOf(V(q[0],q[1]))+.004);i?k.lineTo(p[0],p[1]):k.moveTo(p[0],p[1]);}k.stroke();k.globalAlpha=1;
   const p=pr(tp.x,tp.y,zOf(V(tp.x,tp.y))+.012);k.fillStyle=C.yl;k.beginPath();k.arc(p[0],p[1],7,0,7);k.fill();k.strokeStyle='#fff';k.lineWidth=1;k.stroke();}
  txt(k,'V',16,h-18,C.mu,11);const gr=k.createLinearGradient(30,0,150,0);for(let i=0;i<=10;i++){const cc=col(-450+i*90);gr.addColorStop(i/10,'rgb('+cc.map(v=>v|0)+')');}k.fillStyle=gr;rr(k,30,h-24,120,10,5);k.fill();txt(k,'−',36,h-34,C.mu,12,'center');txt(k,'+',144,h-34,C.mu,12,'center');}
-loop(dt=>{c=fit(cv);W=cv.W;H=cv.H;sc=Math.min(W/1.24,(H-30)/.84);ox=W/2;oy=H/2+10;
+function draw3A(){const k=fit(cv3),w=cv3.W,h=cv3.H;k.fillStyle=C.bg;k.fillRect(0,0,w,h);const S=Math.min(w/1.75,h/1.5),cx=w/2-w*.04,cy=h*.24,ca=Math.cos(az),sa=Math.sin(az),se=Math.sin(el),ce=Math.cos(el),n=AT.n;
+ const pr=(x,y,z)=>{const xr=x*ca-y*sa,yr=x*sa+y*ca;return[cx+xr*S,cy-(yr*se+z*ce)*S,yr];};
+ // a point is hidden when the wall of the well stands between it and the viewer
+ const hid=(x,y,z)=>{for(let t=.015;t<.9;t+=.02){const qx=x-ce*sa*t,qy=y-ce*ca*t,r=RI(Math.hypot(qx,qy));if(r<19&&zA(r)>z+se*t+1e-4)return true;}return false;};
+ for(let i=0;i<=NR;i++)for(let j=0;j<NS;j++){const a=j/NS*6.2832,r=RW(AR[i]),p=pr(r*Math.cos(a),r*Math.sin(a),zA(AR[i])),q=i*NS+j;AX[q]=p[0];AY[q]=p[1];AD[q]=p[2];}
+ k.fillStyle=shade(col(Ua(.85)*40),.5);k.beginPath();for(let j=0;j<NS;j++)j?k.lineTo(AX[j],AY[j]):k.moveTo(AX[j],AY[j]);k.fill();
+ const nu=pr(0,0,zA(.85));k.fillStyle='#ff4d6d';k.beginPath();k.arc(nu[0],nu[1],5,0,7);k.fill();
+ AQ.sort((a,b)=>(AD[b]+AD[b+NS])-(AD[a]+AD[a+NS]));k.lineWidth=.6;k.lineJoin='round';
+ for(const q of AQ){const i=q/NS|0,j=q%NS,b=i*NS+(j+1)%NS,rm=(AR[i]+AR[i+1])/2,cc=col(Ua(rm)*40),st=Math.min(1,(zA(AR[i+1])-zA(AR[i]))/(RW(AR[i+1])-RW(AR[i]))*.5),f=clamp(1+.38*st*Math.cos((j+.5)/NS*6.2832-2.2),.55,1.5);
+  k.fillStyle='rgb('+(cc[0]*f|0)+','+(cc[1]*f|0)+','+(cc[2]*f|0)+')';k.strokeStyle=fa(.11);k.beginPath();k.moveTo(AX[q],AY[q]);k.lineTo(AX[b],AY[b]);k.lineTo(AX[b+NS],AY[b+NS]);k.lineTo(AX[q+NS],AY[q+NS]);k.closePath();k.fill();k.stroke();}
+ let ly=-1e9;for(let m=4;m>=1;m--){const rw=RW(m*m),z=zA(m*m)+.004,on=m===n;k.strokeStyle=on?C.yl:C.tx;k.lineWidth=on?2.6:1.3;let pp=null,ph=false;
+  for(let j=0;j<=96;j++){const a=j/96*6.2832,x=rw*Math.cos(a),y=rw*Math.sin(a),p=pr(x,y,z),hh=hid(x,y,z);if(pp){k.globalAlpha=(hh||ph)?.22:(on?1:.75);k.beginPath();k.moveTo(pp[0],pp[1]);k.lineTo(p[0],p[1]);k.stroke();}pp=p;ph=hh;}
+  k.globalAlpha=1;const lp=pr(rw*ca,-rw*sa,z),yy=Math.max(lp[1],ly+15);ly=yy;k.strokeStyle=on?C.yl:C.mu;k.lineWidth=1;k.globalAlpha=.6;k.beginPath();k.moveTo(lp[0]+3,lp[1]);k.lineTo(w-142,yy);k.stroke();k.globalAlpha=1;txt(k,'n = '+m+' · E = '+nf(-13.606/(m*m),2)+' eV',w-8,yy,on?C.yl:C.mu,11,'right',on);}
+ const rw=RW(n*n),ex=rw*Math.cos(AT.th),ey=rw*Math.sin(AT.th),ez=zA(n*n)+.01,ep=pr(ex,ey,ez);k.globalAlpha=hid(ex,ey,ez)?.3:1;k.fillStyle='#4c8cff';k.beginPath();k.arc(ep[0],ep[1],6.5,0,7);k.fill();k.strokeStyle='#fff';k.lineWidth=1.2;k.stroke();k.globalAlpha=1;
+ const axx=-.64*ca,axy=.64*sa,t0=pr(axx,axy,0),t1=pr(axx,axy,zU(-30));k.strokeStyle=C.mu;k.lineWidth=1;k.beginPath();k.moveTo(t0[0],t0[1]);k.lineTo(t1[0],t1[1]);k.stroke();
+ for(const u of[0,-10,-20,-30]){const p=pr(axx,axy,zU(u));k.beginPath();k.moveTo(p[0]-4,p[1]);k.lineTo(p[0],p[1]);k.stroke();txt(k,nf(u,0),p[0]-7,p[1],C.mu,10.5,'right');}
+ txt(k,'U (eV)',t0[0]+4,t0[1]-14,C.mu,10.5,'right');
+ const un=pr(axx,axy,zU(-27.211/(n*n)));k.fillStyle=C.yl;k.beginPath();k.arc(un[0],un[1],3.5,0,7);k.fill();
+ txt(k,L('Più in basso = più legato · distanze compresse (∝ √r)','Deeper = more tightly bound · distances compressed (∝ √r)'),12,h-14,C.mu,11);}
+function atomFrame(dt){c=fit(cv);W=cv.W;H=cv.H;sc=Math.min(W/1.24,(H-30)/.84);ox=W/2;oy=H/2+10;const n=AT.n,rn=n*n,En=-13.606/rn,u=sc*AUM;
+ AT.th+=dt*6/(n*n*n);if(AT.ph)AT.ph.t-=dt;
+ c.fillStyle=C.bg;c.fillRect(0,0,W,H);c.save();c.beginPath();c.rect(X(-DX),Y(DY),1.2*sc,.8*sc);c.clip();
+ const g=c.createRadialGradient(ox,oy,0,ox,oy,30*u);for(let i=0;i<=30;i++){const cc=col(Ua(i)*40);g.addColorStop(i/30,'rgb('+cc.map(v=>v|0)+')');}c.fillStyle=g;c.fillRect(X(-DX),Y(DY),1.2*sc,.8*sc);
+ for(let m=1;m<=4;m++){const on=m===n,r=m*m*u;c.strokeStyle=on?C.yl:fa(.5);c.lineWidth=on?2.6:1.2;c.beginPath();c.arc(ox,oy,r,0,7);c.stroke();txt(c,'n = '+m,ox+r*.7071+5,oy-r*.7071-7,on?C.yl:C.mu,11,'left',on);}
+ c.fillStyle='#ff4d6d';c.beginPath();c.arc(ox,oy,7,0,7);c.fill();txt(c,'+',ox,oy,'#fff',11,'center',1);
+ const ex=ox+rn*u*Math.cos(AT.th),ey=oy-rn*u*Math.sin(AT.th);
+ if(AT.ph&&AT.ph.t>3.2){const q=(5-AT.ph.t)/1.8,d0=AT.ph.emit?q*.45*sc:(1-q)*.45*sc,ux=Math.cos(AT.ph.a),uy=-Math.sin(AT.ph.a);c.strokeStyle=C.gr;c.lineWidth=2;c.beginPath();
+  for(let i=0;i<=40;i++){const d=d0+i*1.6,wv=Math.sin(i*.55)*7*Math.sin(i/40*3.1416),px=ox+ux*(rn*u+d)-uy*wv,py=oy+uy*(rn*u+d)+ux*wv;i?c.lineTo(px,py):c.moveTo(px,py);}c.stroke();}
+ c.fillStyle='#4c8cff';c.beginPath();c.arc(ex,ey,7,0,7);c.fill();c.strokeStyle='#fff';c.lineWidth=1.2;c.stroke();txt(c,'−',ex,ey,'#fff',11,'center',1);
+ c.restore();c.strokeStyle=C.grid2;c.lineWidth=1;c.strokeRect(X(-DX),Y(DY),1.2*sc,.8*sc);
+ const sb=.5/A0NM*u;c.strokeStyle=C.mu;c.lineWidth=2;c.beginPath();c.moveTo(X(-DX),Y(-DY)+12);c.lineTo(X(-DX)+sb,Y(-DY)+12);c.stroke();txt(c,nf(.5,1)+' nm',X(-DX)+sb+8,Y(-DY)+12,C.mu,11);
+ bubble(c,ex+14,ey-46,['E = '+nf(En,2)+' eV','U = '+nf(2*En,2)+' eV · K = '+sg(-En,2)+' eV'],C.yl);
+ const ph=AT.ph,pt=ph?L(ph.emit?'emesso':'assorbito',ph.emit?'emitted':'absorbed')+' · '+nf(ph.e,2)+' eV · '+nf(ph.nm,0)+' nm':'–';
+ if(ph&&ph.t>0)bubble(c,X(-DX)+8,Y(DY)+26,[L(ph.emit?'Fotone emesso':'Fotone assorbito',ph.emit?'Photon emitted':'Photon absorbed')+': '+nf(ph.e,2)+' eV','λ = '+nf(ph.nm,0)+' nm'+(ph.nm<380?L(' · ultravioletto',' · ultraviolet'):ph.nm>750?L(' · infrarosso',' · infrared'):L(' · visibile',' · visible'))],C.gr);
+ ro('rR',nf(rn*A0NM,3)+' nm');ro('rU',nf(2*En,2)+' eV');ro('rK',sg(-En,2)+' eV');ro('rE',nf(En,2)+' eV');ro('rI',nf(-En,2)+' eV');ro('rPh',pt);draw3A();}
+loop(dt=>{if(P.mode==='at'){atomFrame(dt);return;}c=fit(cv);W=cv.W;H=cv.H;sc=Math.min(W/1.24,(H-30)/.84);ox=W/2;oy=H/2+10;
  if(W!==lw||H!==lh){lw=W;lh=H;dirty=true;}if(dirty)rebuild();stepTp(dt);
  c.fillStyle=C.bg;c.fillRect(0,0,W,H);c.save();c.beginPath();c.rect(X(-DX),Y(DY),1.2*sc,.8*sc);c.clip();c.imageSmoothingEnabled=true;c.drawImage(off,X(-DX)-gx/2,Y(DY)-gy/2,off.nw*gx,off.nh*gy);
  if(P.eq){c.strokeStyle=fa(.42);c.lineWidth=1;c.beginPath();for(let i=0;i<segs.length;i+=4){c.moveTo(segs[i],segs[i+1]);c.lineTo(segs[i+2],segs[i+3]);}c.stroke();}

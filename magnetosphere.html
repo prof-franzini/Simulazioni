@@ -20,7 +20,7 @@
   #cap { margin: 10px 0 14px; font-size: 12px; line-height: 1.6; color: #b9c6dc; letter-spacing: .02em; }
   #tele { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; line-height: 1.9; }
   #tele span { color: #8fa3c2; }
-  #tele i { font-style: normal; color: #ffd9a8; margin-right: 10px; }
+  #tele i { font-style: normal; color: #ffd9a8; margin-right: 10px; text-transform: none; letter-spacing: .08em; }
   #tele em { font-style: normal; color: #9df0c0; }
 
   #hint { position: fixed; right: calc(26px + env(safe-area-inset-right)); top: calc(22px + env(safe-area-inset-top));
@@ -44,7 +44,7 @@
   .seg button.on { background: rgba(120,160,255,.3); color: #fff; }
   input[type=range] { width: 96px; accent-color: #9cc0ff; margin: 0; }
   label { color: #8fa3c2; }
-  output { color: #ffd9a8; min-width: 34px; text-align: right; }
+  output { color: #ffd9a8; min-width: 42px; text-align: right; }
 
   .tag { position: fixed; left: 0; top: 0; pointer-events: none; font-size: 9px; letter-spacing: .18em; text-transform: uppercase;
     color: #a9bad6; white-space: nowrap; text-shadow: 0 0 6px #000, 0 0 2px #000; will-change: transform; }
@@ -82,6 +82,7 @@
     #rowC label, #speed { display: none; }
   }
   @media (max-height: 480px) and (orientation: landscape) {
+    #tags { display: none; }
     #cap { display: none; } #head b { margin-bottom: 8px; }
     #head { max-width: 300px; right: auto; }
     #ctl { left: auto; width: 370px; gap: 6px; }
@@ -466,7 +467,7 @@
   const tags = [];
   function tag(text, getPos) {
     const el = document.createElement('div'); el.className = 'tag'; el.textContent = text; $('tags').appendChild(el);
-    const t = { el, getPos, on: true, shown: true }; tags.push(t); return t;
+    const t = { el, getPos, on: true, shown: true, w: el.offsetWidth + 10 }; tags.push(t); return t;
   }
   const tmpV = new THREE.Vector3(), tmpW = new THREE.Vector3();
   tag('Magnetic north', v => mag.localToWorld(v.set(0, 1.72, 0)));
@@ -501,10 +502,10 @@
 
   // ---------------- modes ----------------
   const MODES = {
-    trapped: { sp: 'p', pitch: 50, pitchOn: true, spOn: true, act: 0.6, cam: [Math.PI - 1.0, 0.36, 11],
+    trapped: { sp: 'p', pitch: 50, pMax: 89, pStep: 1, pitchOn: true, spOn: true, act: 0.6, cam: [Math.PI - 1.0, 0.36, 11],
       cap: 'A charged particle cannot cross the field freely. It spirals around a field line, bounces between two mirror points and slowly drifts around the planet. Lower the pitch angle and it reaches the atmosphere.' },
-    aurora: { sp: 'e', pitch: 2, pitchOn: true, spOn: true, act: 0.95, cam: [Math.PI + 0.55, 0.74, 7.6],
-      cap: 'Particles moving almost parallel to the field are not mirrored in time. They follow the field lines down to the polar atmosphere and make it glow. Zoom in to see the curtains.' },
+    aurora: { sp: 'e', pitch: 1.5, pMax: 12, pStep: 0.1, pitchOn: true, spOn: true, act: 0.95, cam: [Math.PI + 0.55, 0.74, 7.6],
+      cap: 'Only particles moving almost parallel to the field reach the polar atmosphere and make it glow. Slide the pitch angle across the loss cone (2.6°): below it the particle hits the air, above it the particle is mirrored back.' },
     wind: { sp: 'p', pitch: 50, pitchOn: false, spOn: true, act: 0.6, cam: [Math.PI/2 + 0.3, 0.42, 30],
       cap: 'Particles streaming from the Sun are turned aside long before they reach the ground. The field works as a shield, and the way in is easiest near the poles.' },
     belts: { sp: 'p', pitch: 50, pitchOn: false, spOn: false, act: 0.6, cam: [Math.PI - 0.9, 0.30, 13],
@@ -514,12 +515,13 @@
   const stats = { deflected: 0, hit: 0 };
   let actBase = 0.6, actPulse = 0;
 
-  function spawn(p) {
+  let auroraPhi = 0;
+  function spawn(p, keepPhi) {
     const a = pitchDeg*Math.PI/180;
     if (p.kind === 'main') {
       status = ''; statusGood = false;
       if (mode === 'trapped') launchOnShell(p, species, 3, PHI_N + 0.9, 0, a, 1, 1);
-      else launchOnShell(p, species, 6.5, PHI_N + rnd(-0.75, 0.75), 0.61, a, 0.6, 1);
+      else { if (!keepPhi) auroraPhi = PHI_N + rnd(-0.75, 0.75); launchOnShell(p, species, 6.5, auroraPhi, 0.61, a, 0.6, 1); }
     } else if (p.kind === 'rain') {
       const h = Math.random() < 0.6 ? 1 : -1;
       launchOnShell(p, 'e', rnd(5.6, 7.6), PHI_N + rnd(-1.5, 1.5), h*0.8, rnd(0, 0.03), 0.6, h);
@@ -545,13 +547,14 @@
     }
     if (m === 'wind') for (let i = 0; i < 30; i++) { const p = new Particle(520, { kind: 'wind', ds: 0.07, dim: 0.8, size: 0.09, headK: 1.6 }); p.delay = i*0.9; parts.push(p); }
     if (m === 'belts') for (let i = 0; i < 52; i++) { const p = new Particle(i < 20 ? 520 : 340, { kind: 'belt', ds: 0.03, da: i < 20 ? 0.8 : 0.3, dim: 0.75, size: 0.035, headK: 0.6 }); p.inner = i < 20; parts.push(p); }
-    parts.forEach(spawn);
+    parts.forEach(p => spawn(p));
     parts.forEach(p => { if (p.delay > 0) { p.head.visible = false; } });
     if (!keep) { tgt.az = M.cam[0]; tgt.el = M.cam[1]; tgt.dist = M.cam[2]; }
     $('cap').textContent = M.cap;
     document.querySelectorAll('#modes button').forEach(b => b.classList.toggle('on', b.dataset.m === m));
     document.querySelectorAll('#species button').forEach(b => { b.classList.toggle('on', M.spOn && b.dataset.s === species); b.disabled = !M.spOn; });
-    $('pitch').disabled = !M.pitchOn; $('pitch').value = pitchDeg; $('pitchOut').textContent = M.pitchOn ? pitchDeg + '°' : '–';
+    $('pitch').max = M.pMax || 89; $('pitch').step = M.pStep || 1;
+    $('pitch').disabled = !M.pitchOn; $('pitch').value = pitchDeg; $('pitchOut').textContent = M.pitchOn ? pitchText() : '–';
     lastTele = 0;
   }
 
@@ -562,10 +565,10 @@
       if (p.kind === 'rain') { actPulse = Math.min(0.9, actPulse + 0.07); mark(0, p.x, p.y, p.z, 0.16, 0x7dffb0, 0.9); }
       else { hit.value.set(phi, 1.3); actPulse = Math.min(0.9, actPulse + 0.25); mark(0, p.x, p.y, p.z, 0.55, 0x9dffc4, 1.6); mark(1, p.x, p.y, p.z, 0.9, 0x6dffa0, 1.6); }
       if (p.kind === 'wind') stats.hit++;
-      if (p.kind === 'main') { status = 'Reached the atmosphere · aurora'; statusGood = true; }
+      if (p.kind === 'main') { status = 'Reached the atmosphere · aurora'; statusGood = true; p.hitAir = true; }
     } else {
       if (p.kind === 'wind') stats.deflected++;
-      if (p.kind === 'main') status = 'Escaped back into space';
+      if (p.kind === 'main') { status = 'Escaped back into space'; p.hitAir = false; }
     }
     p.timer = p.kind === 'main' ? 2.2 : p.kind === 'rain' ? rnd(0.6, 2.5) : 1.5;
     p.fade = p.timer;
@@ -578,7 +581,8 @@
   $('speed').oninput = e => { speed = +e.target.value; };
   $('launch').onclick = () => setMode(mode, true);
   $('lines').onclick = () => { fieldOn = !fieldOn; uField.value = fieldOn ? 1 : 0; $('lines').textContent = fieldOn ? 'Field on' : 'Field off'; };
-  $('pitch').oninput = e => { pitchDeg = +e.target.value; $('pitchOut').textContent = pitchDeg + '°'; if (main) { spawn(main); mirrorTagT = 0; } };
+  const pitchText = () => (MODES[mode].pStep < 1 ? pitchDeg.toFixed(1) : pitchDeg) + '°';
+  $('pitch').oninput = e => { pitchDeg = +e.target.value; $('pitchOut').textContent = pitchText(); if (main) { spawn(main, true); mirrorTagT = 0; marks.forEach(k => { k.life = 0; k.s.visible = false; }); lastTele = 0; } };
   document.querySelectorAll('#modes button').forEach(b => { b.onclick = () => setMode(b.dataset.m); });
   document.querySelectorAll('#species button').forEach(b => { b.onclick = () => { species = b.dataset.s; setMode(mode, true); }; });
   const toggleUI = () => document.body.classList.toggle('clean');
@@ -637,23 +641,25 @@
       const p = main, r = Math.hypot(p.x, p.y, p.z), Bm = field(p.x, p.y, p.z), sp = Math.hypot(p.vx, p.vy, p.vz);
       const pitch = Math.acos(Math.max(-1, Math.min(1, (p.vx*B[0] + p.vy*B[1] + p.vz*B[2])/(Bm*sp))))*180/Math.PI;
       const L = mode === 'trapped' ? 3 : 6.5;
-      row('Particle', p.sp === 'e' ? 'Electron −' : 'Proton +');
+      row('Particle', p.sp === 'e' ? 'ELECTRON −' : 'PROTON +');
       row('Altitude', fmt((r - 1)*6371) + ' km', 'Field', fmt(31000*Bm) + ' nT');
-      row('Pitch now', Math.round(pitch > 90 ? 180 - pitch : pitch) + '°', 'Loss cone', '< ' + (lossCone(L)*180/Math.PI).toFixed(1) + '°');
+      const lc = lossCone(L)*180/Math.PI, inside = pitchDeg < lc;
+      row('Pitch set', pitchText(), 'Loss cone', '< ' + lc.toFixed(1) + '°');
+      row('Pitch now', Math.round(pitch > 90 ? 180 - pitch : pitch) + '°', 'Verdict', inside ? 'reaches the air' : 'mirrors');
       let s = status;
       if (!s) {
         s = (p.vx*B[0] + p.vy*B[1] + p.vz*B[2] > 0 ? 'Heading north' : 'Heading south');
-        if (p.bounces) s += ' · mirrored ×' + p.bounces + ' at ' + fmt(p.mirrorAlt) + ' km';
+        if (p.bounces) s += ' · mirrored ×' + p.bounces + ' at ' + fmt(p.mirrorAlt) + ' km' + (mode === 'aurora' ? ' · no aurora' : '');
         if (p.bounces > 1) s += ' · drifting ' + (p.sp === 'e' ? 'east' : 'west');
       }
       h += '<div>' + (statusGood ? '<em>' + s + '</em>' : '<span>' + s + '</span>') + '</div>';
     } else if (mode === 'wind') {
-      row('Stream', species === 'e' ? 'Electrons −' : 'Protons +');
+      row('Stream', species === 'e' ? 'ELECTRONS −' : 'PROTONS +');
       row('Turned away', stats.deflected, 'Reached air', stats.hit);
       row('Field at ground', '31 000 nT'); row('At 10 radii', '31 nT');
     } else {
-      row('Inner belt', 'Protons · 1 000–6 000 km');
-      row('Outer belt', 'Electrons · 13 000–30 000 km');
+      row('Inner belt', 'PROTONS · 1 000–6 000 km');
+      row('Outer belt', 'ELECTRONS · 13 000–30 000 km');
       h += '<div><span>Protons drift west · electrons drift east</span></div>';
     }
     $('tele').innerHTML = h;
@@ -674,7 +680,7 @@
         const how = advance(p, T, rOut); if (how) onEnd(p, how);
       } else {
         p.timer -= dt; p.u.uOp.value = p.dim*Math.max(0, p.timer/p.fade);
-        if (p.timer <= 0) spawn(p);
+        if (p.timer <= 0) spawn(p, p.kind === 'main' && !p.hitAir);
       }
     }
     if (main && main.alive) updateGuide(main); else guide.visible = false;
@@ -713,7 +719,7 @@
         const a = tmpW.lengthSq(), b = 2*cp.dot(tmpW), c = cp.lengthSq() - 1, disc = b*b - 4*a*c;
         if (disc > 0) { const s = (-b - Math.sqrt(disc))/(2*a); if (s > 0 && s < 1) show = false; }     // hidden behind the planet
         w.project(camera);
-        if (w.z > 1 || Math.abs(w.x) > 0.96 || Math.abs(w.y) > 0.96) show = false;
+        if (w.z > 1 || Math.abs(w.x) > 0.96 || Math.abs(w.y) > 0.96 || (w.x*0.5 + 0.5)*vw + t.w > vw) show = false;
         if (show) t.el.style.transform = 'translate(' + ((w.x*0.5 + 0.5)*vw + 6).toFixed(1) + 'px,' + ((-w.y*0.5 + 0.5)*vh - 6).toFixed(1) + 'px)';
       }
       if (show !== t.shown) { t.shown = show; t.el.style.display = show ? '' : 'none'; }
