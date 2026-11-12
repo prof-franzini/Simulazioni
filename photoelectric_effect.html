@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -95,6 +95,100 @@
     input[type=range] { height: 22px; }
   }
 </style>
+<!-- sim-i18n -->
+<script>
+window.I18N={
+"Info": "Info",
+"Hide UI": "Nascondi",
+"Pause": "Pausa",
+"Play": "Avvia",
+"Time": "Tempo",
+"Close": "Chiudi",
+"All simulations": "Tutte le simulazioni",
+"Language": "Lingua / Language",
+"This scene needs WebGL, which isn't available in this browser.": "Questa scena richiede WebGL, che non è disponibile in questo browser.",
+"This simulation needs WebGL, which isn't available in this browser.": "Questa simulazione richiede WebGL, che non è disponibile in questo browser.",
+"Drag to orbit · scroll to zoom · H hides interface": "Trascina per ruotare · rotellina per lo zoom · H nasconde i comandi",
+"Drag to orbit · pinch to zoom": "Trascina per ruotare · pizzica per lo zoom",
+"Drag to look · scroll to zoom · H hides interface": "Trascina per guardarti intorno · rotellina per lo zoom · H nasconde i comandi",
+"Drag to look · pinch to zoom": "Trascina per guardarti intorno · pizzica per lo zoom",
+"Photoelectric effect": "Effetto fotoelettrico",
+"Photons": "Fotoni",
+"Electrons": "Elettroni",
+"Cesium": "Cesio",
+"Sodium": "Sodio",
+"Zinc": "Zinco",
+"Copper": "Rame",
+"Colour": "Colore",
+"Brightness": "Intensità",
+"Voltage": "Tensione",
+"Collector": "Collettore",
+"Ammeter": "Amperometro",
+"Lamp": "Lampada",
+"Battery": "Batteria",
+"Photon energy": "Energia del fotone",
+"Needed": "Necessaria",
+"Threshold": "Soglia",
+"Max energy": "Energia max",
+"Stopping voltage": "Potenziale d'arresto",
+"Current": "Corrente",
+"Lamp off": "Lampada spenta",
+"The lamp is off. Raise the brightness to send photons onto the metal plate.": "La lampada è spenta. Aumenta l'intensità per mandare fotoni sulla lastra di metallo.",
+"No electrons · photon energy too low": "Nessun elettrone · energia dei fotoni troppo bassa",
+"Each photon carries too little energy to free an electron. Making the light brighter only sends more photons that are just as weak. Move the colour towards violet.": "Ogni fotone porta troppa poca energia per liberare un elettrone. Una luce più intensa manda solo più fotoni, deboli quanto prima. Sposta il colore verso il viola.",
+"All electrons turned back": "Tutti gli elettroni respinti",
+"The collector is negative enough to stop even the fastest electrons. This stopping voltage measures their kinetic energy directly.": "Il collettore è abbastanza negativo da fermare anche gli elettroni più veloci. Questo potenziale d'arresto misura direttamente la loro energia cinetica.",
+"The negative collector pushes the electrons back. Only the fastest still arrive, so the current drops.": "Il collettore negativo respinge gli elettroni. Arrivano solo i più veloci, quindi la corrente cala.",
+"One photon frees one electron. The colour decides how fast the electrons leave; the brightness decides how many.": "Un fotone libera un elettrone. Il colore decide quanto velocemente escono gli elettroni; l'intensità decide quanti.",
+"Cesium plate": "Lastra di cesio",
+"Sodium plate": "Lastra di sodio",
+"Zinc plate": "Lastra di zinco",
+"Copper plate": "Lastra di rame"
+};
+window.I18N_RX=[[/^(Cesium|Sodium|Zinc|Copper) plate$/,"Lastra di $1"],
+[/^(\d+ nm) · deep red$/,"$1 · rosso scuro"],
+[/^Electrons leave with up to (.*)$/,"Gli elettroni escono con al massimo $1"]];
+</script>
+<script>
+/* ---- Italiano / English: shared with the portal (localStorage 'simLang', Italian by default) ----
+   I18N maps the page's own text (English, or Italian when I18N_BASE = 'it') to the other language, I18N_RX holds [RegExp, replacement] for text with numbers.
+   Elements with data-it hold a whole Italian block (info cards). Text the page writes later is translated as it appears. */
+(function () {
+  var D = window.I18N || {}, RX = window.I18N_RX || [], BASE = window.I18N_BASE || 'en', lang = 'it', orig = new WeakMap(), busy = false;
+  try { if (localStorage.getItem('simLang') === 'en') lang = 'en'; } catch (e) {}
+  function tr(s) {
+    var k = s.replace(/\s+/g, ' ').trim(); if (!k) return s;
+    var t = D[k];
+    if (t === undefined) for (var i = 0; i < RX.length; i++) if (RX[i][0].test(k)) { t = k.replace(RX[i][0], RX[i][1]); break; }
+    if (t === undefined) return s;
+    var m = s.match(/^\s*/)[0], n = s.match(/\s*$/)[0]; return m + t + n;
+  }
+  window.simT = function (s) { return lang !== BASE ? tr(s) : s; };          /* for text drawn on canvas */
+  window.simLang = function () { return lang; };
+  function skip(n) { var p = n.parentNode; return !p || /^(SCRIPT|STYLE)$/.test(p.nodeName) || (p.closest && p.closest('[data-it],.notr')); }
+  function node(n) {
+    if (skip(n)) return; var v = n.nodeValue, o = orig.get(n);
+    if (o && (v === o.it || v === o.en) ) { var want = lang !== BASE ? o.it : o.en; if (v !== want) { busy = true; n.nodeValue = want; busy = false; } return; }
+    var it = tr(v); orig.set(n, { en: v, it: it }); if (lang !== BASE && it !== v) { busy = true; n.nodeValue = it; busy = false; }
+  }
+  function walk(root) { if (root.nodeType === 3) return node(root); var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), n; while ((n = w.nextNode())) node(n); }
+  function attrs() { document.querySelectorAll('[title],[aria-label],[placeholder]').forEach(function (e) { ['title', 'aria-label', 'placeholder'].forEach(function (a) {
+    if (!e.hasAttribute(a)) return; var k = 'en' + a.replace(/-/g, ''); if (e.dataset[k] === undefined) e.dataset[k] = e.getAttribute(a);
+    e.setAttribute(a, lang !== BASE ? tr(e.dataset[k]) : e.dataset[k]); }); }); }
+  function blocks() { document.querySelectorAll('[data-it]').forEach(function (e) { if (e.dataset.en === undefined) e.dataset.en = e.innerHTML; var h = lang === 'it' ? e.dataset.it : e.dataset.en; if (e.innerHTML !== h) e.innerHTML = h; }); }
+  function apply() {
+    blocks(); walk(document.body); attrs();
+    document.documentElement.lang = lang; if (!document.title0) document.title0 = document.title; document.title = lang !== BASE ? tr(document.title0) : document.title0;
+    var b = document.getElementById('langBtn'); if (b) b.textContent = lang === 'it' ? 'EN' : 'IT';
+    window.dispatchEvent(new Event('simlang'));
+  }
+  new MutationObserver(function (ms) { if (busy) return; ms.forEach(function (m) {
+    if (m.type === 'characterData') node(m.target); else m.addedNodes.forEach(function (n) { if (n.nodeType === 3 || n.nodeType === 1) walk(n); }); });
+  }).observe(document.documentElement, { subtree: true, childList: true, characterData: true });
+  document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('#langBtn')) { e.stopPropagation(); lang = lang === 'it' ? 'en' : 'it'; try { localStorage.setItem('simLang', lang); } catch (x) {} apply(); } }, true);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', apply); else apply();
+})();
+</script>
 </head>
 <body>
 <canvas id="c"></canvas>
@@ -125,13 +219,25 @@
     <label for="speed">Time</label>
     <input id="speed" type="range" min="0.1" max="3" step="0.1" value="1">
     <button id="play">Pause</button>
-    <button id="about">Info</button>
+    <button id="homeBtn" onclick="location.href='index.html'" title="All simulations">⌂</button><button id="langBtn" class="notr" title="Language">EN</button><button id="about">Info</button>
     <button id="hide">Hide UI</button>
   </div>
 </div>
 
 <div id="info">
   <div id="card">
+<div data-it="&lt;h2&gt;La luce arriva a pacchetti&lt;/h2&gt;
+    &lt;p&gt;Se si illumina un metallo pulito, la luce può strappargli degli elettroni. Intorno al 1900 sembrava un fenomeno semplice, ma i dettagli non tornavano con l&#x27;idea della luce come onda continua. Einstein li spiegò nel 1905 trattando la luce come un flusso di pacchetti, i fotoni, ognuno con un&#x27;energia che dipende solo dal colore: &lt;span class=&quot;f&quot;&gt;E = h f&lt;/span&gt;. Per questo ricevette il Nobel nel 1921.&lt;/p&gt;
+    &lt;h3&gt;Tre cose che un&#x27;onda non spiega&lt;/h3&gt;
+    &lt;p&gt;&lt;b&gt;Una soglia.&lt;/b&gt; Sotto una certa frequenza non esce nessun elettrone, per quanto intensa sia la luce. Un singolo fotone deve portare almeno il &lt;em&gt;lavoro di estrazione&lt;/em&gt; W, l&#x27;energia che lega l&#x27;elettrone al metallo. I fotoni non si mettono insieme.&lt;/p&gt;
+    &lt;p&gt;&lt;b&gt;Il colore decide l&#x27;energia.&lt;/b&gt; Sopra la soglia gli elettroni più veloci escono con &lt;span class=&quot;f&quot;&gt;K&lt;sub&gt;max&lt;/sub&gt; = h f − W&lt;/span&gt;. Una luce più blu dà elettroni più veloci. Una luce più intensa no.&lt;/p&gt;
+    &lt;p&gt;&lt;b&gt;L&#x27;intensità decide il numero.&lt;/b&gt; Una luce più intensa porta più fotoni al secondo, quindi più elettroni e una corrente maggiore, ciascuno con la stessa energia di prima.&lt;/p&gt;
+    &lt;h3&gt;Prova&lt;/h3&gt;
+    &lt;p&gt;Scegli lo zinco e porta il colore dal rosso all&#x27;ultravioletto: non succede nulla fino a circa 288 nm. Poi rendi negativa la tensione. Ora il collettore respinge gli elettroni e la corrente si annulla al &lt;em&gt;potenziale d&#x27;arresto&lt;/em&gt;, che in volt è uguale a K&lt;sub&gt;max&lt;/sub&gt; in elettronvolt. È così che si misura K&lt;sub&gt;max&lt;/sub&gt;.&lt;/p&gt;
+    &lt;h3&gt;Il grafico&lt;/h3&gt;
+    &lt;p&gt;K&lt;sub&gt;max&lt;/sub&gt; in funzione della frequenza è una retta per ogni metallo. Le rette sono parallele: la loro pendenza è la costante di Planck h. Il punto in cui una retta incontra l&#x27;asse è la frequenza di soglia di quel metallo.&lt;/p&gt;
+    &lt;h3&gt;Il modello&lt;/h3&gt;
+    &lt;p&gt;Lavori di estrazione: cesio 2,1 eV, sodio 2,3 eV, zinco 4,3 eV, rame 4,7 eV (valori tipici; le superfici reali variano). Qui ogni fotone sopra la soglia libera un elettrone, mentre in un tubo reale lo fa solo una piccola frazione. Gli elettroni escono con energie e direzioni diverse fino a K&lt;sub&gt;max&lt;/sub&gt; e si muovono in un campo uniforme tra le lastre. La luce ultravioletta è invisibile: è disegnata in viola.&lt;/p&gt;">
     <h2>Light arrives in packets</h2>
     <p>Shine light on a clean metal and electrons can be knocked out of it. Around 1900 this looked simple, but the details did not fit the idea of light as a smooth wave. Einstein explained them in 1905 by treating light as a stream of packets, photons, each carrying an energy set only by its colour: <span class="f">E = h f</span>. It earned him the 1921 Nobel Prize.</p>
     <h3>Three things a wave cannot explain</h3>
@@ -144,6 +250,7 @@
     <p>K<sub>max</sub> against frequency is a straight line for every metal. The lines are parallel: their slope is Planck's constant h. Where a line meets the axis is that metal's threshold frequency.</p>
     <h3>About the model</h3>
     <p>Work functions: cesium 2.1 eV, sodium 2.3 eV, zinc 4.3 eV, copper 4.7 eV (typical values; real surfaces vary). Every photon above the threshold frees one electron here, while in a real tube only a small fraction do. Electrons leave with a spread of energies and directions up to K<sub>max</sub> and move in a uniform field between the plates. Ultraviolet light is invisible; it is drawn violet.</p>
+    </div>
     <button id="closeInfo">Close</button>
   </div>
 </div>

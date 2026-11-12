@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -90,6 +90,100 @@
     .seg button, #rowD button { padding-top: 6px; padding-bottom: 6px; } #rowD button { flex: 1 1 18%; padding-left: 2px; padding-right: 2px; font-size: 9px; }
   }
 </style>
+<!-- sim-i18n -->
+<script>
+window.I18N={
+"Info": "Info",
+"Hide UI": "Nascondi",
+"Pause": "Pausa",
+"Play": "Avvia",
+"Time": "Tempo",
+"Close": "Chiudi",
+"All simulations": "Tutte le simulazioni",
+"Language": "Lingua / Language",
+"This scene needs WebGL, which isn't available in this browser.": "Questa scena richiede WebGL, che non è disponibile in questo browser.",
+"This simulation needs WebGL, which isn't available in this browser.": "Questa simulazione richiede WebGL, che non è disponibile in questo browser.",
+"Drag to orbit · scroll to zoom · H hides interface": "Trascina per ruotare · rotellina per lo zoom · H nasconde i comandi",
+"Drag to orbit · pinch to zoom": "Trascina per ruotare · pizzica per lo zoom",
+"Drag to look · scroll to zoom · H hides interface": "Trascina per guardarti intorno · rotellina per lo zoom · H nasconde i comandi",
+"Drag to look · pinch to zoom": "Trascina per guardarti intorno · pizzica per lo zoom",
+"Hydrogen atom": "Atomo di idrogeno",
+"Wave +": "Onda +",
+"Wave −": "Onda −",
+"Shell": "Livello",
+"Type": "Tipo",
+"Shape": "Forma",
+"Cut open": "Sezione",
+"Bohr orbit": "Orbita di Bohr",
+"Simple shape": "Forma semplice",
+"Dot cloud": "Nuvola di punti",
+"Proton": "Protone",
+"Photon": "Fotone",
+"ENERGY LEVELS": "LIVELLI DI ENERGIA",
+"State": "Stato",
+"Energy": "Energia",
+"Mean radius": "Raggio medio",
+"Ang. momentum": "Mom. angolare",
+"Nodes": "Nodi",
+"Emitted": "Emesso",
+"Absorbed": "Assorbito",
+"Lyman · ultraviolet": "Lyman · ultravioletto",
+"Balmer · visible": "Balmer · visibile",
+"Paschen · infrared": "Paschen · infrarosso",
+"The electron has no orbit. Each dot marks a place where it could be found; where the dots are dense it is more likely to be.": "L'elettrone non ha un'orbita. Ogni punto segna un posto in cui potrebbe trovarsi; dove i punti sono fitti è più probabile trovarlo.",
+"The ground state is a single round cloud, densest at the proton.": "Lo stato fondamentale è una sola nuvola rotonda, più densa vicino al protone.",
+"An s state is round.": "Uno stato s è rotondo.",
+"A p state has two lobes of opposite sign, with an empty plane between them.": "Uno stato p ha due lobi di segno opposto, con un piano vuoto tra di loro.",
+"A d state has two nodal surfaces, giving four lobes or a lobe pair with a ring.": "Uno stato d ha due superfici nodali: quattro lobi, oppure una coppia di lobi con un anello.",
+"An f state has three nodal surfaces. Shapes like these organise the lanthanides.": "Uno stato f ha tre superfici nodali. Forme come queste organizzano i lantanidi.",
+"Simple view: the surface reaches farthest in the directions where the electron is most likely to be found.": "Vista semplice: la superficie arriva più lontano nelle direzioni in cui è più probabile trovare l'elettrone.",
+"Distance from the proton and inner shells are not shown here.": "Qui non si vedono né la distanza dal protone né i gusci interni.",
+"Cut it open: 1 empty shell separates the layers.": "Taglialo: 1 guscio vuoto separa gli strati.",
+"Cut it open: 2 empty shells separate the layers.": "Taglialo: 2 gusci vuoti separano gli strati.",
+"Cut it open: 3 empty shells separate the layers.": "Taglialo: 3 gusci vuoti separano gli strati."
+};
+window.I18N_RX=[[/^(\d+) radial · (\d+) angular$/,"$1 radiali · $2 angolari"]];
+</script>
+<script>
+/* ---- Italiano / English: shared with the portal (localStorage 'simLang', Italian by default) ----
+   I18N maps the page's own text (English, or Italian when I18N_BASE = 'it') to the other language, I18N_RX holds [RegExp, replacement] for text with numbers.
+   Elements with data-it hold a whole Italian block (info cards). Text the page writes later is translated as it appears. */
+(function () {
+  var D = window.I18N || {}, RX = window.I18N_RX || [], BASE = window.I18N_BASE || 'en', lang = 'it', orig = new WeakMap(), busy = false;
+  try { if (localStorage.getItem('simLang') === 'en') lang = 'en'; } catch (e) {}
+  function tr(s) {
+    var k = s.replace(/\s+/g, ' ').trim(); if (!k) return s;
+    var t = D[k];
+    if (t === undefined) for (var i = 0; i < RX.length; i++) if (RX[i][0].test(k)) { t = k.replace(RX[i][0], RX[i][1]); break; }
+    if (t === undefined) return s;
+    var m = s.match(/^\s*/)[0], n = s.match(/\s*$/)[0]; return m + t + n;
+  }
+  window.simT = function (s) { return lang !== BASE ? tr(s) : s; };          /* for text drawn on canvas */
+  window.simLang = function () { return lang; };
+  function skip(n) { var p = n.parentNode; return !p || /^(SCRIPT|STYLE)$/.test(p.nodeName) || (p.closest && p.closest('[data-it],.notr')); }
+  function node(n) {
+    if (skip(n)) return; var v = n.nodeValue, o = orig.get(n);
+    if (o && (v === o.it || v === o.en) ) { var want = lang !== BASE ? o.it : o.en; if (v !== want) { busy = true; n.nodeValue = want; busy = false; } return; }
+    var it = tr(v); orig.set(n, { en: v, it: it }); if (lang !== BASE && it !== v) { busy = true; n.nodeValue = it; busy = false; }
+  }
+  function walk(root) { if (root.nodeType === 3) return node(root); var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), n; while ((n = w.nextNode())) node(n); }
+  function attrs() { document.querySelectorAll('[title],[aria-label],[placeholder]').forEach(function (e) { ['title', 'aria-label', 'placeholder'].forEach(function (a) {
+    if (!e.hasAttribute(a)) return; var k = 'en' + a.replace(/-/g, ''); if (e.dataset[k] === undefined) e.dataset[k] = e.getAttribute(a);
+    e.setAttribute(a, lang !== BASE ? tr(e.dataset[k]) : e.dataset[k]); }); }); }
+  function blocks() { document.querySelectorAll('[data-it]').forEach(function (e) { if (e.dataset.en === undefined) e.dataset.en = e.innerHTML; var h = lang === 'it' ? e.dataset.it : e.dataset.en; if (e.innerHTML !== h) e.innerHTML = h; }); }
+  function apply() {
+    blocks(); walk(document.body); attrs();
+    document.documentElement.lang = lang; if (!document.title0) document.title0 = document.title; document.title = lang !== BASE ? tr(document.title0) : document.title0;
+    var b = document.getElementById('langBtn'); if (b) b.textContent = lang === 'it' ? 'EN' : 'IT';
+    window.dispatchEvent(new Event('simlang'));
+  }
+  new MutationObserver(function (ms) { if (busy) return; ms.forEach(function (m) {
+    if (m.type === 'characterData') node(m.target); else m.addedNodes.forEach(function (n) { if (n.nodeType === 3 || n.nodeType === 1) walk(n); }); });
+  }).observe(document.documentElement, { subtree: true, childList: true, characterData: true });
+  document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('#langBtn')) { e.stopPropagation(); lang = lang === 'it' ? 'en' : 'it'; try { localStorage.setItem('simLang', lang); } catch (x) {} apply(); } }, true);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', apply); else apply();
+})();
+</script>
 </head>
 <body>
 <canvas id="c"></canvas>
@@ -117,13 +211,28 @@
     <button id="cut">Cut open</button>
     <button id="bohr">Bohr orbit</button>
     <button id="solid">Simple shape</button>
-    <button id="about">Info</button>
+    <button id="homeBtn" onclick="location.href='index.html'" title="All simulations">⌂</button><button id="langBtn" class="notr" title="Language">EN</button><button id="about">Info</button>
     <button id="hide">Hide UI</button>
   </div>
 </div>
 
 <div id="info">
   <div id="card">
+<div data-it="&lt;h2&gt;Dov&#x27;è l&#x27;elettrone?&lt;/h2&gt;
+    &lt;p&gt;Nel modello di Bohr del 1913 l&#x27;elettrone gira attorno al protone su orbite fisse. Spiegava i colori della luce dell&#x27;idrogeno, ma l&#x27;immagine è sbagliata. La meccanica quantistica (Schrödinger, 1926) sostituisce l&#x27;orbita con una funzione d&#x27;onda ψ. Il suo quadrato, |ψ|², dà la probabilità di trovare l&#x27;elettrone in ogni punto.&lt;/p&gt;
+    &lt;h3&gt;Che cosa vedi&lt;/h3&gt;
+    &lt;p&gt;&lt;em&gt;Forma semplice&lt;/em&gt; sostituisce i punti con i lobi lisci disegnati nei libri. Mostra solo le direzioni preferite dall&#x27;elettrone, non quanto è lontano.&lt;/p&gt;
+    &lt;p&gt;Ogni punto è un posto in cui si potrebbe trovare l&#x27;elettrone, se lo si cercasse. Dove i punti sono fitti, l&#x27;elettrone è probabile. La nuvola non si muove: sono stati stazionari. Il colore indica il segno dell&#x27;onda, &lt;span class=&quot;a&quot;&gt;positivo&lt;/span&gt; o &lt;span class=&quot;b&quot;&gt;negativo&lt;/span&gt;. Dove il segno cambia la probabilità è zero: è un &lt;em&gt;nodo&lt;/em&gt;. Usa &lt;em&gt;Sezione&lt;/em&gt; per vedere i nodi interni.&lt;/p&gt;
+    &lt;h3&gt;Tre numeri&lt;/h3&gt;
+    &lt;p&gt;&lt;b&gt;n, il livello&lt;/b&gt;, fissa l&#x27;energia, &lt;span class=&quot;f&quot;&gt;E = −13,6 eV / n²&lt;/span&gt;, e le dimensioni, che crescono come n².&lt;/p&gt;
+    &lt;p&gt;&lt;b&gt;l, il tipo&lt;/b&gt; (s, p, d, f per 0, 1, 2, 3), fissa il momento angolare e il numero di piani o coni nodali. Va da 0 a n − 1.&lt;/p&gt;
+    &lt;p&gt;&lt;b&gt;m, la forma&lt;/b&gt;, fissa l&#x27;orientazione. Ci sono 2l + 1 possibilità.&lt;/p&gt;
+    &lt;h3&gt;La luce&lt;/h3&gt;
+    &lt;p&gt;Cambiando livello l&#x27;atomo emette o assorbe un fotone con esattamente la differenza di energia. I salti che finiscono su n = 2 danno le righe visibili di Balmer (656 nm rossa, 486 nm azzurra); quelli che finiscono su n = 1 sono ultravioletti (Lyman), su n = 3 infrarossi (Paschen).&lt;/p&gt;
+    &lt;h3&gt;Bohr aveva in parte ragione&lt;/h3&gt;
+    &lt;p&gt;L&#x27;orbita di Bohr ha raggio n² × 0,053 nm. Accendila e confronta: per gli stati con l più grande in ogni livello (1s, 2p, 3d, 4f) la nuvola è più densa proprio a quella distanza.&lt;/p&gt;
+    &lt;h3&gt;Il modello&lt;/h3&gt;
+    &lt;p&gt;I punti sono estratti dalle funzioni d&#x27;onda esatte dell&#x27;idrogeno, nella forma reale usata in chimica (p&lt;sub&gt;x&lt;/sub&gt;, d&lt;sub&gt;xy&lt;/sub&gt; e così via). Spin e correzioni relativistiche sono trascurati. Un vero salto con un solo fotone richiede anche che l cambi di 1; il diagramma mostra l&#x27;energia di qualsiasi cambio di livello. I fotoni infrarossi e ultravioletti sono disegnati in rosso scuro e viola.&lt;/p&gt;">
     <h2>Where is the electron?</h2>
     <p>In Bohr's 1913 model the electron circles the proton on fixed orbits. It explained the colours of hydrogen's light, but the picture is wrong. Quantum mechanics (Schrödinger, 1926) replaces the orbit with a wave function ψ. Its square, |ψ|², gives the probability of finding the electron at each point.</p>
     <h3>What you see</h3>
@@ -139,6 +248,7 @@
     <p>The Bohr orbit has radius n² × 0.053 nm. Switch it on and compare: for the states with the largest l in each shell (1s, 2p, 3d, 4f) the cloud is densest at that distance.</p>
     <h3>About the model</h3>
     <p>The dots are drawn from the exact hydrogen wave functions, in the real-valued form used in chemistry (p<sub>x</sub>, d<sub>xy</sub> and so on). Spin and relativistic corrections are left out. A real single-photon jump also needs l to change by 1; the diagram shows the energy of any change of shell. Infrared and ultraviolet photons are drawn dark red and violet.</p>
+    </div>
     <button id="closeInfo">Close</button>
   </div>
 </div>
@@ -361,7 +471,7 @@
     const small = w < 200, L = 12, R = w - (small ? 62 : 84), T = 20, Bm = h - 12, Y = E => T + (Bm - T)*(-E/13.606);
     pc.clearRect(0, 0, w, h); pc.fillStyle = 'rgba(6,9,16,.55)'; pc.fillRect(0, 0, w, h);
     pc.font = (small ? 8 : 9) + 'px ui-monospace, Menlo, monospace'; pc.textAlign = 'left';
-    pc.fillStyle = '#8fa3c2'; pc.fillText('ENERGY LEVELS', L, 12);
+    pc.fillStyle = '#8fa3c2'; pc.fillText(simT('ENERGY LEVELS'), L, 12);
     pc.strokeStyle = 'rgba(190,210,255,.25)'; pc.setLineDash([2, 3]); pc.beginPath(); pc.moveTo(L, Y(0)); pc.lineTo(R, Y(0)); pc.stroke(); pc.setLineDash([]);
     for (let k = 1; k <= 4; k++) { const y = Y(energy(k)); pc.strokeStyle = k === n ? '#ffd9a8' : 'rgba(143,163,194,.6)'; pc.lineWidth = k === n ? 2 : 1;
       pc.beginPath(); pc.moveTo(L, y); pc.lineTo(R, y); pc.stroke();
@@ -382,12 +492,14 @@
     if (last) h += '<div><span>' + (last.to < last.from ? 'Emitted' : 'Absorbed') + '</span> <em style="color:#' + last.col.clone().lerp(new THREE.Color(1, 1, 1), 0.35).getHexString() + '">' +
       last.nm.toFixed(0) + ' nm · ' + last.dE.toFixed(2) + ' eV</em> <span>' + last.series + '</span></div>';
     $('tele').innerHTML = h;
-    const base = 'The electron has no orbit. Each dot marks a place where it could be found; where the dots are dense it is more likely to be. ';
-    const extra = l === 0 ? (n === 1 ? 'The ground state is a single round cloud, densest at the proton.' : 'An s state is round. Cut it open: ' + (n - 1) + ' empty shell' + (n > 2 ? 's separate' : ' separates') + ' the layers.')
-      : l === 1 ? 'A p state has two lobes of opposite sign, with an empty plane between them.'
-      : l === 2 ? 'A d state has two nodal surfaces, giving four lobes or a lobe pair with a ring.'
-      : 'An f state has three nodal surfaces. Shapes like these organise the lanthanides.';
-    $('cap').textContent = solidOn ? 'Simple view: the surface reaches farthest in the directions where the electron is most likely to be found. ' + extra.replace(/ Cut it open:.*$/, '') + ' Distance from the proton and inner shells are not shown here.' : base + extra;
+    // sentences go through simT() one by one, so each one translates on its own
+    const base = simT('The electron has no orbit. Each dot marks a place where it could be found; where the dots are dense it is more likely to be.') + ' ';
+    const cutS = l === 0 && n > 1 ? ' ' + simT('Cut it open: ' + (n - 1) + ' empty shell' + (n > 2 ? 's separate' : ' separates') + ' the layers.') : '';
+    const extra = l === 0 ? (n === 1 ? simT('The ground state is a single round cloud, densest at the proton.') : simT('An s state is round.'))
+      : l === 1 ? simT('A p state has two lobes of opposite sign, with an empty plane between them.')
+      : l === 2 ? simT('A d state has two nodal surfaces, giving four lobes or a lobe pair with a ring.')
+      : simT('An f state has three nodal surfaces. Shapes like these organise the lanthanides.');
+    $('cap').textContent = solidOn ? simT('Simple view: the surface reaches farthest in the directions where the electron is most likely to be found.') + ' ' + extra + ' ' + simT('Distance from the proton and inner shells are not shown here.') : base + extra + cutS;
     setTag(tBohr, 'Bohr orbit <s>' + (n*n*A0).toFixed(2) + ' nm</s>');
     if (last) setTag(tPh, 'Photon <s>' + last.nm.toFixed(0) + ' nm</s>');
   }
@@ -436,7 +548,7 @@
     if (frames === 90) { if (slow > 45 && pixelRatio > 0.75) { pixelRatio = Math.max(0.75, pixelRatio*0.75); resize(); } frames = 0; slow = 0; }
     requestAnimationFrame(frame);
   }
-  window.addEventListener('resize', resize); window.addEventListener('orientationchange', () => setTimeout(resize, 200));
+  window.addEventListener('resize', resize); window.addEventListener('simlang', () => { telemetry(); drawPlot(); }); window.addEventListener('orientationchange', () => setTimeout(resize, 200));
   setState(2, 1, 0, true); resize();
   window.hDebug = { setState, tgt, solid: () => $('solid').click(), cut: () => $('cut').click(), bohr: () => $('bohr').click() };
   requestAnimationFrame(frame);

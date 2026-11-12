@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -89,6 +89,117 @@
     .seg button, #rowC button { padding-top: 8px; padding-bottom: 8px; }
   }
 </style>
+<!-- sim-i18n -->
+<script>
+window.I18N={
+"Info": "Info",
+"Hide UI": "Nascondi",
+"Pause": "Pausa",
+"Play": "Avvia",
+"Time": "Tempo",
+"Close": "Chiudi",
+"All simulations": "Tutte le simulazioni",
+"Language": "Lingua / Language",
+"This scene needs WebGL, which isn't available in this browser.": "Questa scena richiede WebGL, che non è disponibile in questo browser.",
+"This simulation needs WebGL, which isn't available in this browser.": "Questa simulazione richiede WebGL, che non è disponibile in questo browser.",
+"Drag to orbit · scroll to zoom · H hides interface": "Trascina per ruotare · rotellina per lo zoom · H nasconde i comandi",
+"Drag to orbit · pinch to zoom": "Trascina per ruotare · pizzica per lo zoom",
+"Drag to look · scroll to zoom · H hides interface": "Trascina per guardarti intorno · rotellina per lo zoom · H nasconde i comandi",
+"Drag to look · pinch to zoom": "Trascina per guardarti intorno · pizzica per lo zoom",
+"Magnetosphere": "Magnetosfera",
+"Electron": "Elettrone",
+"Proton": "Protone",
+"Trapped": "Intrappolata",
+"Aurora": "Aurora",
+"Solar wind": "Vento solare",
+"Belts": "Fasce",
+"Pitch": "Inclinazione",
+"Relaunch": "Rilancia",
+"Field on": "Campo sì",
+"Field off": "Campo no",
+"Magnetic north": "Nord magnetico",
+"Magnetic south": "Sud magnetico",
+"Sun": "Sole",
+"Mirror point": "Punto specchio",
+"A charged particle cannot cross the field freely. It spirals around a field line, bounces between two mirror points and slowly drifts around the planet. Lower the pitch angle and it reaches the atmosphere.": "Una particella carica non può attraversare liberamente il campo. Gira a spirale attorno a una linea di campo, rimbalza tra due punti specchio e deriva lentamente attorno al pianeta. Riduci l'angolo di inclinazione e raggiunge l'atmosfera.",
+"Only particles moving almost parallel to the field reach the polar atmosphere and make it glow. Slide the pitch angle across the loss cone (2.6°): below it the particle hits the air, above it the particle is mirrored back.": "Solo le particelle che si muovono quasi parallele al campo raggiungono l'atmosfera polare e la fanno brillare. Porta l'angolo di inclinazione attraverso il cono di perdita (2,6°): sotto, la particella colpisce l'aria; sopra, viene riflessa indietro.",
+"Particles streaming from the Sun are turned aside long before they reach the ground. The field works as a shield, and the way in is easiest near the poles.": "Le particelle che arrivano dal Sole vengono deviate molto prima di raggiungere il suolo. Il campo fa da scudo, e il passaggio è più facile vicino ai poli.",
+"Trapped particles collect in two rings around the planet, the Van Allen belts: mostly protons in the inner belt, electrons in the outer one.": "Le particelle intrappolate si raccolgono in due anelli attorno al pianeta, le fasce di Van Allen: soprattutto protoni nella fascia interna, elettroni in quella esterna.",
+"Reached the atmosphere · aurora": "Ha raggiunto l'atmosfera · aurora",
+"Escaped back into space": "È sfuggita nello spazio",
+"Particle": "Particella",
+"Altitude": "Quota",
+"Field": "Campo",
+"Pitch set": "Inclin. scelta",
+"Loss cone": "Cono di perdita",
+"Pitch now": "Inclin. ora",
+"Verdict": "Esito",
+"reaches the air": "raggiunge l'aria",
+"mirrors": "si riflette",
+"Stream": "Flusso",
+"Turned away": "Deviate",
+"Reached air": "Arrivate all'aria",
+"Field at ground": "Campo al suolo",
+"At 10 radii": "A 10 raggi",
+"Inner belt": "Fascia interna",
+"Outer belt": "Fascia esterna",
+"Protons drift west · electrons drift east": "I protoni derivano verso ovest · gli elettroni verso est",
+"ELECTRON −": "ELETTRONE −",
+"PROTON +": "PROTONE +",
+"ELECTRONS −": "ELETTRONI −",
+"PROTONS +": "PROTONI +",
+"PROTONS · 1 000–6 000 km": "PROTONI · 1 000–6 000 km",
+"ELECTRONS · 13 000–30 000 km": "ELETTRONI · 13 000–30 000 km",
+"Heading north": "Verso nord",
+"Heading south": "Verso sud",
+"mirrored": "riflessa",
+"at": "a",
+"no aurora": "niente aurora",
+"drifting east": "deriva verso est",
+"drifting west": "deriva verso ovest"
+};
+window.I18N_RX=[];
+</script>
+<script>
+/* ---- Italiano / English: shared with the portal (localStorage 'simLang', Italian by default) ----
+   I18N maps the page's own text (English, or Italian when I18N_BASE = 'it') to the other language, I18N_RX holds [RegExp, replacement] for text with numbers.
+   Elements with data-it hold a whole Italian block (info cards). Text the page writes later is translated as it appears. */
+(function () {
+  var D = window.I18N || {}, RX = window.I18N_RX || [], BASE = window.I18N_BASE || 'en', lang = 'it', orig = new WeakMap(), busy = false;
+  try { if (localStorage.getItem('simLang') === 'en') lang = 'en'; } catch (e) {}
+  function tr(s) {
+    var k = s.replace(/\s+/g, ' ').trim(); if (!k) return s;
+    var t = D[k];
+    if (t === undefined) for (var i = 0; i < RX.length; i++) if (RX[i][0].test(k)) { t = k.replace(RX[i][0], RX[i][1]); break; }
+    if (t === undefined) return s;
+    var m = s.match(/^\s*/)[0], n = s.match(/\s*$/)[0]; return m + t + n;
+  }
+  window.simT = function (s) { return lang !== BASE ? tr(s) : s; };          /* for text drawn on canvas */
+  window.simLang = function () { return lang; };
+  function skip(n) { var p = n.parentNode; return !p || /^(SCRIPT|STYLE)$/.test(p.nodeName) || (p.closest && p.closest('[data-it],.notr')); }
+  function node(n) {
+    if (skip(n)) return; var v = n.nodeValue, o = orig.get(n);
+    if (o && (v === o.it || v === o.en) ) { var want = lang !== BASE ? o.it : o.en; if (v !== want) { busy = true; n.nodeValue = want; busy = false; } return; }
+    var it = tr(v); orig.set(n, { en: v, it: it }); if (lang !== BASE && it !== v) { busy = true; n.nodeValue = it; busy = false; }
+  }
+  function walk(root) { if (root.nodeType === 3) return node(root); var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), n; while ((n = w.nextNode())) node(n); }
+  function attrs() { document.querySelectorAll('[title],[aria-label],[placeholder]').forEach(function (e) { ['title', 'aria-label', 'placeholder'].forEach(function (a) {
+    if (!e.hasAttribute(a)) return; var k = 'en' + a.replace(/-/g, ''); if (e.dataset[k] === undefined) e.dataset[k] = e.getAttribute(a);
+    e.setAttribute(a, lang !== BASE ? tr(e.dataset[k]) : e.dataset[k]); }); }); }
+  function blocks() { document.querySelectorAll('[data-it]').forEach(function (e) { if (e.dataset.en === undefined) e.dataset.en = e.innerHTML; var h = lang === 'it' ? e.dataset.it : e.dataset.en; if (e.innerHTML !== h) e.innerHTML = h; }); }
+  function apply() {
+    blocks(); walk(document.body); attrs();
+    document.documentElement.lang = lang; if (!document.title0) document.title0 = document.title; document.title = lang !== BASE ? tr(document.title0) : document.title0;
+    var b = document.getElementById('langBtn'); if (b) b.textContent = lang === 'it' ? 'EN' : 'IT';
+    window.dispatchEvent(new Event('simlang'));
+  }
+  new MutationObserver(function (ms) { if (busy) return; ms.forEach(function (m) {
+    if (m.type === 'characterData') node(m.target); else m.addedNodes.forEach(function (n) { if (n.nodeType === 3 || n.nodeType === 1) walk(n); }); });
+  }).observe(document.documentElement, { subtree: true, childList: true, characterData: true });
+  document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('#langBtn')) { e.stopPropagation(); lang = lang === 'it' ? 'en' : 'it'; try { localStorage.setItem('simLang', lang); } catch (x) {} apply(); } }, true);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', apply); else apply();
+})();
+</script>
 </head>
 <body>
 <canvas id="c"></canvas>
@@ -123,13 +234,27 @@
     <button id="play">Pause</button>
     <button id="launch">Relaunch</button>
     <button id="lines">Field on</button>
-    <button id="about">Info</button>
+    <button id="homeBtn" onclick="location.href='index.html'" title="All simulations">⌂</button><button id="langBtn" class="notr" title="Language">EN</button><button id="about">Info</button>
     <button id="hide">Hide UI</button>
   </div>
 </div>
 
 <div id="info">
   <div id="card">
+<div data-it="&lt;h2&gt;Che cosa succede a una particella carica&lt;/h2&gt;
+    &lt;p&gt;Un campo magnetico spinge una carica in moto di lato, mai in avanti o indietro (la forza di Lorentz, F = q v × B). La particella mantiene la sua velocità ma non può muoversi in linea retta. Vicino alla Terra questo dà tre moti sovrapposti.&lt;/p&gt;
+    &lt;h3&gt;1 · Rotazione&lt;/h3&gt;
+    &lt;p&gt;La particella gira attorno a una linea di campo. Elettroni e protoni girano in versi opposti, e il cerchio si stringe dove il campo è più forte.&lt;/p&gt;
+    &lt;h3&gt;2 · Rimbalzo&lt;/h3&gt;
+    &lt;p&gt;Scivolando lungo la linea verso un polo, la particella incontra un campo più forte. Il suo moto lungo la linea rallenta, si ferma nel &lt;em&gt;punto specchio&lt;/em&gt; e si inverte. La particella rimbalza tra i due emisferi.&lt;/p&gt;
+    &lt;h3&gt;3 · Deriva&lt;/h3&gt;
+    &lt;p&gt;Più lontano il campo è più debole, quindi ogni cerchio è un po&#x27; sbilenco e la particella si sposta lentamente di lato: i protoni verso ovest, gli elettroni verso est. Insieme formano un anello di corrente attorno al pianeta.&lt;/p&gt;
+    &lt;h3&gt;Angolo di inclinazione e aurora&lt;/h3&gt;
+    &lt;p&gt;L&#x27;angolo di inclinazione (pitch angle) è l&#x27;angolo tra la velocità e il campo. Un angolo grande si riflette in alto, lontano dal suolo. Uno piccolo (dentro il &lt;em&gt;cono di perdita&lt;/em&gt;) raggiunge l&#x27;atmosfera prima di potersi riflettere, colpisce ossigeno e azoto e li fa brillare:
+      &lt;span class=&quot;g&quot;&gt;verde&lt;/span&gt; dall&#x27;ossigeno tra 100 e 250 km, &lt;span class=&quot;r&quot;&gt;rosso&lt;/span&gt; dall&#x27;ossigeno più in alto, &lt;span class=&quot;v&quot;&gt;viola&lt;/span&gt; dall&#x27;azoto sul bordo inferiore.&lt;/p&gt;
+    &lt;h3&gt;Il modello&lt;/h3&gt;
+    &lt;p&gt;Il campo è un dipolo inclinato, 31 000 nT all&#x27;equatore. Le traiettorie sono calcolate passo per passo dalla sola forza di Lorentz, quindi riflessione e deriva non sono scritte a mano. Per rendere visibile il moto, i cerchi sono molto più grandi del vero e l&#x27;aurora è disegnata più alta. Il campo reale è anche compresso dal vento solare sul lato del giorno e stirato in una lunga coda sul lato della notte, dove viene accelerata la maggior parte delle particelle delle aurore.&lt;/p&gt;
+    &lt;p style=&quot;opacity:.6&quot;&gt;Immagini: NASA Blue Marble / Black Marble.&lt;/p&gt;">
     <h2>What happens to a charged particle</h2>
     <p>A magnetic field pushes a moving charge sideways, never forwards or backwards (the Lorentz force, F = q v × B). The particle keeps its speed but cannot travel in a straight line. Near Earth this gives three motions on top of each other.</p>
     <h3>1 · Gyration</h3>
@@ -144,6 +269,7 @@
     <h3>About the model</h3>
     <p>The field is a tilted dipole, 31 000 nT at the equator. Orbits are integrated step by step from the Lorentz force alone, so mirroring and drift are not scripted. To make the motion visible, the circles are far larger than in reality and the aurora is drawn taller. The real field is also squeezed by the solar wind on the day side and stretched into a long tail at night, where most auroral particles are accelerated.</p>
     <p style="opacity:.6">Imagery: NASA Blue Marble / Black Marble.</p>
+    </div>
     <button id="closeInfo">Close</button>
   </div>
 </div>
@@ -648,9 +774,9 @@
       row('Pitch now', Math.round(pitch > 90 ? 180 - pitch : pitch) + '°', 'Verdict', inside ? 'reaches the air' : 'mirrors');
       let s = status;
       if (!s) {
-        s = (p.vx*B[0] + p.vy*B[1] + p.vz*B[2] > 0 ? 'Heading north' : 'Heading south');
-        if (p.bounces) s += ' · mirrored ×' + p.bounces + ' at ' + fmt(p.mirrorAlt) + ' km' + (mode === 'aurora' ? ' · no aurora' : '');
-        if (p.bounces > 1) s += ' · drifting ' + (p.sp === 'e' ? 'east' : 'west');
+        s = simT(p.vx*B[0] + p.vy*B[1] + p.vz*B[2] > 0 ? 'Heading north' : 'Heading south');
+        if (p.bounces) s += ' · ' + simT('mirrored') + ' ×' + p.bounces + ' ' + simT('at') + ' ' + fmt(p.mirrorAlt) + ' km' + (mode === 'aurora' ? ' · ' + simT('no aurora') : '');
+        if (p.bounces > 1) s += ' · ' + simT(p.sp === 'e' ? 'drifting east' : 'drifting west');
       }
       h += '<div>' + (statusGood ? '<em>' + s + '</em>' : '<span>' + s + '</span>') + '</div>';
     } else if (mode === 'wind') {

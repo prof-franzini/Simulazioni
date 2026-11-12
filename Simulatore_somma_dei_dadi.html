@@ -4,39 +4,31 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Simulatore somma dei dadi</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap" rel="stylesheet">
 <style>
 :root{
-  /* Layout: header, control bar, four stat tiles, one large histogram, then rolls + 36-combination grid beside the notes */
-  color-scheme: light;
-  --bg:#f1f3f6;
-  --surface:#ffffff;
-  --ink:#15181d;
-  --ink-2:#4a505a;
-  --ink-3:#6b717c;
-  --line:#dde1e7;
-  --bars:#2a78d6;
-  --bars-hi:#1c5cab;
-  --curve:#eb6834;
-  --chip:#e5edf8;
-  --font-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
-  --font-body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
-}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    color-scheme:dark;
-    --bg:#111317; --surface:#1a1d22; --ink:#eff1f4; --ink-2:#b8bec8; --ink-3:#8f95a0; --line:#2d3139;
-    --bars:#3987e5; --bars-hi:#86b6ef; --curve:#e2733f; --chip:#1e2a3b;
-  }
-}
-:root[data-theme="dark"]{
+  /* Layout: site header, control bar, four stat tiles, one large histogram, then rolls + 36-combination grid beside the notes.
+     Colours follow the rest of the site: dark by default, light when the visitor picks it (localStorage 'simTheme'). */
   color-scheme:dark;
-  --bg:#111317; --surface:#1a1d22; --ink:#eff1f4; --ink-2:#b8bec8; --ink-3:#8f95a0; --line:#2d3139;
-  --bars:#3987e5; --bars-hi:#86b6ef; --curve:#e2733f; --chip:#1e2a3b;
+  --bg:#070b18; --surface:#121a36; --ink:#e8ecff; --ink-2:#a3acd0; --ink-3:#8d97bd; --line:#1c2548;
+  --bars:#4cc9f0; --bars-hi:#ffd166; --curve:#ff9f43; --chip:#18224a; --ac:#4cc9f0; --actx:#06101f;
+  --hd:linear-gradient(90deg,#101a3d,#0a0f1f 70%); --bd2:#2a3566;
+  --font-display:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --font-body:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
 }
-
+:root[data-theme="light"]{
+  color-scheme:light;
+  --bg:#e9edf7; --surface:#ffffff; --ink:#16203f; --ink-2:#4a5680; --ink-3:#5c6890; --line:#d5dcee;
+  --bars:#0a8fc0; --bars-hi:#06587a; --curve:#e07a10; --chip:#e4f2fa; --ac:#0a8fc0; --actx:#ffffff;
+  --hd:linear-gradient(90deg,#dfe7fb,#f6f8fd 70%); --bd2:#bcc6e0;
+}
+/* site header, same as the other simulations */
+.top{display:flex;align-items:center;justify-content:space-between;padding:9px 16px;border-bottom:1px solid var(--line);background:var(--hd);position:sticky;top:0;z-index:5}
+.top .tag{font-size:10.5px;text-transform:uppercase;letter-spacing:1.6px;color:var(--ac);display:block}
+.top .ttl{margin:0;font-size:19px;letter-spacing:.2px;font-weight:700}
+.hb{display:flex;gap:8px}
+.hb button,.hb a{width:38px;height:34px;display:grid;place-items:center;text-decoration:none;border-radius:9px;border:1px solid var(--bd2);background:var(--surface);color:var(--ink);font:600 13px system-ui;cursor:pointer}
+.hb button:hover,.hb a:hover{border-color:var(--ac)}
+@media (max-width:560px){.top{padding:8px 10px}.top .ttl{font-size:16px}.hb{gap:5px}.hb button,.hb a{width:36px;height:36px}}
 *{box-sizing:border-box}
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:17px;line-height:1.5}
@@ -59,14 +51,13 @@ input[type=number]:focus-visible{outline:3px solid var(--bars);outline-offset:1p
 .chip:hover{border-color:var(--bars)}
 .chip[aria-pressed="true"]{background:var(--chip);border-color:var(--bars);font-weight:700}
 .btn{font:inherit;font-weight:700;font-size:17px;padding:10px 20px;border-radius:10px;border:1.5px solid var(--ink);cursor:pointer}
-.btn.primary{background:var(--ink);color:var(--surface)}
+.btn.primary{background:var(--ac);color:var(--actx);border-color:var(--ac)}
 .btn.secondary{background:transparent;color:var(--ink)}
 .btn:hover{filter:brightness(1.12)}
 .btn:disabled{opacity:.55;cursor:wait}
 .chip:focus-visible,.btn:focus-visible,summary:focus-visible,.legend input:focus-visible+span{outline:3px solid var(--bars);outline-offset:2px}
-.err{color:#c4322f;font-weight:700;font-size:15px;min-height:1.2em;margin:0}
-:root[data-theme="dark"] .err{color:#f08a88}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .err{color:#f08a88}}
+.err{color:#ff7b8a;font-weight:700;font-size:15px;min-height:1.2em;margin:0}
+:root[data-theme="light"] .err{color:#c4322f}
 
 /* Stat tiles */
 .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
@@ -121,7 +112,7 @@ table.combo{border-collapse:separate;border-spacing:3px;font-variant-numeric:tab
 table.combo th{font-weight:400;padding:0}
 table.combo th .die{display:block;margin:auto}
 table.combo td{width:38px;height:34px;text-align:center;border-radius:6px;background:var(--bg);border:1px solid var(--line);font-weight:700;cursor:default;transition:background .1s,color .1s}
-table.combo td.hi{background:var(--bars);color:#fff;border-color:var(--bars)}
+table.combo td.hi{background:var(--bars);color:var(--actx);border-color:var(--bars)}
 .combo-caption{font-size:15px;color:var(--ink-2);margin:8px 0 0;max-width:46ch}
 .notes ol{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:10px}
 .notes li::marker{font-weight:700;color:var(--ink-2)}
@@ -156,8 +147,118 @@ table.data td:first-child,table.data th:first-child{text-align:center}
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 @media (prefers-reduced-motion: reduce){ *{transition:none !important} }
 </style>
+<!-- sim-i18n -->
+<script>
+window.I18N={
+"Matematica · Probabilità": "Maths · Probability",
+"Somma dei dadi": "Sum of the dice",
+"Tutte le simulazioni": "All simulations",
+"Tema chiaro-scuro": "Light-dark theme",
+"Simulatore somma dei dadi": "Sum of dice simulator",
+"Quanto fa la somma dei dadi?": "What do the dice add up to?",
+"Scegli quanti lanci fare: il computer li esegue tutti in un istante e disegna quante volte è uscita ogni somma.": "Choose how many rolls to make: the computer does them all in an instant and draws how often each sum came up.",
+"Impostazioni della simulazione": "Simulation settings",
+"Numero di lanci": "Number of rolls",
+"Valori rapidi": "Quick values",
+"Dadi per lancio": "Dice per roll",
+"Lancia": "Roll",
+"Lancio…": "Rolling…",
+"Aggiungi ai lanci fatti": "Add to the rolls made",
+"Riepilogo": "Summary",
+"Lanci effettuati": "Rolls made",
+"Media delle somme": "Mean of the sums",
+"Somma uscita più spesso": "Most frequent sum",
+"Scarto massimo dalla teoria": "Largest gap from theory",
+"si riduce con più lanci": "shrinks with more rolls",
+"Frequenza di ogni somma": "Frequency of each sum",
+"Lanci simulati": "Simulated rolls",
+"Probabilità teorica": "Theoretical probability",
+"Curva normale": "Normal curve",
+"Mostra i dati in tabella": "Show the data as a table",
+"Ultimi lanci": "Latest rolls",
+"Le 36 combinazioni di due dadi": "The 36 combinations of two dice",
+"Cosa osservare": "What to look for",
+"Frequenza (%)": "Frequency (%)",
+"Nessun lancio ancora.": "No rolls yet.",
+"Quante combinazioni?": "How many combinations?",
+"Somma per ogni coppia di facce": "Sum for each pair of faces",
+"Somma": "Sum",
+"Uscite": "Count",
+"Frequenza": "Frequency",
+"con 1 dado": "with 1 die",
+"Pochi lanci, grafico irregolare.": "Few rolls, ragged graph.",
+"Con 10 o 100 lanci le barre saltano su e giù. Con 100.000 lanci si appoggiano quasi esattamente sui trattini della teoria: è la": "With 10 or 100 rolls the bars jump up and down. With 100,000 rolls they sit almost exactly on the theory marks: this is the",
+"legge dei grandi numeri": "law of large numbers",
+"Il 7 vince perché ha più modi di uscire.": "7 wins because it has more ways to come up.",
+"Con due dadi ci sono 36 coppie possibili: 6 danno 7, una sola dà 2 e una sola dà 12. Passa sopra una barra per vedere le sue coppie nella tabella.": "With two dice there are 36 possible pairs: 6 give 7, only one gives 2 and only one gives 12. Point at a bar to see its pairs in the table.",
+"Più dadi, più campana.": "More dice, more of a bell.",
+"Con 2 dadi la forma è un triangolo. Prova 3, 5 e 10 dadi: la forma si arrotonda e combacia con la curva arancione. È il": "With 2 dice the shape is a triangle. Try 3, 5 and 10 dice: the shape rounds off and matches the orange curve. This is the",
+"teorema del limite centrale": "central limit theorem",
+"Evidenziate le coppie che danno la somma scelta. Il 7 occupa tutta la diagonale: 6 caselle su 36.": "Highlighted: the pairs that give the chosen sum. 7 fills the whole diagonal: 6 cells out of 36.",
+"Con un dado solo ci sono 6 risultati, tutti con la stessa probabilità: il grafico è piatto.": "With a single die there are 6 outcomes, all equally likely: the graph is flat.",
+"Con un dado solo non c’è nessuna campana: ogni faccia ha 1 probabilità su 6.": "With a single die there is no bell at all: each face has a 1 in 6 chance.",
+"Attenzione: con 2 dadi la distribuzione è triangolare, non normale. La curva arancione le somiglia ma non coincide: guarda il 7 e le estremità.": "Careful: with 2 dice the distribution is triangular, not normal. The orange curve looks similar but does not match: look at 7 and at the ends.",
+"Scrivi un numero intero di lanci, almeno 1.": "Type a whole number of rolls, at least 1."
+};
+window.I18N_RX=[[/^Somma (\d+)$/,"Sum $1"],
+[/^Uscita (.*) volte \((.*)\)$/,"Came up $1 times ($2)"],
+[/^Teoria: (.*) · (.*) combinazioni su (.*)$/,"Theory: $1 · $2 combinations out of $3"],
+[/^Teoria: (.*)$/,"Theory: $1"],
+[/^con (\d+) dadi$/,"with $1 dice"],
+[/^teorica: (.*)$/,"theory: $1"],
+[/^uscita (.*) volte$/,"came up $1 times"],
+[/^(.*) lanci simulati in meno di 1 millisecondi\.$/,"$1 rolls simulated in under 1 millisecond."],
+[/^(.*) lanci simulati in (.*) millisecondi\.$/,"$1 rolls simulated in $2 milliseconds."],
+[/^Con (\d+) dadi le combinazioni possibili sono 6$/,"With $1 dice the possible combinations are 6"],
+[/^= (.*)\. Troppe per una tabella: per questo conviene simulare\. Torna a 2 dadi per vedere la tabella\.$/,"= $1. Too many for a table: that is why we simulate. Go back to 2 dice to see the table."],
+[/^Con (\d+) dadi i trattini della teoria seguono quasi perfettamente la curva normale arancione\.$/,"With $1 dice the theory marks follow the orange normal curve almost perfectly."],
+[/^Massimo (.*) lanci alla volta\. Per averne di più usa “Aggiungi ai lanci fatti”\.$/,"At most $1 rolls at a time. For more, use “Add to the rolls made”."]];
+window.I18N_BASE='it';
+</script>
+<script>
+/* ---- Italiano / English: shared with the portal (localStorage 'simLang', Italian by default) ----
+   I18N maps the page's own text (English, or Italian when I18N_BASE = 'it') to the other language, I18N_RX holds [RegExp, replacement] for text with numbers.
+   Elements with data-it hold a whole Italian block (info cards). Text the page writes later is translated as it appears. */
+(function () {
+  var D = window.I18N || {}, RX = window.I18N_RX || [], BASE = window.I18N_BASE || 'en', lang = 'it', orig = new WeakMap(), busy = false;
+  try { if (localStorage.getItem('simLang') === 'en') lang = 'en'; } catch (e) {}
+  function tr(s) {
+    var k = s.replace(/\s+/g, ' ').trim(); if (!k) return s;
+    var t = D[k];
+    if (t === undefined) for (var i = 0; i < RX.length; i++) if (RX[i][0].test(k)) { t = k.replace(RX[i][0], RX[i][1]); break; }
+    if (t === undefined) return s;
+    var m = s.match(/^\s*/)[0], n = s.match(/\s*$/)[0]; return m + t + n;
+  }
+  window.simT = function (s) { return lang !== BASE ? tr(s) : s; };          /* for text drawn on canvas */
+  window.simLang = function () { return lang; };
+  function skip(n) { var p = n.parentNode; return !p || /^(SCRIPT|STYLE)$/.test(p.nodeName) || (p.closest && p.closest('[data-it],.notr')); }
+  function node(n) {
+    if (skip(n)) return; var v = n.nodeValue, o = orig.get(n);
+    if (o && (v === o.it || v === o.en) ) { var want = lang !== BASE ? o.it : o.en; if (v !== want) { busy = true; n.nodeValue = want; busy = false; } return; }
+    var it = tr(v); orig.set(n, { en: v, it: it }); if (lang !== BASE && it !== v) { busy = true; n.nodeValue = it; busy = false; }
+  }
+  function walk(root) { if (root.nodeType === 3) return node(root); var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), n; while ((n = w.nextNode())) node(n); }
+  function attrs() { document.querySelectorAll('[title],[aria-label],[placeholder]').forEach(function (e) { ['title', 'aria-label', 'placeholder'].forEach(function (a) {
+    if (!e.hasAttribute(a)) return; var k = 'en' + a.replace(/-/g, ''); if (e.dataset[k] === undefined) e.dataset[k] = e.getAttribute(a);
+    e.setAttribute(a, lang !== BASE ? tr(e.dataset[k]) : e.dataset[k]); }); }); }
+  function blocks() { document.querySelectorAll('[data-it]').forEach(function (e) { if (e.dataset.en === undefined) e.dataset.en = e.innerHTML; var h = lang === 'it' ? e.dataset.it : e.dataset.en; if (e.innerHTML !== h) e.innerHTML = h; }); }
+  function apply() {
+    blocks(); walk(document.body); attrs();
+    document.documentElement.lang = lang; if (!document.title0) document.title0 = document.title; document.title = lang !== BASE ? tr(document.title0) : document.title0;
+    var b = document.getElementById('langBtn'); if (b) b.textContent = lang === 'it' ? 'EN' : 'IT';
+    window.dispatchEvent(new Event('simlang'));
+  }
+  new MutationObserver(function (ms) { if (busy) return; ms.forEach(function (m) {
+    if (m.type === 'characterData') node(m.target); else m.addedNodes.forEach(function (n) { if (n.nodeType === 3 || n.nodeType === 1) walk(n); }); });
+  }).observe(document.documentElement, { subtree: true, childList: true, characterData: true });
+  document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('#langBtn')) { e.stopPropagation(); lang = lang === 'it' ? 'en' : 'it'; try { localStorage.setItem('simLang', lang); } catch (x) {} apply(); } }, true);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', apply); else apply();
+})();
+</script>
 </head>
 <body>
+<div class="top"><div><span class="tag">Matematica · Probabilità</span><b class="ttl">Somma dei dadi</b></div>
+<div class="hb"><a href="index.html" title="Tutte le simulazioni">⌂</a><button id="thm" type="button" title="Tema chiaro-scuro">☀</button><button id="langBtn" class="notr" type="button" title="Lingua / Language">EN</button></div></div>
 <div class="wrap">
   <header>
     <h1>Quanto fa la somma dei dadi?</h1>
@@ -237,7 +338,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     <div class="card notes">
       <h2>Cosa osservare</h2>
       <ol>
-        <li><strong>Pochi lanci, grafico irregolare.</strong> Con 10 o 100 lanci le barre saltano su e giù. Con 100.000 lanci si appoggiano quasi esattamente sui trattini neri della teoria: è la <em>legge dei grandi numeri</em>.</li>
+        <li><strong>Pochi lanci, grafico irregolare.</strong> Con 10 o 100 lanci le barre saltano su e giù. Con 100.000 lanci si appoggiano quasi esattamente sui trattini della teoria: è la <em>legge dei grandi numeri</em>.</li>
         <li><strong>Il 7 vince perché ha più modi di uscire.</strong> Con due dadi ci sono 36 coppie possibili: 6 danno 7, una sola dà 2 e una sola dà 12. Passa sopra una barra per vedere le sue coppie nella tabella.</li>
         <li><strong>Più dadi, più campana.</strong> Con 2 dadi la forma è un triangolo. Prova 3, 5 e 10 dadi: la forma si arrotonda e combacia con la curva arancione. È il <em>teorema del limite centrale</em>.</li>
       </ol>
@@ -247,10 +348,15 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 </div>
 
 <script>
+(function(){var r=document.documentElement,b=document.getElementById('thm');
+  function set(l){if(l)r.setAttribute('data-theme','light');else r.removeAttribute('data-theme');b.textContent=l?'☾':'☀';try{localStorage.setItem('simTheme',l?'light':'dark');}catch(e){}}
+  var l=false;try{l=localStorage.getItem('simTheme')==='light';}catch(e){}set(l);b.onclick=function(){l=!l;set(l);};})();
+</script>
+<script>
 (function(){
   "use strict";
   var MAX_LANCI = 5000000;
-  var W = 760, H = 380, M = {l:56, r:14, t:22, b:56};
+  var W = 760, H = 380, M = {l:70, r:14, t:22, b:56};
   var state = { dice:2, counts:[], total:0, last:[], hi:null };
 
   var $ = function(id){ return document.getElementById(id); };
@@ -437,7 +543,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
         for (a = 1; a <= 6; a++) h += '<td data-s="' + (a + b) + '">' + (a + b) + '</td>';
         h += '</tr>';
       }
-      h += '</table></div><p class="combo-caption">In blu le coppie che danno la somma evidenziata. Il 7 occupa tutta la diagonale: 6 caselle su 36.</p>';
+      h += '</table></div><p class="combo-caption">Evidenziate le coppie che danno la somma scelta. Il 7 occupa tutta la diagonale: 6 caselle su 36.</p>';
       $('combo').innerHTML = h;
       var tds = document.querySelectorAll('#combo td');
       for (var t = 0; t < tds.length; t++){
@@ -487,7 +593,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
       ? 'Con un dado solo non c’è nessuna campana: ogni faccia ha 1 probabilità su 6.'
       : n === 2
         ? 'Attenzione: con 2 dadi la distribuzione è triangolare, non normale. La curva arancione le somiglia ma non coincide: guarda il 7 e le estremità.'
-        : 'Con ' + n + ' dadi i trattini neri seguono quasi perfettamente la curva normale arancione.';
+        : 'Con ' + n + ' dadi i trattini della teoria seguono quasi perfettamente la curva normale arancione.';
   }
 
   function render(ms, N){

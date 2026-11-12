@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -88,6 +88,94 @@
     #rowA button, #rowC button { padding-top: 8px; padding-bottom: 8px; }
   }
 </style>
+<!-- sim-i18n -->
+<script>
+window.I18N={
+"Info": "Info",
+"Hide UI": "Nascondi",
+"Pause": "Pausa",
+"Play": "Avvia",
+"Time": "Tempo",
+"Close": "Chiudi",
+"All simulations": "Tutte le simulazioni",
+"Language": "Lingua / Language",
+"This scene needs WebGL, which isn't available in this browser.": "Questa scena richiede WebGL, che non è disponibile in questo browser.",
+"This simulation needs WebGL, which isn't available in this browser.": "Questa simulazione richiede WebGL, che non è disponibile in questo browser.",
+"Drag to orbit · scroll to zoom · H hides interface": "Trascina per ruotare · rotellina per lo zoom · H nasconde i comandi",
+"Drag to orbit · pinch to zoom": "Trascina per ruotare · pizzica per lo zoom",
+"Drag to look · scroll to zoom · H hides interface": "Trascina per guardarti intorno · rotellina per lo zoom · H nasconde i comandi",
+"Drag to look · pinch to zoom": "Trascina per guardarti intorno · pizzica per lo zoom",
+"Bose–Einstein condensate": "Condensato di Bose‑Einstein",
+"Thermal atoms": "Atomi termici",
+"Condensate": "Condensato",
+"Cool down": "Raffredda",
+"Release trap": "Spegni la trappola",
+"Stir": "Mescola",
+"Temp": "Temp.",
+"Atoms in the trap": "Atomi nella trappola",
+"Shadow picture of the cloud": "Immagine in ombra della nuvola",
+"Trap coil": "Bobina della trappola",
+"Stop": "Ferma",
+"Reheat": "Riscalda",
+"Recapture": "Riaccendi la trappola",
+"Stop stirring": "Smetti di mescolare",
+"Temperature": "Temperatura",
+"Critical": "Critica",
+"Matter wave": "Onda di materia",
+"Density": "Densità",
+"Thermal gas · no condensate": "Gas termico · nessun condensato",
+"Free flight": "Volo libero",
+"Vortices": "Vortici",
+"A warm gas: every atom moves on its own and the cloud is wide and thin. Cool it down and watch the centre.": "Un gas caldo: ogni atomo si muove per conto suo e la nuvola è ampia e rada. Raffreddalo e guarda il centro.",
+"The atoms’ matter waves have grown almost as long as the distance between neighbours. The gas is about to change.": "Le onde di materia degli atomi sono diventate lunghe quasi quanto la distanza tra atomi vicini. Il gas sta per cambiare.",
+"Below the critical temperature atoms pile into the lowest quantum state. A dense blue core appears inside the thermal cloud, and a sharp spike rises in the picture.": "Sotto la temperatura critica gli atomi si accumulano nello stato quantistico più basso. Dentro la nuvola termica compare un nucleo blu denso e nell'immagine si alza un picco stretto.",
+"Most atoms now share one quantum state and behave as a single matter wave. Only a faint thermal halo is left.": "Ora la maggior parte degli atomi condivide un unico stato quantistico e si comporta come un'unica onda di materia. Resta solo un debole alone termico.",
+"Trap off. The thermal gas spreads evenly, but the condensate expands fastest along the direction in which it was squeezed: the flat disc turns into a tall cigar.": "Trappola spenta. Il gas termico si espande in modo uniforme, mentre il condensato si allarga più in fretta nella direzione in cui era più compresso: il disco piatto diventa un sigaro alto.",
+"A superfluid cannot simply turn like water. The rotation enters as quantised vortices, holes that line up in a regular lattice.": "Un superfluido non può ruotare come l'acqua. La rotazione entra sotto forma di vortici quantizzati, buchi che si dispongono in un reticolo regolare.",
+"Stirring a thermal gas only makes it swirl like any fluid. Cool it below the critical temperature to see what a superfluid does.": "Mescolare un gas termico lo fa solo vorticare come un fluido qualsiasi. Raffreddalo sotto la temperatura critica per vedere che cosa fa un superfluido."
+};
+window.I18N_RX=[[/^Condensed (\d+) % of 500 000 atoms$/,"Condensato il $1 % di 500 000 atomi"]];
+</script>
+<script>
+/* ---- Italiano / English: shared with the portal (localStorage 'simLang', Italian by default) ----
+   I18N maps the page's own text (English, or Italian when I18N_BASE = 'it') to the other language, I18N_RX holds [RegExp, replacement] for text with numbers.
+   Elements with data-it hold a whole Italian block (info cards). Text the page writes later is translated as it appears. */
+(function () {
+  var D = window.I18N || {}, RX = window.I18N_RX || [], BASE = window.I18N_BASE || 'en', lang = 'it', orig = new WeakMap(), busy = false;
+  try { if (localStorage.getItem('simLang') === 'en') lang = 'en'; } catch (e) {}
+  function tr(s) {
+    var k = s.replace(/\s+/g, ' ').trim(); if (!k) return s;
+    var t = D[k];
+    if (t === undefined) for (var i = 0; i < RX.length; i++) if (RX[i][0].test(k)) { t = k.replace(RX[i][0], RX[i][1]); break; }
+    if (t === undefined) return s;
+    var m = s.match(/^\s*/)[0], n = s.match(/\s*$/)[0]; return m + t + n;
+  }
+  window.simT = function (s) { return lang !== BASE ? tr(s) : s; };          /* for text drawn on canvas */
+  window.simLang = function () { return lang; };
+  function skip(n) { var p = n.parentNode; return !p || /^(SCRIPT|STYLE)$/.test(p.nodeName) || (p.closest && p.closest('[data-it],.notr')); }
+  function node(n) {
+    if (skip(n)) return; var v = n.nodeValue, o = orig.get(n);
+    if (o && (v === o.it || v === o.en) ) { var want = lang !== BASE ? o.it : o.en; if (v !== want) { busy = true; n.nodeValue = want; busy = false; } return; }
+    var it = tr(v); orig.set(n, { en: v, it: it }); if (lang !== BASE && it !== v) { busy = true; n.nodeValue = it; busy = false; }
+  }
+  function walk(root) { if (root.nodeType === 3) return node(root); var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), n; while ((n = w.nextNode())) node(n); }
+  function attrs() { document.querySelectorAll('[title],[aria-label],[placeholder]').forEach(function (e) { ['title', 'aria-label', 'placeholder'].forEach(function (a) {
+    if (!e.hasAttribute(a)) return; var k = 'en' + a.replace(/-/g, ''); if (e.dataset[k] === undefined) e.dataset[k] = e.getAttribute(a);
+    e.setAttribute(a, lang !== BASE ? tr(e.dataset[k]) : e.dataset[k]); }); }); }
+  function blocks() { document.querySelectorAll('[data-it]').forEach(function (e) { if (e.dataset.en === undefined) e.dataset.en = e.innerHTML; var h = lang === 'it' ? e.dataset.it : e.dataset.en; if (e.innerHTML !== h) e.innerHTML = h; }); }
+  function apply() {
+    blocks(); walk(document.body); attrs();
+    document.documentElement.lang = lang; if (!document.title0) document.title0 = document.title; document.title = lang !== BASE ? tr(document.title0) : document.title0;
+    var b = document.getElementById('langBtn'); if (b) b.textContent = lang === 'it' ? 'EN' : 'IT';
+    window.dispatchEvent(new Event('simlang'));
+  }
+  new MutationObserver(function (ms) { if (busy) return; ms.forEach(function (m) {
+    if (m.type === 'characterData') node(m.target); else m.addedNodes.forEach(function (n) { if (n.nodeType === 3 || n.nodeType === 1) walk(n); }); });
+  }).observe(document.documentElement, { subtree: true, childList: true, characterData: true });
+  document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('#langBtn')) { e.stopPropagation(); lang = lang === 'it' ? 'en' : 'it'; try { localStorage.setItem('simLang', lang); } catch (x) {} apply(); } }, true);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', apply); else apply();
+})();
+</script>
 </head>
 <body>
 <canvas id="c"></canvas>
@@ -122,13 +210,25 @@
     <label for="speed">Time</label>
     <input id="speed" type="range" min="0.1" max="3" step="0.1" value="1">
     <button id="play">Pause</button>
-    <button id="about">Info</button>
+    <button id="homeBtn" onclick="location.href='index.html'" title="All simulations">⌂</button><button id="langBtn" class="notr" title="Language">EN</button><button id="about">Info</button>
     <button id="hide">Hide UI</button>
   </div>
 </div>
 
 <div id="info">
   <div id="card">
+<div data-it="&lt;h2&gt;Un nuovo stato della materia&lt;/h2&gt;
+    &lt;p&gt;Raffredda un gas rarefatto di bosoni fino a pochi centinaia di miliardesimi di grado sopra lo zero assoluto e succede qualcosa di brusco: una gran parte degli atomi cade nello stesso stato quantistico, il più basso della trappola. Smettono di comportarsi come particelle separate e agiscono come un&#x27;unica onda di materia. Bose ed Einstein lo previdero nel 1924–25; fu ottenuto per la prima volta nel 1995 con rubidio e sodio (Premio Nobel 2001).&lt;/p&gt;
+    &lt;h3&gt;Perché succede&lt;/h3&gt;
+    &lt;p&gt;Ogni atomo è anche un&#x27;onda, con una lunghezza d&#x27;onda che cresce quando l&#x27;atomo rallenta (λ = h / √(2π m k T)). In un gas caldo le onde sono molto più corte della distanza tra gli atomi. Raffreddando si allungano finché quelle di atomi vicini si sovrappongono. Per i bosoni, che possono condividere lo stesso stato, la sovrapposizione innesca la condensazione: comincia quando la densità nello spazio delle fasi nλ³ raggiunge 2,61.&lt;/p&gt;
+    &lt;h3&gt;Che cosa vedi&lt;/h3&gt;
+    &lt;p&gt;I &lt;span class=&quot;h&quot;&gt;punti arancioni&lt;/span&gt; sono atomi termici, ognuno in moto per conto suo. Il &lt;span class=&quot;c&quot;&gt;blu&lt;/span&gt; è il condensato: denso, fermo e coerente. La superficie in basso è ciò che registrano gli esperimenti: un&#x27;immagine in ombra della nuvola, disegnata come altezza e colore. Una collina larga è gas termico; il picco stretto che si alza al centro sotto la temperatura critica è il condensato.&lt;/p&gt;
+    &lt;h3&gt;Spegni la trappola&lt;/h3&gt;
+    &lt;p&gt;Se la trappola si spegne, la nuvola vola via. Il gas termico si espande allo stesso modo in tutte le direzioni. Il condensato no: si allarga più in fretta nella direzione in cui era più compresso, quindi un disco piatto diventa un sigaro alto. Questa inversione fu la prima prova della condensazione.&lt;/p&gt;
+    &lt;h3&gt;Mescola&lt;/h3&gt;
+    &lt;p&gt;Un condensato è un superfluido e non può ruotare come l&#x27;acqua in una tazza. Può portare rotazione solo in vortici quantizzati, sottili buchi che si dispongono in un reticolo triangolare regolare.&lt;/p&gt;
+    &lt;h3&gt;Il modello&lt;/h3&gt;
+    &lt;p&gt;500 000 atomi di rubidio-87 in una trappola armonica (80 Hz in orizzontale, 200 Hz in verticale). La frazione condensata segue la legge del gas ideale N₀/N = 1 − (T/T&lt;sub&gt;c&lt;/sub&gt;)³, il condensato ha la forma di Thomas–Fermi dovuta alla repulsione tra gli atomi e la sua espansione segue le equazioni di scala di Castin–Dum. Ogni punto rappresenta circa 60 atomi, il tempo è rallentato di circa 400 volte e i nuclei dei vortici sono disegnati più grandi del vero.&lt;/p&gt;">
     <h2>A new state of matter</h2>
     <p>Cool a dilute gas of bosons to a few hundred billionths of a degree above absolute zero and something abrupt happens: a large share of the atoms drops into the single lowest quantum state of the trap. They stop behaving as separate particles and act as one matter wave. Bose and Einstein predicted it in 1924–25; it was first made in 1995 with rubidium and sodium (Nobel Prize 2001).</p>
     <h3>Why it happens</h3>
@@ -141,6 +241,7 @@
     <p>A condensate is a superfluid and cannot rotate like water in a cup. It can only carry rotation in quantised vortices, thin holes that arrange themselves in a regular triangular lattice.</p>
     <h3>About the model</h3>
     <p>500 000 atoms of rubidium-87 in a harmonic trap (80 Hz across, 200 Hz vertically). The condensed share follows the ideal-gas law N₀/N = 1 − (T/T<sub>c</sub>)³, the condensate has the Thomas–Fermi shape set by repulsion between atoms, and its expansion follows the Castin–Dum scaling equations. Each dot stands for about 60 atoms, time is slowed about 400 times and vortex cores are drawn larger than they are.</p>
+    </div>
     <button id="closeInfo">Close</button>
   </div>
 </div>
