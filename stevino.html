@@ -55,19 +55,34 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 
 </style></head>
 <body>
-<header><div><span class="tag" data-en="Physics · Stevin's law">Fisica · Legge di Stevino</span><h1 data-en="Pressure in fluids">Pressione nei fluidi</h1></div>
+<header><div><span class="tag" data-en="Physics · Stevin's law and communicating vessels">Fisica · Legge di Stevino e vasi comunicanti</span><h1 data-en="Pressure in fluids">Pressione nei fluidi</h1></div>
 <div class="hb"><a href="index.html" title="Tutte le simulazioni / All simulations">⌂</a><button id="qbtn" title="Sfide / Challenges">?</button><button id="thm" title="Tema chiaro-scuro / Light-dark theme">☀</button><button id="lang" title="Lingua / Language">EN</button></div></header>
-<main><div class="stage"><canvas id="cv"></canvas></div>
+<main><div class="stage tall"><canvas id="cv"></canvas></div>
 <aside>
+<div class="grp"><h3 data-en="Experiment">Esperimento</h3>
+<div class="seg" id="mode"><button data-v="vasi" class="on" data-en="Vessels">Vasi</button><button data-v="stev" data-en="Stevin">Stevino</button><button data-v="multi" data-en="Layers">Strati</button></div>
+<p class="hint" id="mhint"></p>
+</div>
+<div id="uiA">
+<div class="grp"><h3 data-en="Build the vessels">Costruisci i vasi</h3>
+<select id="v0"></select><select id="v1"></select><select id="v2"></select><select id="v3"></select>
+<span class="lb" data-en="Liquid">Liquido</span>
+<select id="liqA"><option value="water" data-en="Water">Acqua</option><option value="oil" data-en="Olive oil">Olio d'oliva</option><option value="gly" data-en="Glycerine">Glicerina</option><option value="hg" data-en="Mercury">Mercurio</option></select>
+<label class="ck"><input type="checkbox" id="open" checked><span data-en="Valves open (vessels connected)">Valvole aperte (vasi collegati)</span></label>
+<div class="row"><button class="btn pri" id="pourA" data-en="Pour">Versa</button><button class="btn" id="emptyA" data-en="Empty">Svuota</button></div>
+<p class="hint" data-en="Tap a vessel to move the tap over it and pour. Drag the background to rotate.">Tocca un vaso per spostarci sopra il rubinetto e versare. Trascina lo sfondo per ruotare.</p>
+</div>
+<div class="grp"><h3 data-en="Levels">Livelli</h3>
+<table class="tb"><tr><th data-en="vessel">vaso</th><th data-en="level">livello</th><th data-en="p at the bottom">p sul fondo</th></tr>
+<tr><td>1</td><td id="ah0"></td><td id="ap0"></td></tr><tr><td>2</td><td id="ah1"></td><td id="ap1"></td></tr><tr><td>3</td><td id="ah2"></td><td id="ap2"></td></tr><tr><td>4</td><td id="ah3"></td><td id="ap3"></td></tr></table>
+</div>
+</div>
+<div id="uiB" class="hidden">
 <div class="grp"><h3 data-en="Liquid">Liquido</h3>
 <select id="liq"><option value="water" data-en="Water">Acqua</option><option value="oil" data-en="Olive oil">Olio d'oliva</option><option value="eth" data-en="Ethanol">Alcol etilico</option><option value="gly" data-en="Glycerine">Glicerina</option><option value="hg" data-en="Mercury">Mercurio</option><option value="mys" data-en="Mystery liquid ?">Liquido misterioso ?</option></select>
 <div class="ro"><span data-en="Density">Densità</span><b id="rho"></b></div>
 <div class="row hidden" id="revrow"><button class="btn" id="rev" data-en="Reveal density">Rivela la densità</button></div>
 <label class="sl"><span class="ln"><span data-en="Liquid level">Livello del liquido</span><output id="o_lev"></output></span><input type="range" id="lev" min="0.5" max="3" step="0.05" value="2.4"></label>
-</div>
-<div class="grp"><h3 data-en="Environment">Ambiente</h3>
-<select id="g"><option value="9.81" data-en="Earth">Terra</option><option value="1.62" data-en="Moon">Luna</option><option value="3.71" data-en="Mars">Marte</option><option value="24.79" data-en="Jupiter">Giove</option></select>
-<label class="ck"><input type="checkbox" id="atm" checked><span data-en="Atmospheric pressure">Pressione atmosferica</span></label>
 </div>
 <div class="grp"><h3 data-en="Sensor">Sensore</h3>
 <div class="ro"><span data-en="Depth h">Profondità h</span><b id="rh"></b></div>
@@ -77,12 +92,31 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 <div class="row"><button class="btn" id="clr" data-en="Clear graph">Cancella grafico</button></div>
 <p class="hint" data-en="Drag the sensor: the points are recorded automatically.">Trascina il sensore: i punti si registrano da soli.</p>
 </div>
+</div>
+<div id="uiC" class="hidden">
+<div class="grp"><h3 data-en="Pour a liquid">Versa un liquido</h3>
+<div class="row" id="pours"></div>
+<div class="row"><button class="btn" id="emptyC" data-en="Empty the vessel">Svuota il recipiente</button></div>
+<p class="hint" data-en="The liquids do not mix: the densest one goes to the bottom.">I liquidi non si mescolano: il più denso va sul fondo.</p>
+</div>
+<div class="grp"><h3 data-en="Sensor">Sensore</h3>
+<div class="ro"><span data-en="Depth h">Profondità h</span><b id="ch"></b></div>
+<div class="ro"><span data-en="Liquid here">Liquido in questo punto</span><b id="cl"></b></div>
+<div class="ro"><span data-en="Pressure p">Pressione p</span><b id="cp" class="c-yl"></b></div>
+</div>
+</div>
+<div class="grp"><h3 data-en="Environment">Ambiente</h3>
+<select id="g"><option value="9.81" data-en="Earth">Terra</option><option value="1.62" data-en="Moon">Luna</option><option value="3.71" data-en="Mars">Marte</option><option value="24.79" data-en="Jupiter">Giove</option></select>
+<label class="ck"><input type="checkbox" id="atm" checked><span data-en="Atmospheric pressure">Pressione atmosferica</span></label>
+</div>
 </aside></main>
 <div id="q" class="hidden"><div class="box"><h2 data-en="Can you…?">Riesci a…?</h2><ul>
 <li data-en="…find two points in different vessels with exactly the same pressure? What do they have in common?">…trovare due punti in recipienti diversi con la stessa identica pressione? Che cosa hanno in comune?</li>
 <li data-en="…say whether the shape of the vessel matters?">…dire se la forma del recipiente conta qualcosa?</li>
 <li data-en="…work out the density of the mystery liquid using only the sensor?">…ricavare la densità del liquido misterioso usando solo il sensore?</li>
 <li data-en="…find how deep you must go in water to double the pressure at the surface? And on the Moon?">…scoprire a che profondità in acqua la pressione raddoppia rispetto alla superficie? E sulla Luna?</li>
+<li data-en="…predict the level in the flask and in the narrow tube before opening the valves? Close them, fill one vessel, then open.">…prevedere il livello nell'ampolla e nel tubo stretto prima di aprire le valvole? Chiudile, riempi un vaso, poi apri.</li>
+<li data-en="…explain why the pressure graph of the layered liquids is made of straight pieces with different slopes?">…spiegare perché il grafico della pressione dei liquidi a strati è fatto di tratti rettilinei con pendenze diverse?</li>
 </ul></div></div>
 <script>
 'use strict';
@@ -150,32 +184,104 @@ try{if(localStorage.getItem('simTheme')==='light')setTheme(true);}catch(e){}
 
 </script>
 <script>
-const cv=$('#cv');let c,W,H,sc=100,ox=0,oy=0,TW=600,TH=400,nser=0;
+const cv=$('#cv');let c,W,H,clock=0;
+const LQ={benz:{r:720,col:[255,170,90],n:['Benzina','Petrol']},oil:{r:920,col:[240,200,60],n:['Olio','Oil']},eth:{r:789,col:[190,160,255],n:['Alcol','Ethanol']},water:{r:1000,col:[64,150,255],n:['Acqua','Water']},gly:{r:1260,col:[110,230,200],n:['Glicerina','Glycerine']},hg:{r:13600,col:[190,196,210],n:['Mercurio','Mercury']}};
+const rgba=(rgb,a)=>'rgba('+rgb.map(v=>clamp(v,0,255)|0)+','+a+')',PATM=()=>P.atm?101.325:0;
+seg('mode');sel('g');check('atm');
+/* =====================================================================================================
+   1 · COMMUNICATING VESSELS, in 3D: four vessels of any shape joined by a pipe; a tap pours into one of them
+   ===================================================================================================== */
+const SH={cil:{f:u=>.035,n:['Cilindro','Cylinder']},stretto:{f:u=>.016,n:['Tubo stretto','Narrow tube']},largo:{f:u=>.055,n:['Cilindro largo','Wide cylinder']},cono:{f:u=>.015+.045*u,n:['Svasato (largo in alto)','Flared (wide at the top)']},imbuto:{f:u=>.058-.043*u,n:['Rastremato (stretto in alto)','Tapered (narrow at the top)']},ampolla:{f:u=>.016+.042*Math.exp(-(((u-.32)/.2)**2)),n:['Ampolla','Flask']}};
+const XS=[-.24,-.08,.08,.24],HV=.3,NS=60,QP=.0005,KP=.012; /* tap flow (m³/s) and how easily the pipe lets liquid through */
+const A={az:-.32,el:.3,vol:[0,0,0,0],pour:-1,sel:0,drain:false,tab:[],down:null,moved:0,rings:[],drops:[],bub:[]};let S3=600,cam;
+function fillShapes(){[0,1,2,3].forEach(i=>{const e=$('#v'+i),v=e.value||['largo','stretto','ampolla','cono'][i];e.innerHTML=Object.keys(SH).map(k=>'<option value="'+k+'">'+(i+1)+' · '+L(SH[k].n[0],SH[k].n[1])+'</option>').join('');e.value=v;});}
+fillShapes();[0,1,2,3].forEach(i=>sel('v'+i));sel('liqA');check('open');
+function buildTab(){A.tab=[0,1,2,3].map(i=>{const f=SH[P['v'+i]].f,cum=[0];for(let k=0;k<NS;k++){const r=f((k+.5)/NS);cum.push(cum[k]+Math.PI*r*r*HV/NS);}return{f,cum,max:cum[NS]};});A.vol=A.vol.map((v,i)=>Math.min(v,A.tab[i].max));}
+buildTab();
+function hOf(i){const cum=A.tab[i].cum,v=A.vol[i];if(v<=0)return 0;if(v>=cum[NS])return HV;let lo=0,hi=NS;while(hi-lo>1){const m=(lo+hi)>>1;cum[m]<=v?lo=m:hi=m;}return(lo+(v-cum[lo])/(cum[hi]-cum[lo]))*HV/NS;}
+function stepA(dt){for(let k=0;k<6;k++){const h=dt/6;
+  if(A.pour>=0){const i=A.pour;A.vol[i]+=QP*h;if(A.vol[i]>=A.tab[i].max){A.vol[i]=A.tab[i].max;A.pour=-1;}}
+  if(P.open)for(let i=0;i<3;i++){let q=KP*(hOf(i)-hOf(i+1))*h;q=q>0?Math.min(q,A.vol[i],A.tab[i+1].max-A.vol[i+1]):-Math.min(-q,A.vol[i+1],A.tab[i].max-A.vol[i]);A.vol[i]-=q;A.vol[i+1]+=q;}
+  if(A.drain){let tot=0;for(let i=0;i<4;i++){A.vol[i]=Math.max(0,A.vol[i]-.0009*h);tot+=A.vol[i];}if(tot<1e-8)A.drain=false;}}
+ /* effects where the jet hits the surface */
+ if(A.pour>=0){const i=A.pour,h=hOf(i);if(Math.random()<dt*14)A.rings.push({i,t:0});if(Math.random()<dt*40)A.drops.push({i,x:(Math.random()-.5)*.02,y:h,vx:(Math.random()-.5)*.25,vy:.25+Math.random()*.5});
+  if(Math.random()<dt*30)A.bub.push({i,x:(Math.random()-.5)*.02,y:h-.01-Math.random()*.05,v:.08+Math.random()*.1,r:1+Math.random()*2.2});}
+ for(const r of A.rings)r.t+=dt;A.rings=A.rings.filter(r=>r.t<.7);
+ for(const d of A.drops){d.vy-=(+P.g)*dt;d.x+=d.vx*dt;d.y+=d.vy*dt;}A.drops=A.drops.filter(d=>d.y>hOf(d.i)-.004).slice(-60);
+ for(const b of A.bub)b.y+=b.v*dt;A.bub=A.bub.filter(b=>b.y<hOf(b.i)-.003).slice(-60);}
+function side(i,a,b){const n=Math.max(2,Math.ceil((b-a)/HV*30)),Lp=[],Rp=[];for(let k=0;k<=n;k++){const y=a+(b-a)*k/n,p=cam.p(XS[i],y,0),r=A.tab[i].f(y/HV)*S3;Lp.push([p[0]-r,p[1]]);Rp.push([p[0]+r,p[1]]);}return[Lp,Rp];}
+function vessel(i,lc){const f=A.tab[i].f,h=hOf(i),x=XS[i],p0=cam.p(x,0,0),p1=cam.p(x,HV,0),r0=f(0)*S3,r1=f(1)*S3,se=cam.se,[Lg,Rg]=side(i,0,HV);
+ /* glass body */
+ c.beginPath();Lg.forEach((m,k)=>k?c.lineTo(m[0],m[1]):c.moveTo(m[0],m[1]));c.ellipse(p1[0],p1[1],r1,r1*se,0,Math.PI,2*Math.PI);for(let k=Rg.length-1;k>=0;k--)c.lineTo(Rg[k][0],Rg[k][1]);c.ellipse(p0[0],p0[1],r0,r0*se,0,0,Math.PI);c.closePath();c.fillStyle=fa(LIGHT?.06:.05);c.fill();
+ c.strokeStyle=fa(.25);c.lineWidth=1;c.beginPath();c.ellipse(p1[0],p1[1],r1,r1*se,0,Math.PI,2*Math.PI);c.stroke();
+ if(h>1e-4){const ph=cam.p(x,h,0),rh=f(h/HV)*S3,[Lp,Rp]=side(i,0,h);c.beginPath();Lp.forEach((m,k)=>k?c.lineTo(m[0],m[1]):c.moveTo(m[0],m[1]));c.ellipse(ph[0],ph[1],rh,rh*se,0,Math.PI,2*Math.PI);for(let k=Rp.length-1;k>=0;k--)c.lineTo(Rp[k][0],Rp[k][1]);c.ellipse(p0[0],p0[1],r0,r0*se,0,0,Math.PI);c.closePath();
+  const hgM=P.liqA==='hg',g=c.createLinearGradient(0,ph[1],0,p0[1]+r0*se);g.addColorStop(0,rgba(lc,hgM?.95:.62));g.addColorStop(1,rgba(lc.map(v=>v*.42),hgM?.97:.8));c.fillStyle=g;c.fill();
+  /* light running down one side of the liquid */
+  c.save();c.clip();const sg=c.createLinearGradient(p0[0]-r0,0,p0[0]+r0,0);sg.addColorStop(0,'rgba(0,0,0,.18)');sg.addColorStop(.28,'rgba(255,255,255,.16)');sg.addColorStop(.5,'rgba(255,255,255,0)');sg.addColorStop(1,'rgba(0,0,0,.22)');c.fillStyle=sg;c.fillRect(p0[0]-.07*S3,ph[1]-r1,.14*S3,p0[1]-ph[1]+r0+r1);
+  for(const b of A.bub)if(b.i===i){const q=cam.p(x+b.x,b.y,0);c.strokeStyle='rgba(255,255,255,.7)';c.lineWidth=1;c.beginPath();c.arc(q[0],q[1],b.r,0,7);c.stroke();}c.restore();
+  /* the free surface, with rings from the jet */
+  c.beginPath();c.ellipse(ph[0],ph[1],rh,rh*se,0,0,7);c.fillStyle=rgba(lc.map(v=>v*1.15+30),hgM?.98:.7);c.fill();c.strokeStyle='rgba(255,255,255,.75)';c.lineWidth=1.2;c.stroke();
+  c.save();c.beginPath();c.ellipse(ph[0],ph[1],rh,rh*se,0,0,7);c.clip();for(const r of A.rings)if(r.i===i){const u=r.t/.7,R=(.006+u*.06)*S3;c.strokeStyle='rgba(255,255,255,'+(.8*(1-u)).toFixed(3)+')';c.lineWidth=1.3;c.beginPath();c.ellipse(ph[0],ph[1],R,R*se,0,0,7);c.stroke();}c.restore();}
+ /* the jet */
+ if(A.pour===i){const top=cam.p(x,HV+.085,0),bot=cam.p(x,h,0),w=Math.max(4,.011*S3),g=c.createLinearGradient(top[0]-w,0,top[0]+w,0);g.addColorStop(0,rgba(lc.map(v=>v*.7),.9));g.addColorStop(.4,rgba(lc.map(v=>v*1.2+50),.95));g.addColorStop(1,rgba(lc.map(v=>v*.6),.9));
+  c.fillStyle=g;c.beginPath();c.moveTo(top[0]-w*.55,top[1]);for(let k=0;k<=12;k++){const yy=top[1]+(bot[1]-top[1])*k/12;c.lineTo(top[0]-w*(.5+.12*Math.sin(clock*22+k*1.3))*(1-.25*k/12),yy);}for(let k=12;k>=0;k--){const yy=top[1]+(bot[1]-top[1])*k/12;c.lineTo(top[0]+w*(.5+.12*Math.cos(clock*19+k*1.7))*(1-.25*k/12),yy);}c.closePath();c.fill();
+  c.strokeStyle='rgba(255,255,255,.55)';c.lineWidth=1;c.beginPath();c.moveTo(top[0]-w*.15,top[1]);c.lineTo(top[0]-w*.1,bot[1]);c.stroke();}
+ for(const d of A.drops)if(d.i===i){const q=cam.p(x+d.x,d.y,0);c.fillStyle=rgba(lc.map(v=>v*1.1+40),.9);c.beginPath();c.arc(q[0],q[1],1.8,0,7);c.fill();}
+ /* glass in front: outline, rim, a reflection */
+ c.strokeStyle=C.glass;c.lineWidth=2;c.lineJoin='round';for(const P_ of[Lg,Rg]){c.beginPath();P_.forEach((m,k)=>k?c.lineTo(m[0],m[1]):c.moveTo(m[0],m[1]));c.stroke();}
+ c.beginPath();c.ellipse(p1[0],p1[1],r1,r1*se,0,0,Math.PI);c.stroke();c.beginPath();c.ellipse(p0[0],p0[1],r0,r0*se,0,0,Math.PI);c.stroke();
+ c.strokeStyle='rgba(255,255,255,.28)';c.lineWidth=Math.max(1.5,.004*S3);c.lineCap='round';c.beginPath();Lg.forEach((m,k)=>{const xx=m[0]+Math.max(3,(p0[0]-m[0])*.22);k?c.lineTo(xx,m[1]):c.moveTo(xx,m[1]);});c.stroke();
+ /* level tag */
+ const tag=cam.p(x,HV,0);c.save();c.shadowColor='rgba(0,0,0,.6)';c.shadowBlur=3;txt(c,String(i+1),tag[0],tag[1]-r1*se-26,i===A.sel?C.yl:C.mu,13,'center',1);txt(c,nf(h*100,1)+' cm',tag[0],tag[1]-r1*se-11,C.tx,11.5,'center',1);c.restore();}
+function drawA(dt){S3=Math.min(W/.82,H/.66);cam=cam3(W/2,H*.5+.2*S3*Math.cos(A.el),S3,A.az,A.el);stepA(dt);const lc=LQ[P.liqA].col,any=A.vol.some(v=>v>1e-7);
+ const bg=c.createRadialGradient(W/2,H*.4,40,W/2,H*.5,Math.max(W,H)*.75);bg.addColorStop(0,LIGHT?'#ffffff':'#17224a');bg.addColorStop(1,LIGHT?'#dfe6f5':'#070b18');c.fillStyle=bg;c.fillRect(0,0,W,H);
+ box3(c,cam,-.37,.37,-.085,-.062,-.14,.14,LIGHT?[196,160,116]:[72,52,34]);
+ /* the pipe under the vessels, its necks and its valves */
+ const tube=(a,b,w)=>{const p=cam.p(a[0],a[1],0),q=cam.p(b[0],b[1],0),dx=q[0]-p[0],dy=q[1]-p[1],l=Math.hypot(dx,dy)||1,nx=-dy/l*w,ny=dx/l*w,g=c.createLinearGradient(p[0]+nx,p[1]+ny,p[0]-nx,p[1]-ny);
+  const base=any?lc.map(v=>v*.75):(LIGHT?[200,208,226]:[70,80,112]);g.addColorStop(0,rgba(base.map(v=>v*.5),.95));g.addColorStop(.35,rgba(base.map(v=>v*1.25+30),.95));g.addColorStop(1,rgba(base.map(v=>v*.45),.95));
+  c.fillStyle=g;c.beginPath();c.moveTo(p[0]+nx,p[1]+ny);c.lineTo(q[0]+nx,q[1]+ny);c.lineTo(q[0]-nx,q[1]-ny);c.lineTo(p[0]-nx,p[1]-ny);c.closePath();c.fill();c.strokeStyle=C.glass;c.lineWidth=1.2;c.stroke();};
+ const pw=.011*S3;tube([XS[0],-.036],[XS[3],-.036],pw);for(const x of XS)tube([x,-.036],[x,.002],pw);
+ for(let i=0;i<3;i++){const q=cam.p((XS[i]+XS[i+1])/2,-.036,0),on=P.open;c.fillStyle=LIGHT?'#59607a':'#2b3250';rr(c,q[0]-5,q[1]-pw-3,10,2*pw+6,2);c.fill();c.save();c.translate(q[0],q[1]-pw-9);c.rotate(on?0:Math.PI/2);c.fillStyle=on?C.gr:C.rd;rr(c,-9,-3,18,6,3);c.fill();c.restore();c.fillStyle=LIGHT?'#59607a':'#2b3250';c.fillRect(q[0]-1.5,q[1]-pw-9,3,7);}
+ const order=[0,1,2,3].sort((a,b)=>(-XS[a]*cam.sa)-(-XS[b]*cam.sa));for(const i of order)vessel(i,lc);
+ /* the tap, hanging from above over the chosen vessel */
+ {const q=cam.p(XS[A.sel],HV+.085,0),m=(y0,y1)=>{const g=c.createLinearGradient(q[0]-9,0,q[0]+9,0);g.addColorStop(0,LIGHT?'#7b849c':'#4a5270');g.addColorStop(.4,LIGHT?'#f2f4f9':'#c9d0e6');g.addColorStop(1,LIGHT?'#6b748c':'#333a55');return g;};
+  c.fillStyle=m();c.fillRect(q[0]-6,0,12,q[1]-22);rr(c,q[0]-10,q[1]-24,20,14,4);c.fill();c.beginPath();c.moveTo(q[0]-7,q[1]-10);c.lineTo(q[0]+7,q[1]-10);c.lineTo(q[0]+5,q[1]);c.lineTo(q[0]-5,q[1]);c.closePath();c.fill();
+  c.fillStyle=A.pour>=0?C.gr:C.rd;c.save();c.translate(q[0]+16,q[1]-17);c.rotate(A.pour>=0?Math.PI/2:0);rr(c,-9,-3.5,18,7,3.5);c.fill();c.restore();}
+ /* all the free surfaces lie on one horizontal line once the liquid is at rest */
+ if(P.open&&any&&A.pour<0&&!A.drain){const hs=[0,1,2,3].map(hOf),mx=Math.max(...hs),mn=Math.min(...hs);if(mx-mn<.002){const a=cam.p(-.33,mx,0),b=cam.p(.33,mx,0);c.save();c.setLineDash([6,6]);c.strokeStyle=C.yl;c.lineWidth=1.5;c.beginPath();c.moveTo(a[0],a[1]);c.lineTo(b[0],b[1]);c.stroke();c.restore();c.save();c.shadowColor='rgba(0,0,0,.7)';c.shadowBlur=4;txt(c,L('stesso livello in tutti i vasi','same level in every vessel'),W/2,cam.p(0,HV+.085,0)[1],C.yl,12.5,'center',1);c.restore();}}
+ const g=+P.g,r=LQ[P.liqA].r;[0,1,2,3].forEach(i=>{const h=hOf(i);ro('ah'+i,nf(h*100,1)+' cm');ro('ap'+i,nf(PATM()+r*g*h/1000,2)+' kPa');});
+ const pb=$('#pourA'),lbl=A.pour>=0?L('Ferma','Stop'):L('Versa nel vaso ','Pour into vessel ')+(A.sel+1);if(pb.textContent!==lbl)pb.textContent=lbl;}
+$('#pourA').onclick=()=>{A.drain=false;A.pour=A.pour>=0?-1:(A.vol[A.sel]<A.tab[A.sel].max-1e-7?A.sel:-1);};$('#emptyA').onclick=()=>{A.pour=-1;A.drain=true;};
+const hA={down(p){A.down=p;A.moved=0;},move(p){if(!A.down)return;const dx=p.x-A.down.x,dy=p.y-A.down.y;A.moved+=Math.abs(dx)+Math.abs(dy);if(A.moved>6){A.az=clamp(A.az+dx*.008,-1,1);A.el=clamp(A.el+dy*.005,.1,.8);}A.down=p;},
+ up(p){if(A.down&&A.moved<=6){for(let i=0;i<4;i++){const q=cam.p(XS[i],HV/2,0);if(Math.abs(p.x-q[0])<.062*S3&&Math.abs(p.y-q[1])<HV*S3*.7){A.drain=false;if(A.pour===i)A.pour=-1;else{A.sel=i;A.pour=A.vol[i]<A.tab[i].max-1e-7?i:-1;}break;}}}A.down=null;}};
+/* =====================================================================================================
+   2 · STEVIN'S LAW, a 2D cross-section: drag the sensor, pressure against depth
+   ===================================================================================================== */
+let sc=100,ox=0,oy=0,TW=600,TH=400,nser=0;
 const LN={water:['Acqua','Water'],oil:['Olio','Oil'],eth:['Alcol','Ethanol'],gly:['Glicerina','Glycerine'],hg:['Mercurio','Mercury'],mys:['Misterioso','Mystery']},PN={'9.81':['Terra','Earth'],'1.62':['Luna','Moon'],'3.71':['Marte','Mars'],'24.79':['Giove','Jupiter']};
 const LIQ={water:{r:1000,col:[64,150,255]},oil:{r:920,col:[240,200,60]},eth:{r:789,col:[190,160,255]},gly:{r:1260,col:[110,230,200]},hg:{r:13600,col:[190,196,210]},mys:{r:10*Math.round(60+Math.random()*240),col:[255,110,170]}};
 let reveal=false,drag=false,lastH=-1;const s={x:1.1,y:1.3},series={};
-sel('liq');sel('g');check('atm');slider('lev',v=>nf(v,2)+' m');
-function onParam(id){if(id==='liq')reveal=false;}
+sel('liq');slider('lev',v=>nf(v,2)+' m');
 $('#rev').onclick=()=>reveal=true;$('#clr').onclick=()=>{for(const k in series)delete series[k];};
 const TOP=3.1,cl=y=>4.3-.4*(y-.35)/2.75,cr=y=>4.7+1.1*(y-.35)/2.75;
 const inside=(x,y)=>y>=0&&y<=TOP&&((x>=.2&&x<=4.7&&y<=.35)||(y>=.35&&((x>=.2&&x<=2)||(x>=2.9&&x<=3.2)||(x>=cl(y)&&x<=cr(y)))));
 function shapes(yt){const p=new Path2D(),poly=a=>{a.forEach((q,i)=>{const m=ox+q[0]*sc,n=oy-q[1]*sc;i?p.lineTo(m,n):p.moveTo(m,n);});p.closePath();};
  poly([[.2,0],[4.7,0],[4.7,.36],[.2,.36]]);poly([[.2,.35],[2,.35],[2,yt],[.2,yt]]);poly([[2.9,.35],[3.2,.35],[3.2,yt],[2.9,yt]]);poly([[4.3,.35],[4.7,.35],[cr(yt),yt],[cl(yt),yt]]);return p;}
-function meas(){const ins=inside(s.x,s.y),h=ins&&s.y<P.lev?P.lev-s.y:0;return{h,pg:LIQ[P.liq].r*(+P.g)*h/1000,p:(P.atm?101.325:0)+LIQ[P.liq].r*(+P.g)*h/1000};}
-pointer(cv,{down(p){const X=ox+s.x*sc,Y=oy-s.y*sc;if(Math.hypot(p.x-X,p.y-Y)<30*TS){drag=true;lastH=-1;}},
+function meas(){const ins=inside(s.x,s.y),h=ins&&s.y<P.lev?P.lev-s.y:0;return{h,pg:LIQ[P.liq].r*(+P.g)*h/1000,p:PATM()+LIQ[P.liq].r*(+P.g)*h/1000};}
+const hB={down(p){const X=ox+s.x*sc,Y=oy-s.y*sc;if(Math.hypot(p.x-X,p.y-Y)<30*TS){drag=true;lastH=-1;}},
  move(p){if(!drag)return;s.x=clamp((p.x-ox)/sc,-.3,Math.min(6.2,(TW-14-ox)/sc));s.y=clamp((oy-p.y)/sc,.04,3.5);const m=meas();if(m.h>0&&Math.abs(m.h-lastH)>.04){lastH=m.h;const k=P.liq+'|'+P.g+'|'+P.atm;(series[k]=series[k]||{pal:nser++,liq:P.liq,g:P.g,atm:P.atm,pts:[],dots:true,r:3.4}).pts.push([m.h,m.p]);if(series[k].pts.length>300)series[k].pts.shift();}},
- up(){drag=false;}});
-loop(()=>{c=fit(cv);W=cv.W;H=cv.H;const wide=W>760;TW=wide?Math.round(W*.58):W;TH=wide?H:Math.round(H*.56);sc=Math.min((TW-70)/6.1,(TH-70)/3.75);ox=(TW-6*sc)/2+12;oy=TH-(TH-3.75*sc)/2-18;
+ up(){drag=false;}};
+function drawB(){const wide=W>760;TW=wide?Math.round(W*.58):W;TH=wide?H:Math.round(H*.56);sc=Math.min((TW-70)/6.1,(TH-70)/3.75);ox=(TW-6*sc)/2+12;oy=TH-(TH-3.75*sc)/2-18;
  c.fillStyle=C.bg;c.fillRect(0,0,W,H);
  const big=shapes(3.3);c.save();c.lineJoin='round';c.lineWidth=12;c.strokeStyle=C.wall;c.stroke(big);c.fillStyle=C.bg;c.fill(big);c.fillRect(0,0,W,oy-3.16*sc);c.restore();
  c.fillStyle=C.gnd;c.fillRect(ox-.3*sc,oy+6,6.6*sc,5);
  const q=LIQ[P.liq],lv=P.lev,yS=oy-lv*sc;
- c.save();c.clip(big);const gr=c.createLinearGradient(0,yS,0,oy);gr.addColorStop(0,'rgba('+q.col+',.55)');gr.addColorStop(1,'rgba('+q.col.map(v=>v*.45|0)+',.9)');c.fillStyle=gr;c.fillRect(0,yS,W,oy-yS+2);c.fillStyle='rgba(255,255,255,.55)';c.fillRect(0,yS,W,2);c.restore();
- /* depth ruler */
+ c.save();c.clip(big);const gr=c.createLinearGradient(0,yS,0,oy);gr.addColorStop(0,'rgba('+q.col+',.55)');gr.addColorStop(1,'rgba('+q.col.map(v=>v*.45|0)+',.9)');c.fillStyle=gr;c.fillRect(0,yS,W,oy-yS+2);
+ /* a gently moving surface */
+ c.fillStyle='rgba(255,255,255,.55)';c.beginPath();c.moveTo(0,yS+2);for(let x=0;x<=W;x+=6)c.lineTo(x,yS+Math.sin(x*.05+clock*2.2)*1.2);c.lineTo(W,yS+2);c.closePath();c.fill();c.restore();
  const rx=ox+.2*sc-16;c.strokeStyle=C.mu;c.lineWidth=1;c.beginPath();c.moveTo(rx,yS);c.lineTo(rx,oy);c.stroke();
  for(let d=0;d<=lv+1e-6;d+=.25){const y=yS+d*sc,mj=Math.abs(d*2-Math.round(d*2))<1e-6;c.beginPath();c.moveTo(rx,y);c.lineTo(rx-(mj?7:4),y);c.stroke();if(mj)txt(c,nf(d,1),rx-10,y,C.mu,10.5,'right');}
  txt(c,'h (m)',rx-4,yS-12,C.mu,10.5,'right');
- /* sensor */
  const m=meas(),X=ox+s.x*sc,Y=oy-s.y*sc;
  if(m.h>0){const len=Math.min(48,6+m.pg*.5);for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1]])arrow(c,X+dx*(len+15),Y+dy*(len+15),X+dx*13,Y+dy*13,C.yl,2.5);
   c.save();c.setLineDash([4,4]);c.strokeStyle=fa(.4);c.beginPath();c.moveTo(0,Y);c.lineTo(TW,Y);c.stroke();c.restore();}
@@ -183,11 +289,64 @@ loop(()=>{c=fit(cv);W=cv.W;H=cv.H;const wide=W>760;TW=wide?Math.round(W*.58):W;T
  bubble(c,X+22,Y-58,['p = '+nf(m.p,1)+' kPa','h = '+nf(m.h,2)+' m']);
  ro('rh',nf(m.h,2)+' m');ro('rp',nf(m.p,1)+' kPa');
  const my=P.liq==='mys';ro('rho',my&&!reveal?'? kg/m³':nf(q.r,0)+' kg/m³');$('#revrow').classList.toggle('hidden',!my||reveal);
- /* graph */
  const PAL=[C.cy,C.pk,C.gr,C.or,C.pu,C.yl,C.rd,C.bl],ss=Object.values(series);let ym=150;ss.forEach(z=>{z.col=PAL[z.pal%PAL.length];z.pts.forEach(p=>ym=Math.max(ym,p[1]*1.1));});ym=Math.max(ym,m.p*1.1);
- const gm=wide?chart(c,TW+4,12,W-TW-16,H-24,{xmin:0,xmax:3,ymin:0,ymax:ym,xl:'h (m)',yl:'p (kPa)',series:ss.concat(m.h>0?[{pts:[[m.h,m.p]],col:C.tx,dots:true,r:6}]:[])}):chart(c,10,TH+4,W-20,H-TH-14,{xmin:0,xmax:3,ymin:0,ymax:ym,xl:'h (m)',yl:'p (kPa)',series:ss.concat(m.h>0?[{pts:[[m.h,m.p]],col:C.tx,dots:true,r:6}]:[])});
- ss.slice(-8).forEach((z,i)=>{const y=gm.py+14+i*17;c.fillStyle=z.col;c.beginPath();c.arc(gm.px+14,y,4.5,0,7);c.fill();txt(c,LN[z.liq][LANG==='it'?0:1]+' · '+PN[z.g][LANG==='it'?0:1]+(z.atm?'':L(' · senza atmosfera',' · no atmosphere')),gm.px+25,y,C.tx,12);});
-});
-applyLang();
+ const opt={xmin:0,xmax:3,ymin:0,ymax:ym,xl:'h (m)',yl:'p (kPa)',series:ss.concat(m.h>0?[{pts:[[m.h,m.p]],col:C.tx,dots:true,r:6}]:[])},gm=wide?chart(c,TW+4,12,W-TW-16,H-24,opt):chart(c,10,TH+4,W-20,H-TH-14,opt);
+ ss.slice(-8).forEach((z,i)=>{const y=gm.py+14+i*17;c.fillStyle=z.col;c.beginPath();c.arc(gm.px+14,y,4.5,0,7);c.fill();txt(c,LN[z.liq][LANG==='it'?0:1]+' · '+PN[z.g][LANG==='it'?0:1]+(z.atm?'':L(' · senza atmosfera',' · no atmosphere')),gm.px+25,y,C.tx,12);});}
+/* =====================================================================================================
+   3 · ONE VESSEL, SEVERAL LIQUIDS in layers: the pressure graph bends at every boundary
+   ===================================================================================================== */
+const MID=['benz','oil','water','gly','hg'],HMAX=2.5,STEP=.25;
+const M={tgt:{},cur:{},anim:null,sx:.5,sy:.4,drag:false,fx:[],full:0,g:{}};
+function fillPours(){$('#pours').innerHTML=MID.map(k=>'<button class="btn" data-k="'+k+'" style="flex:1 1 45%;border-left:5px solid rgb('+LQ[k].col+')">'+L(LQ[k].n[0],LQ[k].n[1])+' <span style="opacity:.6;font-size:11px">'+LQ[k].r+'</span></button>').join('');}
+fillPours();$('#pours').onclick=e=>{const b=e.target.closest('button');if(!b||M.anim)return;const k=b.dataset.k,tot=MID.reduce((a,i)=>a+(M.tgt[i]||0),0);if(tot+STEP>HMAX+1e-9){M.full=2;return;}M.tgt[k]=(M.tgt[k]||0)+STEP;M.anim={k,t:0};};
+$('#emptyC').onclick=()=>{M.tgt={};M.cur={};M.anim=null;M.fx=[];};
+/* layers from the bottom up: densest first */
+function layers(){let y=0;return MID.filter(k=>(M.cur[k]||0)>1e-6).sort((a,b)=>LQ[b].r-LQ[a].r).map(k=>{const o={k,y0:y,y1:y+M.cur[k]};y=o.y1;return o;});}
+function pAt(y,ly){const top=ly.length?ly[ly.length-1].y1:0,g=+P.g;let p=PATM(),liq=null;if(y>=top)return{p,h:0,liq};for(let i=ly.length-1;i>=0;i--){const l=ly[i];if(y>=l.y1)continue;const a=Math.max(y,l.y0);p+=LQ[l.k].r*g*(l.y1-a)/1000;if(y>=l.y0){liq=l.k;break;}}return{p,h:top-y,liq};}
+const hC={down(p){const g=M.g;if(Math.hypot(p.x-(g.x0+M.sx*g.w),p.y-(g.oy-M.sy*g.sc))<30*TS)M.drag=true;},move(p){if(!M.drag)return;const g=M.g;M.sx=clamp((p.x-g.x0)/g.w,.06,.94);M.sy=clamp((g.oy-p.y)/g.sc,.03,HMAX+.2);},up(){M.drag=false;}};
+function drawC(dt){const wide=W>760,tw_=wide?Math.round(W*.52):W,th_=wide?H:Math.round(H*.58),scl=(th_-96)/(HMAX+.35),w=clamp(tw_*.42,120,250),x0=(tw_-w)/2+18,oyc=th_-34,Yc=y=>oyc-y*scl;M.g={x0,w,oy:oyc,sc:scl};
+ if(M.anim){const a=M.anim;a.t+=dt;M.cur[a.k]=Math.min(M.tgt[a.k],(M.cur[a.k]||0)+STEP*dt/1.5);if(M.cur[a.k]>=M.tgt[a.k]-1e-9)M.anim=null;}
+ const ly=layers(),top=ly.length?ly[ly.length-1].y1:0;
+ c.fillStyle=C.bg;c.fillRect(0,0,W,H);
+ const bgc=c.createRadialGradient(tw_/2,th_*.45,30,tw_/2,th_*.5,th_*.8);bgc.addColorStop(0,LIGHT?'#ffffff':'#151f44');bgc.addColorStop(1,LIGHT?'#eef2fb':'#0a0f1f');c.fillStyle=bgc;c.fillRect(0,0,tw_,th_);
+ c.fillStyle=LIGHT?'#c9a875':'#3d2c1c';c.fillRect(x0-60,oyc+8,w+120,8);
+ /* liquid layers */
+ for(const l of ly){const col=LQ[l.k].col,hg=l.k==='hg',g=c.createLinearGradient(x0,0,x0+w,0);g.addColorStop(0,rgba(col.map(v=>v*.55),hg?.97:.82));g.addColorStop(.3,rgba(col.map(v=>v*1.12+18),hg?.97:.72));g.addColorStop(1,rgba(col.map(v=>v*.5),hg?.97:.85));
+  c.fillStyle=g;c.fillRect(x0,Yc(l.y1),w,(l.y1-l.y0)*scl+.6);c.fillStyle='rgba(255,255,255,.35)';c.fillRect(x0,Yc(l.y1),w,1.4);
+  if((l.y1-l.y0)*scl>16){c.save();c.shadowColor='rgba(0,0,0,.55)';c.shadowBlur=3;txt(c,L(LQ[l.k].n[0],LQ[l.k].n[1])+' · '+LQ[l.k].r+' kg/m³',x0+w/2,Yc((l.y0+l.y1)/2),'#fff',12,'center',1);c.restore();}}
+ /* the jug and its jet, down to the layer being filled */
+ if(M.anim){const a=M.anim,col=LQ[a.k].col,jx=x0+w*.72,jy=Yc(HMAX)-52,l=ly.find(q=>q.k===a.k),yEnd=l?Yc(l.y1):oyc,ySurf=Yc(top);
+  c.save();c.translate(jx+34,jy);c.rotate(-.9);c.fillStyle=rgba(col,.85);rr(c,-16,-4,32,30,4);c.fill();c.strokeStyle=C.glass;c.lineWidth=2;rr(c,-18,-22,36,50,5);c.stroke();c.restore();
+  const jet=(ya,yb,al)=>{const g=c.createLinearGradient(jx-5,0,jx+5,0);g.addColorStop(0,rgba(col.map(v=>v*.65),al));g.addColorStop(.45,rgba(col.map(v=>v*1.2+50),al));g.addColorStop(1,rgba(col.map(v=>v*.6),al));c.fillStyle=g;c.beginPath();c.moveTo(jx-4,ya);for(let k=0;k<=10;k++)c.lineTo(jx-4-Math.sin(clock*21+k)*.9,ya+(yb-ya)*k/10);for(let k=10;k>=0;k--)c.lineTo(jx+4+Math.cos(clock*18+k)*.9,ya+(yb-ya)*k/10);c.closePath();c.fill();};
+  jet(jy+10,Math.min(ySurf,yEnd),.95);if(yEnd>ySurf+1)jet(ySurf,yEnd,.55); /* a denser liquid sinks through the lighter ones */
+  if(Math.random()<dt*40)M.fx.push({x:jx+(Math.random()-.5)*10,y:Math.min(ySurf,yEnd),vx:(Math.random()-.5)*70,vy:-40-Math.random()*90,t:0,col});
+  c.strokeStyle='rgba(255,255,255,.7)';c.lineWidth=1.2;for(let k=0;k<2;k++){const u=((clock*1.6+k/2)%1);c.globalAlpha=1-u;c.beginPath();c.ellipse(jx,Math.min(ySurf,yEnd)+1,6+u*26,1.5+u*3,0,0,7);c.stroke();}c.globalAlpha=1;}
+ for(const q of M.fx){q.t+=dt;q.vy+=420*dt;q.x+=q.vx*dt;q.y+=q.vy*dt;c.fillStyle=rgba(q.col.map(v=>v*1.1+40),Math.max(0,1-q.t/.6));c.beginPath();c.arc(q.x,q.y,2,0,7);c.fill();}M.fx=M.fx.filter(q=>q.t<.6);
+ /* glass walls, a reflection, the depth ruler */
+ c.strokeStyle=C.glass;c.lineWidth=5;c.lineJoin='round';c.beginPath();c.moveTo(x0-2.5,Yc(HMAX+.12));c.lineTo(x0-2.5,oyc+2.5);c.lineTo(x0+w+2.5,oyc+2.5);c.lineTo(x0+w+2.5,Yc(HMAX+.12));c.stroke();
+ c.fillStyle='rgba(255,255,255,.09)';c.fillRect(x0+w*.08,Yc(HMAX),w*.07,HMAX*scl);
+ c.strokeStyle=C.mu;c.lineWidth=1;for(let y=0;y<=HMAX+1e-6;y+=.25){const mj=Math.abs(y*2-Math.round(y*2))<1e-6;c.beginPath();c.moveTo(x0-8,Yc(y));c.lineTo(x0-(mj?17:13),Yc(y));c.stroke();if(mj)txt(c,nf(y,1),x0-21,Yc(y),C.mu,10.5,'right');}txt(c,'m',x0-21,Yc(HMAX)-14,C.mu,10.5,'right');
+ if(!ly.length&&!M.anim)txt(c,L('Scegli un liquido da versare','Choose a liquid to pour'),x0+w/2,Yc(1.2),C.mu,13,'center');
+ if(M.full>0){M.full-=dt;bubble(c,x0+w/2-80,Yc(HMAX)-40,[L('Il recipiente è pieno','The vessel is full')],C.pk);}
+ /* sensor */
+ const sx=x0+M.sx*w,sy=Yc(M.sy),m=pAt(M.sy,ly);
+ if(m.h>0){const len=Math.min(48,6+(m.p-PATM())*.5);for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1]])arrow(c,sx+dx*(len+15),sy+dy*(len+15),sx+dx*13,sy+dy*13,C.yl,2.5);}
+ c.save();c.fillStyle=C.bg;c.strokeStyle=C.yl;c.lineWidth=3;c.beginPath();c.arc(sx,sy,10,0,7);c.fill();c.stroke();c.fillStyle=C.yl;c.beginPath();c.arc(sx,sy,3.5,0,7);c.fill();c.restore();
+ bubble(c,sx+22,sy-58,['p = '+nf(m.p,1)+' kPa','h = '+nf(m.h,2)+' m']);
+ ro('ch',nf(m.h,2)+' m');ro('cl',m.liq?L(LQ[m.liq].n[0],LQ[m.liq].n[1]):L('aria','air'));ro('cp',nf(m.p,1)+' kPa');
+ /* pressure against depth: one straight piece per liquid, steeper where the liquid is denser */
+ const ser=[];let pmax=Math.max(150,m.p*1.1);for(let i=ly.length-1;i>=0;i--){const l=ly[i],a=pAt(l.y1,ly),b=pAt(l.y0,ly);ser.push({pts:[[top-l.y1,a.p],[top-l.y0,b.p]],col:'rgb('+LQ[l.k].col+')',w:3.2});pmax=Math.max(pmax,b.p*1.08);}
+ if(m.h>0)ser.push({pts:[[m.h,m.p]],col:C.tx,dots:true,r:6});
+ const opt={xmin:0,xmax:Math.max(1,Math.ceil(top*2)/2),ymin:0,ymax:pmax,xl:L('profondità h (m)','depth h (m)'),yl:'p (kPa)',series:ser},gm=wide?chart(c,tw_+4,12,W-tw_-16,H-24,opt):chart(c,10,th_+4,W-20,H-th_-14,opt);
+ ly.slice().reverse().forEach((l,i)=>{const y=gm.py+14+i*17;c.fillStyle='rgb('+LQ[l.k].col+')';c.fillRect(gm.px+8,y-2,14,4);txt(c,L(LQ[l.k].n[0],LQ[l.k].n[1]),gm.px+28,y,C.tx,12);});}
+/* ===================================================================================================== */
+const HINT={vasi:['Versa il liquido in un vaso: con le valvole aperte arriva alla stessa altezza in tutti, qualunque forma abbiano.','Pour liquid into one vessel: with the valves open it reaches the same height in all of them, whatever their shape.'],stev:['Trascina il sensore nel liquido: la pressione dipende solo dalla profondità.','Drag the sensor through the liquid: the pressure depends only on the depth.'],multi:['Un solo recipiente, più liquidi a strati: guarda come cambia la pendenza del grafico.','One vessel, several liquids in layers: watch how the slope of the graph changes.']};
+function onParam(id){if(id==='liq')reveal=false;if(/^v\d$/.test(id))buildTab();
+ if(id==='mode'){$('#uiA').classList.toggle('hidden',P.mode!=='vasi');$('#uiB').classList.toggle('hidden',P.mode!=='stev');$('#uiC').classList.toggle('hidden',P.mode!=='multi');$('#mhint').textContent=L(...HINT[P.mode]);A.pour=-1;}}
+function onLang(){fillShapes();fillPours();$('#mhint').textContent=L(...HINT[P.mode]);refreshUI();}
+const H_=()=>P.mode==='vasi'?hA:P.mode==='stev'?hB:hC;
+pointer(cv,{down(p){H_().down(p);},move(p){H_().move(p);},up(p){H_().up(p);}});
+loop(dt=>{c=fit(cv);W=cv.W;H=cv.H;clock+=dt;if(P.mode==='vasi')drawA(dt);else if(P.mode==='stev')drawB();else drawC(dt);});
+onParam('mode');applyLang();
 </script>
 </body></html>
