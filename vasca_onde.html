@@ -60,7 +60,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 <body>
 <header><div><span class="tag" data-en="Physics · Waves in two dimensions">Fisica · Onde in due dimensioni</span><h1 data-en="Ripple tank">Vasca delle onde</h1></div>
 <div class="hb"><a href="index.html" title="Tutte le simulazioni / All simulations">⌂</a><button id="qbtn" title="Sfide / Challenges">?</button><button id="thm" title="Tema chiaro-scuro / Light-dark theme">☀</button><button id="lang" title="Lingua / Language">EN</button></div></header>
-<main><div class="stage tall"><span class="cap" id="cap"></span><canvas id="cv"></canvas></div>
+<main><div class="stage tall"><span class="cap" id="cap"></span><canvas id="gl"></canvas><canvas id="cv"></canvas></div>
 <aside>
 <div class="grp"><h3 data-en="Experiment">Esperimento</h3>
 <div class="seg" id="mode"><button data-v="src" class="on" data-en="Sources">Sorgenti</button><button data-v="slit" data-en="Slits">Fenditure</button><button data-v="dop" data-en="Doppler">Doppler</button></div>
@@ -90,10 +90,11 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 <div class="ro"><span data-en="Frequency heard behind">Frequenza percepita dietro</span><b id="rfb" class="c-pk"></b></div>
 </div>
 <div class="grp"><h3 data-en="Show">Mostra</h3>
+<div class="seg" id="view"><button data-v="3d" class="on" data-en="3D view">Vista 3D</button><button data-v="top" data-en="From above">Dall'alto</button></div>
 <label class="ck"><input type="checkbox" id="nod"><span data-en="Nodal lines (water at rest)">Linee nodali (acqua ferma)</span></label>
-<label class="ck"><input type="checkbox" id="scr"><span data-en="Intensity on the right edge">Intensità sul bordo destro</span></label>
+<label class="ck" id="scrL"><input type="checkbox" id="scr"><span data-en="Intensity on the right edge">Intensità sul bordo destro</span></label>
 <label class="ck"><input type="checkbox" id="wall"><span data-en="Reflecting edges">Bordi riflettenti</span></label>
-<p class="hint" data-en="Tap the water to drop a pebble.">Tocca l'acqua per far cadere un sassolino.</p>
+<p class="hint" data-en="Tap the water to drop a pebble. In 3D, drag to turn the tank and use the wheel to zoom.">Tocca l'acqua per far cadere un sassolino. In 3D trascina per ruotare la vasca e usa la rotellina per lo zoom.</p>
 </div>
 </aside></main>
 <div id="q" class="hidden"><div class="box"><h2 data-en="Can you…?">Riesci a…?</h2><ul>
@@ -103,6 +104,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 <li data-en="…recognise Young's experiment in the two slits? Where are the bright and dark bands on the right edge?">…riconoscere l'esperimento di Young nelle due fenditure? Dove sono le bande chiare e scure sul bordo destro?</li>
 <li data-en="…explain why an ambulance siren sounds higher as it approaches? And what happens when the source is faster than its own waves?">…spiegare perché la sirena di un'ambulanza è più acuta quando si avvicina? E che cosa succede se la sorgente è più veloce delle sue onde?</li>
 </ul></div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 'use strict';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
@@ -175,23 +177,28 @@ try{if(localStorage.getItem('simTheme')==='light')setTheme(true);}catch(e){}
 const cv=$('#cv'),NX=260,NY=160,SP=16,CM=.25,HS=1/180,N=NX*NY;
 let c,W,H,play=true,T=0,acc=0,u=new Float32Array(N),vel=new Float32Array(N),wall=new Uint8Array(N),damp=new Float32Array(N),inten=new Float32Array(NY),dop={x:SP+12,dir:1,ph:0},nodal=null,nodKey='',tank={x:0,y:0,w:10,h:10};
 const off=document.createElement('canvas');off.width=NX;off.height=NY;const octx=off.getContext('2d'),img=octx.createImageData(NX,NY),px=img.data;
-seg('mode');seg('ns');seg('nf');check('anti');check('nod');check('scr');check('wall');
+seg('mode');seg('view');seg('ns');seg('nf');check('anti');check('nod');check('scr');check('wall');
 slider('f',v=>nf(v,2)+' Hz');slider('v',v=>nf(v,0)+' cm/s');slider('ds',v=>nf(v,1)+' cm');slider('a',v=>nf(v,1)+' cm');slider('df',v=>nf(v,1)+' cm');slider('vs',v=>nf(v,2)+' × v');
 const XB=Math.round(NX*.3),XS=Math.round(NX*.3); /* barrier column, and the column of the point sources */
 function build(){/* edges that soak up the waves (or mirror them), and the barrier with its slits */
  for(let j=0;j<NY;j++)for(let i=0;i<NX;i++){const d=Math.min(i,j,NX-1-i,NY-1-j),k=j*NX+i;damp[k]=P.wall||d>=SP?.9996:1-.11*((SP-d)/SP)**2;wall[k]=0;}
  if(P.mode==='slit'){const a=P.a/CM,cs=P.nf==='2'?[NY/2-P.df/CM/2,NY/2+P.df/CM/2]:[NY/2];for(let j=0;j<NY;j++){const open=cs.some(y=>Math.abs(j+.5-y)<a/2);if(!open)for(let i=XB-1;i<=XB+1;i++)wall[j*NX+i]=1;}}
- nodKey='';}
+ nodKey='';if(V3.rebuild)V3.rebuild();}
 function calm(){u.fill(0);vel.fill(0);inten.fill(0);T=0;dop.x=SP+12;dop.dir=1;dop.ph=0;}
 function centres(){if(P.mode==='src')return P.ns==='2'?[[XS,NY/2-P.ds/CM/2],[XS,NY/2+P.ds/CM/2]]:[[XS,NY/2]];if(P.mode==='slit')return P.nf==='2'?[[XB,NY/2-P.df/CM/2],[XB,NY/2+P.df/CM/2]]:[[XB,NY/2]];return[];}
 const HINT={src:['Due sorgenti che battono insieme: dove cresta incontra cresta l\'onda si rinforza, dove cresta incontra valle l\'acqua resta ferma.','Two sources beating together: where crest meets crest the wave grows, where crest meets trough the water stays still.'],slit:['Onde piane arrivano da sinistra su una barriera: oltre la fenditura si allargano (diffrazione) e, con due fenditure, interferiscono.','Plane waves come from the left onto a barrier: beyond the slit they spread out (diffraction) and, with two slits, they interfere.'],dop:['La sorgente si muove: davanti le creste si addensano, dietro si diradano. Oltre la velocità dell\'onda nasce il cono di Mach.','The source moves: the crests bunch up ahead and spread out behind. Faster than the wave, and a Mach cone appears.']};
 function onParam(id){if(id==='mode'){$('#uiS').classList.toggle('hidden',P.mode!=='src');$('#uiF').classList.toggle('hidden',P.mode!=='slit');$('#uiD').classList.toggle('hidden',P.mode!=='dop');$('#mhint').textContent=L(...HINT[P.mode]);calm();}
- if(['mode','nf','a','df','wall'].includes(id))build();if(id==='nf')$('#sl_df').classList.toggle('hidden',P.nf!=='2');if(['ns','ds','anti','nf','a','df'].includes(id))inten.fill(0);}
+ if(['mode','nf','a','df','wall'].includes(id))build();if(id==='nf')$('#sl_df').classList.toggle('hidden',P.nf!=='2');if(['ns','ds','anti','nf','a','df'].includes(id))inten.fill(0);if(['ns','ds','anti','f','v'].includes(id)&&V3.rebuild)V3.rebuild();
+ if(id==='view'){$('#scrL').classList.toggle('hidden',P.view==='3d');gl.style.display=P.view==='3d'?'':'none';}}
 function onLang(){$('#mhint').textContent=L(...HINT[P.mode]);}
 $('#play').onclick=()=>play=!play;$('#calm').onclick=calm;
 function drop(x,y,amp){const r=3;for(let j=-6;j<=6;j++)for(let i=-6;i<=6;i++){const X=Math.round(x)+i,Y=Math.round(y)+j;if(X<1||Y<1||X>=NX-1||Y>=NY-1)continue;u[Y*NX+X]-=amp*Math.exp(-(i*i+j*j)/(2*r*r));}}
-let lastDrop=0;pointer(cv,{down(p){poke(p,1.6);},move(p){if(performance.now()-lastDrop>70)poke(p,.7);}});
-function poke(p,a){const x=(p.x-tank.x)/tank.w*NX,y=(p.y-tank.y)/tank.h*NY;if(x>1&&y>1&&x<NX-1&&y<NY-1){drop(x,y,a);lastDrop=performance.now();}}
+let lastDrop=0;const is3=()=>P.view==='3d'&&V3.ok;
+pointer(cv,{down(p){if(is3()){V3.down=p;V3.moved=0;}else poke(p,1.6);},
+ move(p){if(is3()){if(!V3.down)return;const dx=p.x-V3.down.x,dy=p.y-V3.down.y;V3.moved+=Math.abs(dx)+Math.abs(dy);if(V3.moved>6){V3.az-=dx*.007;V3.el=clamp(V3.el+dy*.005,.16,1.5);}V3.down=p;}else if(performance.now()-lastDrop>70)poke(p,.7);},
+ up(p){if(is3()&&V3.down&&V3.moved<=6)poke(p,1.8);V3.down=null;}});
+cv.addEventListener('wheel',e=>{if(!is3())return;e.preventDefault();V3.dist=clamp(V3.dist*(e.deltaY>0?1.08:.93),45,170);},{passive:false});
+function poke(p,a){let q;if(is3())q=V3.pick(p,cv.W,cv.H);else q=[(p.x-tank.x)/tank.w*NX,(p.y-tank.y)/tank.h*NY];if(q&&q[0]>1&&q[1]>1&&q[0]<NX-1&&q[1]<NY-1){drop(q[0],q[1],a);lastDrop=performance.now();}}
 /* a source pushes on a small round patch of water, not on a single point: smoother, cleaner waves */
 const KER=[];for(let j=-3;j<=3;j++)for(let i=-3;i<=3;i++)KER.push([i,j,Math.exp(-(i*i+j*j)/3.2)]);const KS=KER.reduce((a,q)=>a+q[2],0);
 function push(x,y,a){const X=Math.round(x),Y=Math.round(y);for(const q of KER)vel[(Y+q[1])*NX+X+q[0]]+=a*q[2]/KS;}
@@ -217,6 +224,9 @@ function nodes(){const cs=centres();if(cs.length<2)return[];const lam=P.v/P.f/CM
  for(let y=SP;y<NY-SP;y+=1.5)for(let x=x0;x<NX-SP;x+=1.5){const a=F(x,y);if(a*F(x+1.5,y)<0||a*F(x,y+1.5)<0)pts.push([x,y]);}return pts;}
 loop(dt=>{c=fit(cv);W=cv.W;H=cv.H;
  if(play){acc+=Math.min(dt,.05);let n=0;while(acc>=HS&&n<12){step();acc-=HS;n++;}if(n===12)acc=0;}
+ const lam0=P.v/P.f;if(is3()){V3.render(W,H);c.clearRect(0,0,W,H);c.save();c.shadowColor='rgba(0,0,0,.7)';c.shadowBlur=4;txt(c,'λ = '+nf(lam0,1)+' cm',14,H-16,LIGHT?'#8a5a00':'#ffd166',13,'left',1);c.restore();$('#play').textContent=play?'❚❚':'▶';ro('rl',nf(lam0,2)+' cm');
+  if(P.mode==='dop'){const k=P.vs;ro('rla',k<1?nf(lam0*(1-k),2)+' cm':'—');ro('rlb',nf(lam0*(1+k),2)+' cm');ro('rfa',k<1?nf(P.f/(1-k),2)+' Hz':L('onda d\'urto','shock wave'));ro('rfb',nf(P.f/(1+k),2)+' Hz');}
+  ro('cap',L('Trascina per ruotare · tocca l\'acqua per un sassolino','Drag to turn · tap the water for a pebble'));return;}
  paint();
  const sw=P.scr&&P.mode!=='dop'?(W<560?58:104):0,aw=W-sw-16,ah=H-30,sc=Math.min(aw/NX,ah/NY),tw=NX*sc,th=NY*sc,tx=Math.round((W-sw-tw)/2),ty=Math.round((H-th)/2+4);tank={x:tx,y:ty,w:tw,h:th};
  c.fillStyle=LIGHT?'#dfe6f5':'#05070f';c.fillRect(0,0,W,H);
@@ -245,6 +255,60 @@ loop(dt=>{c=fit(cv);W=cv.W;H=cv.H;
  let cap=L('Tocca l\'acqua per far cadere un sassolino','Tap the water to drop a pebble');
  if(P.mode==='slit')cap=P.nf==='2'?'d·sin θ = λ → θ₁ = '+(lam/P.df<1?nf(Math.asin(lam/P.df)*180/Math.PI,1)+'°':'—')+L(' (primo massimo)',' (first maximum)'):'a·sin θ = λ → θ₁ = '+(lam/P.a<1?nf(Math.asin(lam/P.a)*180/Math.PI,1)+'°'+L(' (primo minimo)',' (first minimum)'):L('nessun minimo: l\'onda riempie tutto lo spazio','no minimum: the wave fills the whole space'));
  ro('cap',cap);});
-build();onParam('mode');applyLang();
+/* ============================ the same water, drawn in 3D ============================
+   The heights computed above move the vertices of a mesh; the colour comes from the sky mirrored in the surface
+   (more at grazing angles, as on real water), the depth of the water and the glint of the sun. */
+const gl=$('#gl'),V3={ok:false,az:-.42,el:.66,dist:86,down:null,moved:0};
+try{if(window.THREE){
+ const R=new THREE.WebGLRenderer({canvas:gl,antialias:true}),scene=new THREE.Scene(),cam=new THREE.PerspectiveCamera(38,1,1,600);
+ const geo=new THREE.BufferGeometry(),pos=new Float32Array(N*3),nor=new Float32Array(N*3),idx=new Uint32Array((NX-1)*(NY-1)*6);
+ for(let j=0,k=0;j<NY;j++)for(let i=0;i<NX;i++,k++){pos[3*k]=(i-NX/2)*CM;pos[3*k+2]=(j-NY/2)*CM;nor[3*k+1]=1;}
+ for(let j=0,q=0;j<NY-1;j++)for(let i=0;i<NX-1;i++){const a=j*NX+i;idx[q++]=a;idx[q++]=a+NX;idx[q++]=a+1;idx[q++]=a+1;idx[q++]=a+NX;idx[q++]=a+NX+1;}
+ geo.setAttribute('position',new THREE.BufferAttribute(pos,3));geo.setAttribute('normal',new THREE.BufferAttribute(nor,3));geo.setIndex(new THREE.BufferAttribute(idx,1));
+ const sun=new THREE.Vector3(-.45,.7,-.55).normalize(),U={uSun:{value:sun},uZen:{value:new THREE.Color()},uHor:{value:new THREE.Color()},uDeep:{value:new THREE.Color()},uShal:{value:new THREE.Color()},uSunC:{value:new THREE.Color()}};
+ const water=new THREE.Mesh(geo,new THREE.ShaderMaterial({uniforms:U,
+  vertexShader:'varying vec3 vN;varying vec3 vP;void main(){vN=normal;vP=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+  fragmentShader:`precision highp float;uniform vec3 uSun,uZen,uHor,uDeep,uShal,uSunC;varying vec3 vN;varying vec3 vP;
+   void main(){vec3 N=normalize(vN),V=normalize(cameraPosition-vP),R=reflect(-V,N);
+    vec3 sky=mix(uHor,uZen,pow(clamp(R.y,0.0,1.0),0.55));
+    float F=0.03+0.97*pow(1.0-max(dot(N,V),0.0),5.0);
+    vec3 body=mix(uDeep,uShal,smoothstep(-0.75,0.75,vP.y))*(0.55+0.55*max(dot(N,uSun),0.0));
+    float s=max(dot(R,uSun),0.0);
+    vec3 col=mix(body,sky,F)+uSunC*(pow(s,260.0)*2.2+pow(s,22.0)*0.22);
+    gl_FragColor=vec4(col,1.0);}`}));
+ water.frustumCulled=false;scene.add(water);
+ scene.add(new THREE.AmbientLight(0xffffff,.55));const dl=new THREE.DirectionalLight(0xffffff,.9);dl.position.copy(sun);scene.add(dl);
+ const fixed=new THREE.Group(),dyn=new THREE.Group();scene.add(fixed,dyn);
+ const mFrame=new THREE.MeshLambertMaterial(),mWall=new THREE.MeshLambertMaterial(),mRod=new THREE.MeshLambertMaterial({color:0xc9d0e6}),mTip=new THREE.MeshBasicMaterial({color:0xffd166}),mTable=new THREE.MeshLambertMaterial();
+ const box=(w,h,d,x,y,z,m,g)=>{const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);b.position.set(x,y,z);(g||fixed).add(b);return b;};
+ const TW=NX*CM,TD=NY*CM,FH=2.4;box(TW+3,FH+2,1.5,0,FH/2-1,-TD/2-.75,mFrame);box(TW+3,FH+2,1.5,0,FH/2-1,TD/2+.75,mFrame);box(1.5,FH+2,TD,-TD*0-TW/2-.75,FH/2-1,0,mFrame);box(1.5,FH+2,TD,TW/2+.75,FH/2-1,0,mFrame);
+ box(TW+3,1,TD+3,0,-2.5,0,mFrame);const table=box(600,1,600,0,-3.6,0,mTable);
+ const rod=()=>{const g=new THREE.Group(),c1=new THREE.Mesh(new THREE.CylinderGeometry(.22,.22,13,10),mRod);c1.position.y=7.2;g.add(c1);const t=new THREE.Mesh(new THREE.SphereGeometry(.55,14,10),mTip);t.position.y=.7;g.add(t);return g;};
+ const rods=[rod(),rod()],bar=new THREE.Mesh(new THREE.BoxGeometry(.8,.8,TD-2*SP*CM),mRod),mach=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3()]),new THREE.LineDashedMaterial({color:0xffffff,dashSize:1.2,gapSize:1,transparent:true,opacity:.8}));
+ bar.position.set((SP+3-NX/2)*CM,1.1,0);scene.add(rods[0],rods[1],bar,mach);
+ let nodPts=null;
+ V3.rebuild=()=>{/* the barrier (in the Slits experiment) and the dotted nodal lines */while(dyn.children.length)dyn.remove(dyn.children[0]);
+  if(P.mode==='slit'){let j0=-1;for(let j=0;j<=NY;j++){const w=j<NY&&wall[j*NX+XB];if(w&&j0<0)j0=j;if(!w&&j0>=0){box(3*CM,FH+.6,(j-j0)*CM,(XB+.5-NX/2)*CM,(FH+.6)/2-.6,((j0+j)/2-NY/2)*CM,mWall,dyn);j0=-1;}}}
+  nodPts=null;};
+ V3.render=(w,h)=>{const dpr=Math.min(window.devicePixelRatio||1,2);if(gl.width!==Math.round(w*dpr)||gl.height!==Math.round(h*dpr)){R.setPixelRatio(dpr);R.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix();}
+  /* heights and slopes of the surface */
+  const HG=1.15,k2=1/(2*CM);for(let j=0,k=0;j<NY;j++)for(let i=0;i<NX;i++,k++){const hgt=Math.tanh(u[k]*2.4)*HG; /* compressed, so that the weak far waves still stand out */pos[3*k+1]=hgt;}
+  for(let j=1;j<NY-1;j++)for(let i=1,k=j*NX+1;i<NX-1;i++,k++){const dx=(pos[3*(k+1)+1]-pos[3*(k-1)+1])*k2,dz=(pos[3*(k+NX)+1]-pos[3*(k-NX)+1])*k2,l=1/Math.sqrt(dx*dx+dz*dz+1);nor[3*k]=-dx*l;nor[3*k+1]=l;nor[3*k+2]=-dz*l;}
+  geo.attributes.position.needsUpdate=true;geo.attributes.normal.needsUpdate=true;
+  /* colours follow the light or dark theme */
+  const d=!LIGHT;U.uZen.value.set(d?0x030a22:0x2f7fe0);U.uHor.value.set(d?0x2a4f9a:0xdff0ff);U.uDeep.value.set(d?0x021a44:0x0b4f96);U.uShal.value.set(d?0x1c8fd0:0x58c3f2);U.uSunC.value.set(d?0xcfe4ff:0xfff6dc);
+  scene.background=new THREE.Color(d?0x05070f:0xdfe6f5);mFrame.color.set(d?0x2b3350:0xaab3c9);mWall.color.set(d?0x6f7a9c:0x7d88a6);mTable.color.set(d?0x0a0e1c:0xcfd7ea);
+  /* dippers, the vibrating bar, the Mach cone */
+  const cs=P.mode==='src'?centres():[];rods.forEach((r,i)=>{r.visible=!!cs[i]||(P.mode==='dop'&&i===0);if(cs[i])r.position.set((cs[i][0]-NX/2)*CM,pos[3*(Math.round(cs[i][1])*NX+cs[i][0])+1]*.5,(cs[i][1]-NY/2)*CM);});
+  if(P.mode==='dop')rods[0].position.set((dop.x-NX/2)*CM,0,0);bar.visible=P.mode==='slit';bar.position.y=1.1+.25*Math.sin(2*Math.PI*P.f*T);
+  mach.visible=P.mode==='dop'&&P.vs>1;if(mach.visible){const al=Math.asin(1/P.vs),x=(dop.x-NX/2)*CM,L_=90,a=mach.geometry.attributes.position;a.setXYZ(0,x-dop.dir*Math.cos(al)*L_,1.4,-Math.sin(al)*L_);a.setXYZ(1,x,1.4,0);a.setXYZ(2,x-dop.dir*Math.cos(al)*L_,1.4,Math.sin(al)*L_);a.needsUpdate=true;mach.computeLineDistances();}
+  if(P.nod&&P.mode!=='dop'){if(!nodPts){const q=nodes(),a=new Float32Array(q.length*3);q.forEach((m,i)=>{a[3*i]=(m[0]-NX/2)*CM;a[3*i+1]=1.5;a[3*i+2]=(m[1]-NY/2)*CM;});const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(a,3));nodPts=new THREE.Points(g,new THREE.PointsMaterial({color:0xffd166,size:2.4,sizeAttenuation:false}));dyn.add(nodPts);}nodPts.visible=true;}else if(nodPts)nodPts.visible=false;
+  const fit_=Math.max(1,1.45/(w/h))*V3.dist,ce=Math.cos(V3.el);cam.position.set(Math.sin(V3.az)*ce*fit_,Math.sin(V3.el)*fit_,Math.cos(V3.az)*ce*fit_);cam.lookAt(0,-1,0);R.render(scene,cam);};
+ /* where a tap lands on the water: the line of sight meets the plane y = 0 */
+ const ray=new THREE.Raycaster(),pl=new THREE.Plane(new THREE.Vector3(0,1,0),0),hit=new THREE.Vector3();
+ V3.pick=(p,w,h)=>{ray.setFromCamera({x:p.x/w*2-1,y:-(p.y/h*2-1)},cam);return ray.ray.intersectPlane(pl,hit)?[hit.x/CM+NX/2,hit.z/CM+NY/2]:null;};
+ V3.ok=true;}}catch(e){V3.ok=false;}
+if(!V3.ok){$('#view').children[1].click();$('#view').classList.add('hidden');}
+build();onParam('mode');onParam('view');applyLang();
 </script>
 </body></html>
