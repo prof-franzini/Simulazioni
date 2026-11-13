@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Oersted e il campo magnetico</title>
+<style>
+:root{--bg0:#141412;--bg:#1d1d1a;--hd:linear-gradient(180deg,#22221e,#1a1a17);--side:#191917;--card:#242420;--bd:#31312b;--bd2:#43423a;--tx:#f1efe6;--mu:#a5a291;--ac:#d6f06a;--actx:#1c2108;--val:#e9cf78;--btn:#2c2c27;--strong:#fffdf5;--cy:#8fd6c4;--pk:#f2917c;--yl:#e9cf78;--gr:#c9ec62;--tagc:#d6f06a}
+body.light{--bg0:#ebe8df;--bg:#f6f4ee;--hd:linear-gradient(180deg,#f4f2ec,#ebe8df);--side:#efede5;--card:#fbfaf6;--bd:#dedbd0;--bd2:#cbc7b8;--tx:#23231d;--mu:#6c695b;--ac:#c8e65a;--actx:#1c2108;--val:#8a6a12;--btn:#f1efe7;--strong:#15150f;--cy:#2f8f7a;--pk:#c4553f;--yl:#9a7410;--gr:#5f8a12;--tagc:#5f7d0e}
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{background:var(--bg0);color:var(--tx);font:14px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+header{display:flex;align-items:center;justify-content:space-between;padding:9px 16px;border-bottom:1px solid var(--bd);background:var(--hd)}
+h1{margin:0;font-size:19px;letter-spacing:.2px}
+.tag{font-size:10.5px;text-transform:uppercase;letter-spacing:1.6px;color:var(--ac);display:block}
+.hb{display:flex;gap:8px}
+.hb button,.hb a{width:38px;height:34px;display:grid;place-items:center;text-decoration:none;border-radius:9px;border:1px solid var(--bd2);background:var(--card);color:var(--tx);font:600 13px system-ui;cursor:pointer}
+.hb button:hover,.hb a:hover{border-color:var(--ac)}
+main{flex:1;display:flex;min-height:0}
+.stage{flex:1;position:relative;min-width:0;background:var(--bg)}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:crosshair}
+.stage.two{display:flex}.pane{flex:1;position:relative;min-width:0;min-height:0}.pane+.pane{border-left:1px solid var(--bd)}
+.cap{position:absolute;left:10px;top:8px;font-size:10.5px;text-transform:uppercase;letter-spacing:1.4px;color:var(--mu);pointer-events:none;z-index:2}
+aside{width:312px;overflow:auto;padding:12px;border-left:1px solid var(--bd);background:var(--side);display:flex;flex-direction:column;gap:10px}
+aside>div:not(.grp){display:flex;flex-direction:column;gap:10px}
+.grp{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px 12px}
+.grp h3{margin:0 0 8px;font-size:10.5px;text-transform:uppercase;letter-spacing:1.3px;color:var(--mu);font-weight:600}
+.sl{display:block;margin:7px 0}.sl .ln{display:flex;justify-content:space-between;font-size:13px;gap:8px}
+.sl output{color:var(--val);font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+input[type=range]{width:100%;accent-color:var(--ac);margin:4px 0 0}
+.ck{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:13px;cursor:pointer}.ck input{accent-color:var(--ac);width:16px;height:16px;margin:0}
+.seg{display:flex;background:var(--bg);border-radius:9px;padding:3px;gap:3px;margin:4px 0}
+.seg button{flex:1;border:0;background:transparent;color:var(--mu);padding:6px 4px;border-radius:7px;font:inherit;font-size:13px;cursor:pointer}
+.seg button.on{background:var(--ac);color:var(--actx);font-weight:600}
+.btn{border:1px solid var(--bd2);background:var(--btn);color:var(--tx);border-radius:9px;padding:7px 10px;font:inherit;font-size:13px;cursor:pointer;flex:1;white-space:nowrap}
+.btn:hover{border-color:var(--ac)}.btn.pri{background:var(--ac);color:var(--actx);border-color:var(--ac);font-weight:600}
+select{width:100%;background:var(--bg);color:var(--tx);border:1px solid var(--bd2);border-radius:8px;padding:7px;font:inherit;font-size:13px;margin:3px 0}
+.lb{font-size:12px;color:var(--mu);margin-top:6px;display:block}
+.ro{display:flex;justify-content:space-between;gap:8px;font-size:13px;padding:4px 0;border-bottom:1px dashed var(--bd)}.ro:last-child{border-bottom:0}
+.ro b{font-variant-numeric:tabular-nums;color:var(--strong);white-space:nowrap}
+.row{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 2px}
+.gc{width:100%;height:210px;display:block}
+.tb{width:100%;border-collapse:collapse;font-size:13px}.tb th{font-weight:500;color:var(--mu);font-size:11px;text-align:right;padding:2px 3px}
+.tb td{text-align:right;padding:4px 3px;font-variant-numeric:tabular-nums;border-top:1px dashed var(--bd)}.tb td:first-child{text-align:left;font-weight:700}
+.hint{font-size:12px;color:var(--mu);margin:4px 0 0}
+.c-cy{color:var(--cy)!important}.c-pk{color:var(--pk)!important}.c-yl{color:var(--yl)!important}.c-gr{color:var(--gr)!important}
+.hidden{display:none!important}
+#q{position:fixed;inset:0;background:rgba(4,7,16,.6);display:flex;align-items:center;justify-content:center;z-index:9;padding:20px}
+#q .box{background:var(--card);border:1px solid var(--bd2);border-radius:16px;max-width:520px;padding:20px 24px;box-shadow:0 20px 60px #0006}
+#q h2{margin:0 0 10px;font-size:16px;color:var(--val)}#q li{margin:9px 0;font-size:14.5px}#q ul{padding-left:20px;margin:0}
+/* --- mobile --- */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+.stage canvas{-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#q .box{max-height:86vh;overflow:auto}
+@media(pointer:coarse){input[type=range]{height:30px}.ck{margin:9px 0}.ck input{width:20px;height:20px}.seg button{padding:9px 4px}.btn{padding:10px}select{padding:10px 8px}.hb button,.hb a{width:40px;height:38px}}
+@media(max-width:820px){body{overflow:auto;height:auto}main{flex-direction:column}.stage{flex:none;height:60vh;height:60svh;min-height:300px}.stage.tall{height:84vh;height:84svh;min-height:460px}.stage.two{height:92vh;height:92svh;min-height:560px;flex-direction:column}.pane+.pane{border-left:0;border-top:1px solid var(--bd)}aside{width:auto;border-left:0;border-top:1px solid var(--bd);overflow:visible;display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));align-items:start;padding-bottom:calc(16px + env(safe-area-inset-bottom))}}
+@media(max-width:560px){header{padding:8px 10px;gap:8px}header>div:first-child{min-width:0}h1{font-size:16px;line-height:1.2}.tag{font-size:9.5px;letter-spacing:1.1px}.hb{gap:5px;flex:none}.hb button,.hb a{width:36px;height:36px}aside{padding:10px;grid-template-columns:1fr}#q{padding:12px}#q .box{padding:16px 18px}}
+@media(max-height:520px) and (min-width:560px) and (orientation:landscape){body{overflow:hidden;height:100%}main{flex-direction:row}.stage,.stage.tall{flex:1;height:auto;min-height:0}.stage.two{height:auto;min-height:0;flex-direction:row}.pane+.pane{border-left:1px solid var(--bd);border-top:0}aside{display:flex;width:270px;border-left:1px solid var(--bd);border-top:0;overflow:auto;padding:8px}header{padding:5px 12px}h1{font-size:15px}.tag{display:none}.hb button,.hb a{height:30px}}
+
+
+/* --- soft, modern shapes: pill buttons, rounder glassy panels --- */
+header{border-bottom:1px solid var(--bd);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.tag{color:var(--tagc)}h1{font-weight:650;letter-spacing:-.2px}
+.hb button,.hb a{border-radius:999px;background:var(--btn);border-color:var(--bd2)}
+.hb button:hover,.hb a:hover{border-color:var(--ac);color:var(--ac)}
+aside{gap:12px}
+.grp{border-radius:20px;padding:14px 16px;box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 6px 20px rgba(0,0,0,.12)}
+.grp h3{letter-spacing:1.5px}
+.seg{border-radius:999px;padding:4px;background:var(--bg0);border:1px solid var(--bd)}
+.seg button{border-radius:999px}
+.seg button.on{box-shadow:0 2px 10px rgba(200,230,90,.25)}
+.btn{border-radius:999px;padding:8px 14px}.btn.pri{box-shadow:0 4px 14px rgba(200,230,90,.25)}
+select{border-radius:12px}
+#q .box{border-radius:24px}#q h2{color:var(--ac)}body.light #q h2{color:var(--tagc)}
+.ro{border-bottom-color:var(--bd)}
+/* --- glass --- */
+body{background:radial-gradient(900px 620px at 6% -10%,rgba(214,240,106,.14),transparent 60%),radial-gradient(820px 620px at 104% 106%,rgba(233,207,120,.11),transparent 60%),radial-gradient(700px 520px at 62% 38%,rgba(143,214,196,.06),transparent 70%),var(--bg0);background-attachment:fixed}body.light{background:radial-gradient(900px 620px at 6% -10%,rgba(200,230,90,.38),transparent 60%),radial-gradient(820px 620px at 104% 106%,rgba(233,200,120,.38),transparent 60%),radial-gradient(700px 520px at 62% 38%,rgba(143,214,196,.18),transparent 70%),var(--bg0);background-attachment:fixed}
+header{background:rgba(32,32,27,.42);border-bottom:1px solid rgba(255,255,255,.07);-webkit-backdrop-filter:blur(22px) saturate(1.4);backdrop-filter:blur(22px) saturate(1.4)}
+body.light header{background:rgba(255,255,255,.42);border-bottom-color:rgba(0,0,0,.06)}
+main{gap:12px;padding:12px}
+.stage{border-radius:24px;overflow:hidden;border:1px solid rgba(255,255,255,.08);box-shadow:0 22px 50px rgba(0,0,0,.38)}
+body.light .stage{border-color:rgba(255,255,255,.9);box-shadow:0 18px 44px rgba(70,60,20,.14)}
+.cap{left:16px;top:12px}
+aside{background:transparent;border:0!important;padding:0 2px 14px}
+.grp{background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.025));border:1px solid rgba(255,255,255,.09);-webkit-backdrop-filter:blur(22px) saturate(1.4);backdrop-filter:blur(22px) saturate(1.4);
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 12px 32px rgba(0,0,0,.28)}
+body.light .grp{background:linear-gradient(180deg,rgba(255,255,255,.78),rgba(255,255,255,.48));border-color:rgba(255,255,255,.85);box-shadow:inset 0 1px 0 #fff,0 10px 26px rgba(70,60,20,.10)}
+.hb button,.hb a{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.13)}
+body.light .hb button,body.light .hb a{background:rgba(255,255,255,.62);border-color:rgba(0,0,0,.08)}
+.seg{background:rgba(0,0,0,.24);border-color:rgba(255,255,255,.06)}body.light .seg{background:rgba(60,50,20,.06);border-color:rgba(0,0,0,.04)}
+.btn{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.13)}body.light .btn{background:rgba(255,255,255,.72);border-color:rgba(0,0,0,.08)}
+.btn.pri,body.light .btn.pri{background:var(--ac);border-color:var(--ac);color:var(--actx)}
+select{background:rgba(0,0,0,.24);border-color:rgba(255,255,255,.1)}body.light select{background:rgba(255,255,255,.72)}
+#q{background:rgba(10,10,8,.4);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+#q .box{background:rgba(40,40,34,.62);border-color:rgba(255,255,255,.12);-webkit-backdrop-filter:blur(22px) saturate(1.4);backdrop-filter:blur(22px) saturate(1.4)}body.light #q .box{background:rgba(255,255,255,.7)}
+@media(max-width:820px){main{padding:10px;gap:10px}.stage{border-radius:20px}}
+/* --- liquid glass --- */
+.grp,.seg,.btn,.hb button,.hb a{position:relative;border-color:transparent!important}
+.grp::before,.seg::before,.btn::before,.hb button::before,.hb a::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.3px;pointer-events:none;background:linear-gradient(140deg,rgba(255,255,255,.62),rgba(255,255,255,.14) 22%,rgba(255,255,255,.03) 48%,rgba(255,255,255,.10) 72%,rgba(255,255,255,.42));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+body.light .grp::before,body.light .seg::before,body.light .btn::before,body.light .hb button::before,body.light .hb a::before{background:linear-gradient(140deg,rgba(255,255,255,1),rgba(255,255,255,.55) 25%,rgba(120,110,80,.12) 55%,rgba(255,255,255,.35) 75%,rgba(255,255,255,.95))}
+.grp{box-shadow:inset 0 1px 1px rgba(255,255,255,.22),inset 0 -1px 2px rgba(0,0,0,.28),0 14px 34px rgba(0,0,0,.30)}body.light .grp{box-shadow:inset 0 1px 1px #fff,0 12px 28px rgba(70,60,20,.12)}
+.btn,.hb button,.hb a{box-shadow:inset 0 1px 1px rgba(255,255,255,.22),inset 0 -1px 2px rgba(0,0,0,.28);transition:transform .25s cubic-bezier(.3,1.3,.45,1),background .2s,color .2s}
+.btn:active,.hb button:active,.hb a:active{transform:scale(.94)}
+/* segmented control: one lime pill that slides to the chosen option */
+.seg{isolation:isolate;box-shadow:inset 0 1px 3px rgba(0,0,0,.35)}body.light .seg{box-shadow:inset 0 1px 3px rgba(60,50,20,.12)}
+.seg .thumb{position:absolute;top:4px;bottom:4px;left:0;width:0;border-radius:999px;z-index:0;pointer-events:none;
+ background:linear-gradient(180deg,#e6f98f,var(--ac) 55%,#b9d64a);box-shadow:inset 0 1px 1px rgba(255,255,255,.75),inset 0 -1px 1px rgba(60,80,0,.25),0 4px 14px rgba(200,230,90,.32)}
+.seg.ready .thumb{transition:transform .5s cubic-bezier(.3,1.3,.45,1),width .5s cubic-bezier(.3,1.3,.45,1),opacity .2s}
+.seg button{position:relative;z-index:1;transition:color .3s ease}
+.seg.ready button.on{background:transparent!important;box-shadow:none!important}
+.seg button:active{transform:scale(.95)}
+/* checkboxes become iOS switches */
+.ck input{-webkit-appearance:none;appearance:none;width:40px!important;height:24px!important;margin:0;flex:none;border-radius:999px;position:relative;cursor:pointer;
+ background:rgba(255,255,255,.14);box-shadow:inset 0 1px 2px rgba(0,0,0,.35),inset 0 0 0 1px rgba(255,255,255,.08);transition:background .3s ease}
+body.light .ck input{background:rgba(60,50,20,.14);box-shadow:inset 0 1px 2px rgba(60,50,20,.2)}
+.ck input::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:999px;background:linear-gradient(180deg,#fff,#eceae2);
+ box-shadow:0 2px 6px rgba(0,0,0,.35),inset 0 -1px 1px rgba(0,0,0,.08);transition:transform .45s cubic-bezier(.3,1.3,.45,1),width .25s ease}
+.ck input:checked,body.light .ck input:checked{background:linear-gradient(180deg,#e6f98f,var(--ac))}
+.ck input:checked::after{transform:translateX(16px)}
+.ck input:active::after{width:25px}.ck input:checked:active::after{transform:translateX(11px)}
+.ck input:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){.seg.ready .thumb,.ck input::after,.btn,.hb button{transition:none}}
+</style>
+</head>
+<body>
+<header><div><span class="tag" data-en="Physics · Magnetism">Fisica · Magnetismo</span><h1 data-en="Oersted and the magnetic field">Oersted e il campo magnetico</h1></div>
+<div class="hb"><a href="index.html" title="Tutte le simulazioni / All simulations">⌂</a><button id="qbtn" title="Sfide / Challenges">?</button><button id="thm" title="Tema chiaro-scuro / Light-dark theme">☀</button><button id="lang" title="Lingua / Language">EN</button></div></header>
+<main><div class="stage tall"><span class="cap" id="cap"></span><canvas id="gl"></canvas><canvas id="cv"></canvas></div>
+<aside>
+<div class="grp"><h3 data-en="Experiment">Esperimento</h3>
+<div class="seg" id="mode" style="font-size:12px"><button data-v="oer" class="on">Oersted</button><button data-v="filo" data-en="Wire">Filo</button><button data-v="spira" data-en="Loop">Spira</button><button data-v="sol" data-en="Coil">Bobina</button><button data-v="due" data-en="2 wires">2 fili</button></div>
+<p class="hint" id="expl" style="font-size:13px;line-height:1.5;color:var(--tx)"></p>
+</div>
+<div class="grp"><h3 data-en="Current">Corrente</h3>
+<label class="ck"><input type="checkbox" id="on"><span data-en="Circuit closed (current flowing)">Circuito chiuso (passa corrente)</span></label>
+<label class="sl"><span class="ln"><span data-en="Current I">Intensità di corrente I</span><output id="o_I"></output></span><input type="range" id="I" min="0.5" max="10" step="0.5" value="5"></label>
+<div class="row"><button class="btn" id="flip" data-en="⇄ Reverse the current">⇄ Inverti la corrente</button></div>
+<div id="g_h"><label class="sl"><span class="ln"><span data-en="Height of the wire over the compass">Altezza del filo sulla bussola</span><output id="o_h"></output></span><input type="range" id="h" min="1.5" max="10" step="0.5" value="3"></label></div>
+<div id="g_d" class="hidden"><div class="seg" id="pair"><button data-v="same" class="on" data-en="Same direction">Concordi</button><button data-v="opp" data-en="Opposite">Opposte</button></div>
+<label class="sl"><span class="ln"><span data-en="Distance between the wires d">Distanza tra i fili d</span><output id="o_d"></output></span><input type="range" id="d" min="4" max="18" step="1" value="10"></label></div>
+</div>
+<div class="grp"><h3 data-en="Show">Mostra</h3>
+<label class="ck"><input type="checkbox" id="lines" checked><span data-en="Field lines (with flow)">Linee di campo (con il verso)</span></label>
+<label class="ck"><input type="checkbox" id="comp" checked><span data-en="Compasses">Bussole</span></label>
+<label class="ck"><input type="checkbox" id="fil" checked><span data-en="Iron filings">Limatura di ferro</span></label>
+<label class="ck"><input type="checkbox" id="flow" checked><span data-en="Moving charges in the wire">Cariche in moto nel filo</span></label>
+<label class="ck"><input type="checkbox" id="earth"><span data-en="Earth's magnetic field">Campo magnetico terrestre</span></label>
+</div>
+<div class="grp"><h3 data-en="Measurements">Misure</h3>
+<div class="ro"><span id="lB" data-en="Field at the probe">Campo nella sonda</span><b id="rB" class="c-yl"></b></div>
+<div class="ro"><span id="lF"></span><b id="rF" class="c-cy"></b></div>
+<div class="ro" id="r3"><span id="lX"></span><b id="rX"></b></div>
+<p class="hint" data-en="Tap the card to move the probe. Drag to turn, wheel or pinch to zoom.">Tocca il cartoncino per spostare la sonda. Trascina per ruotare, rotellina o due dita per lo zoom.</p>
+</div>
+</aside></main>
+<div id="q" class="hidden"><div class="box"><h2 data-en="Can you…?">Riesci a…?</h2><ul>
+<li data-en="…make the compass needle turn by 45° in Oersted's experiment? Then the wire's field is as strong as the Earth's.">…far ruotare l'ago di 45° nell'esperienza di Oersted? In quel momento il campo del filo è forte quanto quello terrestre.</li>
+<li data-en="…predict which way the needle turns if you reverse the current? Check it with the right-hand rule.">…prevedere da che parte gira l'ago se inverti la corrente? Verificalo con la regola della mano destra.</li>
+<li data-en="…find how the field of a straight wire changes when you double the distance from it?">…scoprire come cambia il campo di un filo rettilineo se raddoppi la distanza?</li>
+<li data-en="…say which end of the coil is a north pole? What happens to it when the current is reversed?">…dire quale estremità della bobina è un polo nord? Che cosa succede se inverti la corrente?</li>
+<li data-en="…make two wires attract each other, and then repel? What decides it?">…far attrarre due fili, e poi farli respingere? Da che cosa dipende?</li>
+<li data-en="…explain why the iron filings draw circles around a straight wire, but the shape of a bar magnet around a coil?">…spiegare perché la limatura disegna cerchi attorno a un filo, ma la forma di una calamita attorno a una bobina?</li>
+</ul></div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+let LANG='it';try{if(localStorage.getItem('simLang')==='en')LANG='en';}catch(e){}
+const L=(it,en)=>LANG==='it'?it:en;
+const FONT='system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
+const THEMES={dark:{bg:'#1d1d1a',grid:'#292925',grid2:'#393832',ax:'#5e5c50',tx:'#f1efe6',mu:'#a5a291',panel:'rgba(34,34,30,.92)',gnd:'#34332c',wall:'#57554a',glass:'#bdb9a5',wire:'#a9a592',fg:'255,253,240',line:'200,226,150',base:[29,29,26],pos:[242,112,92],neg:[104,168,230],ramp:['#4a4840','#3a3932'],road:[58,57,50],slab:[52,50,44],cy:'#8fd6c4',pk:'#f2917c',yl:'#e9cf78',gr:'#c9ec62',or:'#f0a35e',pu:'#b9a8e6',rd:'#ef6b5b',bl:'#86aee6'},
+light:{bg:'#f6f4ee',grid:'#e8e5dc',grid2:'#d6d2c5',ax:'#a39f8e',tx:'#23231d',mu:'#6c695b',panel:'rgba(251,250,246,.94)',gnd:'#dcd8cc',wall:'#a8a493',glass:'#77735f',wire:'#7d796a',fg:'35,35,25',line:'95,125,20',base:[246,244,238],pos:[200,80,60],neg:[50,120,190],ramp:['#d8d4c6','#c8c3b2'],road:[180,176,162],slab:[210,206,194],cy:'#2f8f7a',pk:'#c4553f',yl:'#9a7410',gr:'#5f8a12',or:'#c26a1a',pu:'#6e55b8',rd:'#c53a2b',bl:'#2f64b0'}};
+const C=Object.assign({},THEMES.dark);const fa=a=>'rgba('+C.fg+','+a+')';
+function nf(x,d=1){if(!isFinite(x))return '–';let s=x.toFixed(d);if(+s===0)s=(0).toFixed(d);return LANG==='it'?s.replace('.',','):s;}
+const SUP={'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
+function sci(x,d=2){if(x===0||!isFinite(x))return nf(x,d);const a=Math.abs(x);if(a>=0.01&&a<10000)return nf(x,a>=100?1:d);let e=Math.floor(Math.log10(a)),m=x/10**e;if(Math.abs(+m.toFixed(d))>=10){m/=10;e++;}return nf(m,d)+'·10'+String(e).split('').map(ch=>SUP[ch]).join('');}
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));const TS=matchMedia('(pointer:coarse)').matches?1.6:1;
+function fit(cv){const d=window.devicePixelRatio||1,r=cv.getBoundingClientRect(),w=Math.max(60,Math.round(r.width)),h=Math.max(60,Math.round(r.height)),pw=Math.round(w*d),ph=Math.round(h*d);if(cv.width!==pw||cv.height!==ph){cv.width=pw;cv.height=ph;}const c=cv.getContext('2d');c.setTransform(d,0,0,d,0,0);cv.W=w;cv.H=h;return c;}
+function loop(fn){let t0=performance.now();function f(t){const dt=Math.min(0.05,Math.max(0,(t-t0)/1000));t0=t;fn(dt);requestAnimationFrame(f);}requestAnimationFrame(f);}
+function pointer(cv,h){cv.style.touchAction='none';const p=e=>{const r=cv.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};};let lt=0,lx=0,ly=0,syn=0,pid=null;
+ cv.addEventListener('pointerdown',e=>{if(pid!==null&&e.pointerType==='touch')return;pid=e.pointerId;try{cv.setPointerCapture(e.pointerId);}catch(_){}const q=p(e);h.down&&h.down(q,e);
+  if(e.pointerType!=='mouse'){const n=performance.now();if(n-lt<350&&Math.hypot(q.x-lx,q.y-ly)<32){lt=0;syn=n;h.dbl&&h.dbl(q,e);}else{lt=n;lx=q.x;ly=q.y;}}});
+ cv.addEventListener('pointermove',e=>{if(pid!==null&&e.pointerId!==pid)return;h.move&&h.move(p(e),e);});
+ const up=e=>{if(e.pointerId!==pid)return;pid=null;h.up&&h.up(p(e),e);};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+ cv.addEventListener('contextmenu',e=>e.preventDefault());
+ cv.addEventListener('dblclick',e=>{if(performance.now()-syn<700)return;h.dbl&&h.dbl(p(e),e);});}
+function rr(c,x,y,w,h,r){r=Math.min(r,Math.abs(w)/2,Math.abs(h)/2);c.beginPath();c.moveTo(x+r,y);c.lineTo(x+w-r,y);c.quadraticCurveTo(x+w,y,x+w,y+r);c.lineTo(x+w,y+h-r);c.quadraticCurveTo(x+w,y+h,x+w-r,y+h);c.lineTo(x+r,y+h);c.quadraticCurveTo(x,y+h,x,y+h-r);c.lineTo(x,y+r);c.quadraticCurveTo(x,y,x+r,y);c.closePath();}
+function arrow(c,x1,y1,x2,y2,col,w=3,dash){const dx=x2-x1,dy=y2-y1,l=Math.hypot(dx,dy);if(l<1.5)return;const ux=dx/l,uy=dy/l,hd=Math.min(l,6+w*2.4);c.save();c.strokeStyle=c.fillStyle=col;c.lineWidth=w;c.lineCap='round';if(dash)c.setLineDash(dash);c.beginPath();c.moveTo(x1,y1);c.lineTo(x2-ux*hd*.8,y2-uy*hd*.8);c.stroke();c.setLineDash([]);c.beginPath();c.moveTo(x2,y2);c.lineTo(x2-ux*hd-uy*hd*.5,y2-uy*hd+ux*hd*.5);c.lineTo(x2-ux*hd+uy*hd*.5,y2-uy*hd-ux*hd*.5);c.closePath();c.fill();c.restore();}
+function txt(c,s,x,y,col=C.tx,size=13,al='left',bold){c.font=(bold?'700 ':'')+size+'px '+FONT;c.fillStyle=col;c.textAlign=al;c.textBaseline='middle';c.fillText(s,x,y);}
+function bubble(c,x,y,lines,col=C.yl){c.save();c.font='700 14px '+FONT;let w=0;lines.forEach((s,i)=>{c.font=(i?'12px ':'700 14px ')+FONT;w=Math.max(w,c.measureText(s).width);});const h=lines.length*18+10;w+=20;x=clamp(x,6,c.canvas.W-w-6);y=clamp(y,6,c.canvas.H-h-6);c.fillStyle=C.panel;rr(c,x,y,w,h,9);c.fill();c.strokeStyle=col;c.lineWidth=1.2;c.stroke();lines.forEach((s,i)=>txt(c,s,x+10,y+14+i*18,i?C.mu:col,i?12:14,'left',!i));c.restore();}
+function nice(range,n){const r=range/Math.max(1,n),p=10**Math.floor(Math.log10(r)),m=r/p;return(m<1.5?1:m<3.5?2:m<7.5?5:10)*p;}
+function tick(v,s){const d=Math.max(0,-Math.floor(Math.log10(s)+1e-9));if(Math.abs(v)>=1e5||(Math.abs(v)<1e-3&&v!==0&&d>4))return sci(v,1);return nf(v,Math.min(d,4));}
+function chart(c,x,y,w,h,o){const ml=46,mb=28,mt=18,mr=12,px=x+ml,py=y+mt,pw=w-ml-mr,ph=h-mt-mb;let{xmin=0,xmax=1,ymin=0,ymax=1}=o;if(!(ymax-ymin>1e-12))ymax=ymin+1;if(!(xmax-xmin>1e-12))xmax=xmin+1;
+ const X=v=>px+(v-xmin)/(xmax-xmin)*pw,Y=v=>py+ph-(v-ymin)/(ymax-ymin)*ph;
+ c.save();c.fillStyle=C.panel;rr(c,x,y,w,h,10);c.fill();c.strokeStyle=C.grid2;c.lineWidth=1;c.stroke();
+ c.font='10.5px '+FONT;c.textBaseline='middle';
+ const sx=nice(xmax-xmin,pw/58),sy=nice(ymax-ymin,ph/(ph>320?46:30));
+ for(let v=Math.ceil(xmin/sx-1e-9)*sx;v<=xmax+sx*1e-6;v+=sx){const q=X(v);c.strokeStyle=Math.abs(v)<sx*1e-6?C.ax:C.grid;c.beginPath();c.moveTo(q,py);c.lineTo(q,py+ph);c.stroke();c.fillStyle=C.mu;c.textAlign='center';c.fillText(tick(Math.abs(v)<sx*1e-6?0:v,sx),q,py+ph+10);}
+ for(let v=Math.ceil(ymin/sy-1e-9)*sy;v<=ymax+sy*1e-6;v+=sy){const q=Y(v);c.strokeStyle=Math.abs(v)<sy*1e-6?C.ax:C.grid;c.beginPath();c.moveTo(px,q);c.lineTo(px+pw,q);c.stroke();c.fillStyle=C.mu;c.textAlign='right';c.fillText(tick(Math.abs(v)<sy*1e-6?0:v,sy),px-5,q);}
+ c.fillStyle=C.tx;c.font='600 11px '+FONT;c.textAlign='right';if(o.xl)c.fillText(o.xl,x+w-8,y+h-8);c.textAlign='left';if(o.yl)c.fillText(o.yl,x+8,y+9);
+ c.beginPath();c.rect(px,py,pw,ph);c.clip();
+ for(const s of o.series||[]){if(!s.pts.length)continue;c.strokeStyle=c.fillStyle=s.col;if(s.line!==false&&!s.dots){c.lineWidth=s.w||2.2;c.lineJoin='round';c.beginPath();s.pts.forEach((p,i)=>i?c.lineTo(X(p[0]),Y(p[1])):c.moveTo(X(p[0]),Y(p[1])));c.stroke();}
+  if(s.dots){for(const p of s.pts){c.beginPath();c.arc(X(p[0]),Y(p[1]),s.r||2.6,0,7);c.fill();}}
+  if(s.end){const p=s.pts[s.pts.length-1];c.beginPath();c.arc(X(p[0]),Y(p[1]),4.5,0,7);c.fill();}}
+ c.restore();return{X,Y,px,py,pw,ph};}
+/* --- controls --- */
+const P={},_upd=[];
+function _fire(id){if(typeof onParam==='function')onParam(id);}
+function slider(id,fmt){const el=$('#'+id),o=$('#o_'+id);const u=()=>{P[id]=+el.value;if(o)o.textContent=fmt?fmt(P[id]):P[id];};el.addEventListener('input',()=>{u();_fire(id);});_upd.push(u);u();}
+function setS(id,v){$('#'+id).value=v;refreshUI();}
+function check(id){const el=$('#'+id);const u=()=>{P[id]=el.checked;};el.addEventListener('change',()=>{u();_fire(id);});_upd.push(u);u();}
+function sel(id){const el=$('#'+id);const u=()=>{P[id]=el.value;};el.addEventListener('change',()=>{u();_fire(id);});_upd.push(u);u();}
+function seg(id){const el=$('#'+id);const set=v=>{P[id]=v;[...el.children].forEach(b=>b.classList.toggle('on',b.dataset.v===v));};el.addEventListener('click',e=>{const b=e.target.closest('button');if(b){set(b.dataset.v);_fire(id);}});const on=el.querySelector('.on');set(on?on.dataset.v:el.children[0].dataset.v);}
+function refreshUI(){_upd.forEach(u=>u());}
+function ro(id,s){const e=$('#'+id);if(e&&e.textContent!==s)e.textContent=s;}
+function applyLang(){$$('[data-en]').forEach(e=>{if(e.dataset.it===undefined)e.dataset.it=e.innerHTML;e.innerHTML=LANG==='it'?e.dataset.it:e.dataset.en;});document.documentElement.lang=LANG;$('#lang').textContent=LANG==='it'?'EN':'IT';document.title=$('h1').textContent;refreshUI();if(typeof onLang==='function')onLang();}
+function shade(rgb,f){return'rgb('+rgb.map(v=>clamp(v*f,0,255)|0)+')';}
+function cam3(cx,cy,S,az,el){const ca=Math.cos(az),sa=Math.sin(az),ce=Math.cos(el),se=Math.sin(el);return{S,ce,se,ca,sa,sx:sa<0?1:-1,p:(x,y,z)=>{const xr=x*ca+z*sa,zr=-x*sa+z*ca;return[cx+xr*S,cy-(y*ce-zr*se)*S];}};}
+function poly3(c,cam,pts,fill,stroke,al=1){c.save();c.globalAlpha=al;c.beginPath();pts.forEach((p,i)=>{const m=cam.p(p[0],p[1],p[2]);i?c.lineTo(m[0],m[1]):c.moveTo(m[0],m[1]);});c.closePath();if(fill){c.fillStyle=fill;c.fill();}if(stroke){c.strokeStyle=stroke;c.stroke();}c.restore();}
+function box3(c,cam,x0,x1,y0,y1,z0,z1,rgb,al=1,stroke){const xs=cam.sx>0?x1:x0;c.lineWidth=1;c.lineJoin='round';
+ poly3(c,cam,[[xs,y0,z0],[xs,y0,z1],[xs,y1,z1],[xs,y1,z0]],shade(rgb,.62),stroke,al);poly3(c,cam,[[x0,y0,z1],[x1,y0,z1],[x1,y1,z1],[x0,y1,z1]],shade(rgb,.84),stroke,al);poly3(c,cam,[[x0,y1,z0],[x1,y1,z0],[x1,y1,z1],[x0,y1,z1]],shade(rgb,1.1),stroke,al);}
+let LIGHT=false;function setTheme(l){LIGHT=l;Object.assign(C,THEMES[l?'light':'dark']);document.body.classList.toggle('light',l);$('#thm').textContent=l?'☾':'☀';try{localStorage.setItem('simTheme',l?'light':'dark');}catch(e){}if(typeof onTheme==='function')onTheme();}
+$('#thm').onclick=()=>setTheme(!LIGHT);
+$('#lang').onclick=()=>{LANG=LANG==='it'?'en':'it';try{localStorage.setItem('simLang',LANG);}catch(e){}applyLang();};
+$('#qbtn').onclick=()=>$('#q').classList.remove('hidden');
+$('#q').onclick=()=>$('#q').classList.add('hidden');
+try{if(localStorage.getItem('simTheme')==='light')setTheme(true);}catch(e){}
+
+
+/* sliding pill for the segmented controls: follows the button marked "on", wherever and however it changes */
+function segPlace(el){const t=el.querySelector(':scope>.thumb'),b=el.querySelector(':scope>button.on');if(!t)return;if(!b||!b.offsetWidth){t.style.opacity=0;return;}
+ t.style.opacity=1;t.style.width=b.offsetWidth+'px';t.style.transform='translateX('+b.offsetLeft+'px)';if(!el.classList.contains('ready'))requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('ready')));}
+function segThumbs(){$$('.seg').forEach(el=>{if(el.querySelector(':scope>.thumb'))return segPlace(el);const t=document.createElement('span');t.className='thumb';el.appendChild(t);
+ new MutationObserver(()=>segPlace(el)).observe(el,{subtree:true,attributes:true,attributeFilter:['class'],childList:true,characterData:true});
+ if(window.ResizeObserver)new ResizeObserver(()=>segPlace(el)).observe(el);segPlace(el);});}
+segThumbs();
+</script>
+<script>
+'use strict';
+/* Units: centimetres in the scene, amperes, microtesla. The field of every wire comes from the Biot–Savart law,
+   summed exactly over straight pieces of wire; lines, needles and filings all read that one field. */
+const cv=$('#cv'),gl=$('#gl');let W=0,H=0,c,clock=0,sign=1,Iv=0,G=null,probe=[6,.3,0],cam3d=null;
+seg('mode');seg('pair');['on','lines','comp','fil','flow','earth'].forEach(check);
+slider('I',v=>nf(v,1)+' A');slider('h',v=>nf(v,1)+' cm');slider('d',v=>nf(v,0)+' cm');
+const MU=1e-7,BE=20,R_LOOP=9,R_SOL=5,L_SOL=26,T_SOL=12; /* μ0/4π; Earth's horizontal field (μT), towards +x = north */
+const EXPL={oer:['1820: Oersted fa passare corrente in un filo teso sopra una bussola, parallelo all\'ago. Chiudi il circuito: l\'ago ruota. Una corrente elettrica crea un campo magnetico, che si somma a quello terrestre.','1820: Oersted runs a current through a wire stretched over a compass, parallel to the needle. Close the circuit: the needle turns. An electric current makes a magnetic field, which adds to the Earth\'s.'],
+ filo:['Attorno a un filo rettilineo le linee di campo sono cerchi. La limatura e le bussole li disegnano. Il verso segue la regola della mano destra: pollice nel verso della corrente, le dita si chiudono nel verso del campo.','Around a straight wire the field lines are circles. The filings and the compasses draw them. The direction follows the right-hand rule: thumb along the current, fingers curl along the field.'],
+ spira:['Piegando il filo ad anello, i cerchi attorno a ogni pezzo di filo si sommano: al centro il campo è più forte e attraversa la spira. Da un lato escono le linee (polo nord), dall\'altro entrano.','Bend the wire into a ring and the circles around each piece add up: in the middle the field is stronger and goes through the loop. The lines come out of one face (north pole) and go into the other.'],
+ sol:['Tante spire una dopo l\'altra: dentro la bobina il campo è quasi uniforme, fuori è quello di una calamita. Una corrente in una bobina è un elettromagnete.','Many loops one after the other: inside the coil the field is almost uniform, outside it looks like a bar magnet\'s. A current in a coil is an electromagnet.'],
+ due:['Ogni filo si trova nel campo dell\'altro e subisce una forza. Correnti concordi si attraggono, correnti opposte si respingono. È così che si definiva l\'ampere.','Each wire sits in the other\'s field and feels a force. Currents in the same direction attract, opposite ones repel. This is how the ampere used to be defined.']};
+/* ------------------------------------------------------------------ geometry of the circuit ------------------------------------------------------------------ */
+function geometry(){const m=P.mode,S=[],vis=[];
+ if(m==='oer'){const h=P.h;S.push([[-80,h,0],[80,h,0],1]);vis.push({pts:[[-32,-.2,0],[-32,h,0],[32,h,0],[32,-.2,0]],k:1});}
+ else if(m==='filo'){S.push([[0,-60,0],[0,60,0],1]);vis.push({pts:[[0,-24,0],[0,24,0]],k:1});}
+ else if(m==='spira'){const N=72,p=[];for(let i=0;i<=N;i++){const a=i/N*2*Math.PI;p.push([0,R_LOOP*Math.sin(a),R_LOOP*Math.cos(a)]);}for(let i=0;i<N;i++)S.push([p[i],p[i+1],1]);vis.push({pts:p,k:1,loop:true});}
+ else if(m==='sol'){const N=T_SOL*36,p=[];for(let i=0;i<=N;i++){const a=i/36*2*Math.PI;p.push([-L_SOL/2+L_SOL*i/N,R_SOL*Math.sin(a),R_SOL*Math.cos(a)]);}for(let i=0;i<N;i++)S.push([p[i],p[i+1],1]);vis.push({pts:p,k:1});}
+ else{const d=P.d/2,k2=P.pair==='same'?1:-1;S.push([[0,-60,-d],[0,60,-d],1],[[0,-60,d],[0,60,d],k2]);vis.push({pts:[[0,-24,-d],[0,24,-d]],k:1},{pts:[[0,-24,d],[0,24,d]],k:k2});}
+ /* precompute direction and length of every piece */
+ const seg=S.map(s=>{const A=s[0],B=s[1],ux=B[0]-A[0],uy=B[1]-A[1],uz=B[2]-A[2],L=Math.hypot(ux,uy,uz);return[A[0],A[1],A[2],B[0],B[1],B[2],ux/L,uy/L,uz/L,s[2]];});
+ return{seg,vis};}
+/* field in μT at p, for a current I (A) */
+function Bf(p,I,out){let bx=0,by=0,bz=0;if(I)for(const s of G.seg){const ux=s[6],uy=s[7],uz=s[8],ax=p[0]-s[0],ay=p[1]-s[1],az=p[2]-s[2],al=ax*ux+ay*uy+az*uz,px=ax-al*ux,py=ay-al*uy,pz=az-al*uz,d2=px*px+py*py+pz*pz;
+  if(d2<1e-4)continue;const bxv=p[0]-s[3],byv=p[1]-s[4],bzv=p[2]-s[5],c1=al/Math.hypot(ax,ay,az),c2=(bxv*ux+byv*uy+bzv*uz)/Math.hypot(bxv,byv,bzv),d=Math.sqrt(d2),m=MU*I*s[9]*(c1-c2)/(d*.01)*1e6/d;
+  bx+=m*(uy*pz-uz*py);by+=m*(uz*px-ux*pz);bz+=m*(ux*py-uy*px);}
+ out[0]=bx;out[1]=by;out[2]=bz;return out;}
+const Bt=(p,out)=>{Bf(p,Iv,out);if(P.earth)out[0]+=BE;return out;};
+/* a field line: follow B step by step (Runge–Kutta), until it closes or leaves the room */
+function stream(seed,bound){const b=[0,0,0],f=q=>{Bf(q,1,b);const m=Math.hypot(b[0],b[1],b[2])||1e-9;return[b[0]/m,b[1]/m,b[2]/m];},h=.35,ad=(p,k,s)=>[p[0]+k[0]*s,p[1]+k[1]*s,p[2]+k[2]*s];
+ const run=dir=>{let p=seed.slice();const pts=[p];for(let i=0;i<1100;i++){const k1=f(p),k2=f(ad(p,k1,dir*h/2)),k3=f(ad(p,k2,dir*h/2)),k4=f(ad(p,k3,dir*h));
+   p=[p[0]+dir*h*(k1[0]+2*k2[0]+2*k3[0]+k4[0])/6,p[1]+dir*h*(k1[1]+2*k2[1]+2*k3[1]+k4[1])/6,p[2]+dir*h*(k1[2]+2*k2[2]+2*k3[2]+k4[2])/6];
+   if(Math.abs(p[0])>bound||Math.abs(p[1])>bound||Math.abs(p[2])>bound)return{pts,closed:false};pts.push(p);
+   if(i>30&&Math.hypot(p[0]-seed[0],p[1]-seed[1],p[2]-seed[2])<h*1.3){pts.push(seed.slice());return{pts,closed:true};}}return{pts,closed:false};};
+ const a=run(1);if(a.closed)return a;const b2=run(-1);return{pts:b2.pts.reverse().concat(a.pts.slice(1)),closed:false};}
+function circle(cx,cy,cz,r,axis,n){/* a circle around an axis, in the direction of B for a current along +axis */const p=[];for(let i=0;i<=n;i++){const t=i/n*2*Math.PI;
+  if(axis==='y')p.push([cx+r*Math.cos(t),cy,cz-r*Math.sin(t)]);else p.push([cx,cy+r*Math.cos(t),cz+r*Math.sin(t)]);}return p;}
+function fieldLines(){const m=P.mode,L=[];
+ if(m==='oer'){for(const x of[-22,-11,11,22])for(const r of[1.2,2.4])L.push({pts:circle(x,P.h,0,r,'x',64),closed:true,op:1});}
+ else if(m==='filo'){for(const r of[3,6,9.5,14])L.push({pts:circle(0,.3,0,r,'y',96),closed:true,op:1});for(const y of[-12,12])for(const r of[4,8.5])L.push({pts:circle(0,y,0,r,'y',80),closed:true,op:.55});}
+ else if(m==='due'){const d=P.d/2,seeds=[];for(const x of[1.5,4,7,11,16,22])seeds.push([x,0,0]);for(const s of[-1,1])for(const r of[1.4,3])seeds.push([0,0,s*(d+r)]);
+  for(const s of seeds){const l=stream(s,40);l.op=1;l.pts=l.pts.map(p=>[p[0],.3,p[2]]);L.push(l);for(const y of[-12,12])L.push({pts:l.pts.map(p=>[p[0],y,p[2]]),closed:l.closed,op:.45});}}
+ else{const R=m==='spira'?R_LOOP:R_SOL,fr=m==='spira'?[-.82,-.6,-.35,0,.35,.6,.82]:[-.8,-.45,0,.45,.8];
+  for(const f of fr){const l=stream([0,0,f*R],46);if(l.pts.length<4)continue;for(const ph of[0,Math.PI/3,2*Math.PI/3]){const c_=Math.cos(ph),s_=Math.sin(ph);
+   /* the shape is the same in every plane through the axis: turn the line about x */L.push({pts:l.pts.map(p=>[p[0],p[2]*s_+(ph?0:.3),p[2]*c_]),closed:l.closed,op:ph?.45:1});}}}
+ return L;}
+/* ------------------------------------------------------------------ the 3D scene ------------------------------------------------------------------ */
+const V={ok:false,az:.75,el:.55,dist:70,tgt:new THREE.Vector3()};
+let R3,scene,cam,root,uT={value:0},lineMat=[],cones=[],compasses=[],bigC=null,fil=null,filD=[],filAnim=0,dots=null,dotPath=[],probeM=null,probeArrow=null,card=null,bench=null,forceArr=[],wireTubes=[];
+const MODEV={oer:[0,2,0,48,.85,.5],filo:[0,0,0,72,.75,.5],spira:[0,0,0,62,.85,.42],sol:[0,0,0,64,.6,.45],due:[0,0,0,72,.75,.5]};
+try{R3=new THREE.WebGLRenderer({canvas:gl,antialias:true});scene=new THREE.Scene();cam=new THREE.PerspectiveCamera(38,1,.5,800);
+ scene.add(new THREE.HemisphereLight(0xfff6e0,0x2a2620,.85));const dl=new THREE.DirectionalLight(0xffffff,.75);dl.position.set(-20,40,25);scene.add(dl);V.ok=true;}catch(e){V.ok=false;}
+const lineShader=()=>new THREE.ShaderMaterial({uniforms:{uT,uDir:{value:1},uOn:{value:0},uOp:{value:1},uRep:{value:10},uC:{value:new THREE.Color(0xd6f06a)},uC2:{value:new THREE.Color(0x8fd6c4)}},transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
+ vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+ fragmentShader:`uniform float uT,uDir,uOn,uOp,uRep;uniform vec3 uC,uC2;varying vec2 vUv;
+  void main(){float ph=fract(vUv.x*uRep-uT*uDir*0.55);float pulse=smoothstep(0.0,0.08,ph)*(1.0-smoothstep(0.08,0.5,ph));
+   vec3 col=mix(uC2*0.9,uC*1.35,pulse);float a=uOn*uOp*(0.55+0.45*pulse);gl_FragColor=vec4(col*a,a);}`});
+function clear(){if(!root)return;scene.remove(root);root.traverse(o=>{if(o.geometry)o.geometry.dispose();});}
+function compassMesh(big){const g=new THREE.Group(),s=big?3.4:1;
+ const base=new THREE.Mesh(new THREE.CylinderGeometry(1.35*s,1.45*s,.28*s,40),new THREE.MeshStandardMaterial({color:big?0x2b2a24:0x34332c,metalness:.2,roughness:.5}));g.add(base);
+ if(big){const cvs=document.createElement('canvas');cvs.width=cvs.height=512;const x=cvs.getContext('2d');x.fillStyle='#f1efe6';x.beginPath();x.arc(256,256,250,0,7);x.fill();x.strokeStyle='#2b2a24';x.fillStyle='#2b2a24';x.textAlign='center';x.textBaseline='middle';
+  for(let d=0;d<360;d+=5){const a=d*Math.PI/180,r1=d%30?232:214;x.lineWidth=d%30?2:4;x.beginPath();x.moveTo(256+Math.cos(a)*r1,256-Math.sin(a)*r1);x.lineTo(256+Math.cos(a)*246,256-Math.sin(a)*246);x.stroke();}
+  x.font='bold 46px system-ui';[['N',0],['E',-90],['S',180],['O',90]].forEach(([l,d])=>{const a=d*Math.PI/180;x.fillStyle=l==='N'?'#c53a2b':'#2b2a24';x.fillText(l,256+Math.cos(a)*170,256-Math.sin(a)*170);});
+  const face=new THREE.Mesh(new THREE.CircleGeometry(1.32*s,64),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cvs)}));face.rotation.x=-Math.PI/2;face.position.y=.145*s;g.add(face);}
+ else{const ring=new THREE.Mesh(new THREE.TorusGeometry(1.32,.09,8,32),new THREE.MeshStandardMaterial({color:0xbcb8a6,metalness:.7,roughness:.3}));ring.rotation.x=Math.PI/2;ring.position.y=.15;g.add(ring);}
+ const nd=new THREE.Group();nd.position.y=(big?.32:.24)*s;const len=1.15*s,wd=.3*s;
+ const north=new THREE.Mesh(new THREE.ConeGeometry(wd,len,4),new THREE.MeshStandardMaterial({color:0xe5483a,emissive:0x5a1008,roughness:.4}));north.rotation.z=-Math.PI/2;north.position.x=len/2;north.scale.z=.35;
+ const south=new THREE.Mesh(new THREE.ConeGeometry(wd,len,4),new THREE.MeshStandardMaterial({color:0xf1efe6,roughness:.4}));south.rotation.z=Math.PI/2;south.position.x=-len/2;south.scale.z=.35;
+ const pin=new THREE.Mesh(new THREE.CylinderGeometry(.09*s,.09*s,.14*s,12),new THREE.MeshStandardMaterial({color:0xd6c27a,metalness:.8,roughness:.3}));pin.position.y=.06*s;
+ nd.add(north,south,pin);g.add(nd);g.userData={nd,th:0,om:0};return g;}
+function tubeOf(pts,r,closed){const v=pts.map(p=>new THREE.Vector3(p[0],p[1],p[2]));return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(v,!!closed,'catmullrom',0),Math.min(900,Math.max(16,v.length*2)),r,8,!!closed);}
+function wireMat(){return new THREE.MeshStandardMaterial({color:0xc8793a,metalness:.85,roughness:.32,emissive:0xff6a1a,emissiveIntensity:0});}
+function build(){if(!V.ok)return;clear();scene.background=new THREE.Color(LIGHT?0xebe8df:0x161613);G=geometry();root=new THREE.Group();scene.add(root);lineMat=[];cones=[];compasses=[];bigC=null;fil=null;filD=[];dots=null;dotPath=[];forceArr=[];wireTubes=[];const m=P.mode,dark=!LIGHT;
+ /* bench, and the card the wires pass through */
+ bench=new THREE.Mesh(new THREE.BoxGeometry(110,2,76),new THREE.MeshStandardMaterial({color:dark?0x3a2a1c:0xc9a875,roughness:.8}));bench.position.y=m==='oer'?-1.2:-27;root.add(bench);
+ if(m!=='oer'){card=new THREE.Mesh(new THREE.BoxGeometry(54,.25,38),new THREE.MeshStandardMaterial({color:dark?0x2b2a24:0xf4f2ea,transparent:true,opacity:dark?.5:.58,roughness:.9,depthWrite:false}));card.position.y=-.13;root.add(card);
+  const edge=new THREE.LineSegments(new THREE.EdgesGeometry(card.geometry),new THREE.LineBasicMaterial({color:dark?0x6b6858:0xbcb8a6}));edge.position.copy(card.position);root.add(edge);
+  for(const[x,z]of[[-25,-17],[25,-17],[-25,17],[25,17]]){const leg=new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,26,10),new THREE.MeshStandardMaterial({color:0x8d8a78,metalness:.6,roughness:.4}));leg.position.set(x,-13,z);root.add(leg);}}
+ else{/* posts, battery and leads for Oersted's experiment, and a north arrow */const bat=new THREE.Mesh(new THREE.BoxGeometry(9,6,5),new THREE.MeshStandardMaterial({color:0x2c2c27,roughness:.6}));bat.position.set(0,3,24);root.add(bat);
+  const cap=new THREE.Mesh(new THREE.BoxGeometry(9.1,1.4,5.1),new THREE.MeshStandardMaterial({color:0xd6f06a,roughness:.5}));cap.position.set(0,5.4,24);root.add(cap);
+  for(const s of[-1,1]){const tm=new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,1.2,12),new THREE.MeshStandardMaterial({color:s>0?0xe5483a:0x3a3930,metalness:.5}));tm.position.set(s*2.8,6.6,24);root.add(tm);
+   const lead=new THREE.Mesh(tubeOf([[s*2.8,7,24],[s*10,1.2,20],[s*28,.4,6],[s*32,.4,0]],.22),new THREE.MeshStandardMaterial({color:s>0?0xb8463a:0x2c2c27,roughness:.6}));root.add(lead);}
+  const nArrow=new THREE.ArrowHelper(new THREE.Vector3(1,0,0),new THREE.Vector3(-30,.05,-16),14,0xe5483a,3,1.8);root.add(nArrow);}
+ /* the wires */
+ for(const v of G.vis){const t=new THREE.Mesh(tubeOf(v.pts,.42,v.loop),wireMat());root.add(t);wireTubes.push(t);let L=0;const seglen=[];for(let i=0;i<v.pts.length-1;i++){const a=v.pts[i],b=v.pts[i+1],l=Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2]);seglen.push(l);L+=l;}dotPath.push({pts:v.pts,seglen,L,k:v.k});}
+ if(m==='sol'){/* a translucent former the coil is wound on */const fm=new THREE.Mesh(new THREE.CylinderGeometry(R_SOL-.5,R_SOL-.5,L_SOL+2,40,1,true),new THREE.MeshStandardMaterial({color:0x8fd6c4,transparent:true,opacity:.08,side:THREE.DoubleSide}));fm.rotation.z=Math.PI/2;root.add(fm);}
+ /* moving charges */
+ const nd=dotPath.reduce((s,p)=>s+Math.floor(p.L/2.2),0);dots=new THREE.InstancedMesh(new THREE.SphereGeometry(.26,10,8),new THREE.MeshBasicMaterial({color:0xffd27a}),Math.max(1,nd));dots.count=0;root.add(dots);
+ /* field lines with arrow heads */
+ for(const l of fieldLines()){if(l.pts.length<4)continue;const mat=lineShader();let len=0;for(let i=1;i<l.pts.length;i++)len+=Math.hypot(l.pts[i][0]-l.pts[i-1][0],l.pts[i][1]-l.pts[i-1][1],l.pts[i][2]-l.pts[i-1][2]);
+  const step=Math.max(1,Math.floor(l.pts.length/300)),pts=l.pts.filter((_,i)=>i%step===0||i===l.pts.length-1);
+  mat.uniforms.uRep.value=len/7;mat.uniforms.uOp.value=l.op;const mesh=new THREE.Mesh(tubeOf(pts,l.op<1?.12:.2,l.closed),mat);root.add(mesh);lineMat.push(mat);
+  const curve=new THREE.CatmullRomCurve3(pts.map(p=>new THREE.Vector3(...p)),!!l.closed);for(const f of len>25?[.12,.45,.78]:[.4]){const cm=new THREE.Mesh(new THREE.ConeGeometry(.38,1.05,10),new THREE.MeshBasicMaterial({color:0xd6f06a,transparent:true,opacity:0}));
+   const p=curve.getPointAt(f),tg=curve.getTangentAt(f);cm.position.copy(p);cm.userData={tg:tg.clone(),op:l.op};root.add(cm);cones.push(cm);}}
+ /* compasses */
+ if(m==='oer'){bigC=compassMesh(true);bigC.position.set(0,.15,0);root.add(bigC);compasses.push(bigC);}
+ else{for(let x=-21;x<=21;x+=7)for(let z=-14;z<=14;z+=7){const near=G.seg.some(s=>{if(m==='spira'||m==='sol'){const R=m==='spira'?R_LOOP:R_SOL;return Math.abs(Math.abs(z)-R)<2.6&&(m==='spira'?Math.abs(x)<2.6:Math.abs(x)<L_SOL/2+2.4);}return Math.hypot(x-s[0],z-s[2])<3.2;});if(near)continue;
+  const cm=compassMesh(false);cm.position.set(x,0,z);root.add(cm);compasses.push(cm);}}
+ compasses.forEach(cm=>{const b=Bt([cm.position.x,.3,cm.position.z],[0,0,0]);cm.userData.th=P.earth||Math.hypot(b[0],b[2])>.5?Math.atan2(-b[2],b[0]):0;cm.userData.om=0;cm.userData.nd.rotation.y=cm.userData.th;});
+ /* iron filings: start scattered, then line up along B when the field is strong enough */
+ if(m!=='oer'){const N=3400,geo=new THREE.BoxGeometry(.85,.07,.12),mat=new THREE.MeshStandardMaterial({color:dark?0xd9d6c8:0x2b2a24,metalness:.6,roughness:.45});fil=new THREE.InstancedMesh(geo,mat,N);let n=0;const b=[0,0,0];
+  for(let i=0;i<N*3&&n<N;i++){const x=(Math.random()-.5)*52,z=(Math.random()-.5)*36;if(G.seg.some(s=>m!=='spira'&&m!=='sol'&&Math.hypot(x-s[0],z-s[2])<.9))continue;
+   Bf([x,.1,z],1,b);const mg=Math.hypot(b[0],b[2]);filD.push({x,z,a0:Math.random()*Math.PI,t:Math.atan2(-b[2],b[0]),u:mg,a:0,w:0,dl:Math.random()*.6});filD[n].a=filD[n].a0;n++;}
+  fil.count=n;root.add(fil);filAnim=2;placeFilings(1);}
+ /* the probe */
+ probeM=new THREE.Mesh(new THREE.SphereGeometry(.55,16,12),new THREE.MeshBasicMaterial({color:0xffd166}));root.add(probeM);probeArrow=new THREE.ArrowHelper(new THREE.Vector3(1,0,0),new THREE.Vector3(),5,0xffd166,1.6,.9);root.add(probeArrow);probeM.visible=probeArrow.visible=m!=='oer';
+ if(m==='due')for(let i=0;i<2;i++){const a=new THREE.ArrowHelper(new THREE.Vector3(0,0,1),new THREE.Vector3(),4,0xf2917c,1.6,1);root.add(a);forceArr.push(a);}
+ const mv=MODEV[m];V.tgt.set(mv[0],mv[1],mv[2]);}
+const mtx=new THREE.Matrix4(),q=new THREE.Quaternion(),yax=new THREE.Vector3(0,1,0),one=new THREE.Vector3(1,1,1),pv=new THREE.Vector3();
+function placeFilings(dt){if(!fil)return;const target=P.on?P.I:0;let moving=false;
+ for(let i=0;i<fil.count;i++){const f=filD[i],B=f.u*target,w=clamp((B-1)/12,0,1);/* friction: weak fields leave the filings as they are */
+  if(filAnim>0&&filAnim<2-f.dl){f.w+=(w-f.w)*Math.min(1,dt*7);}let d=((f.t-f.a0)%Math.PI+Math.PI*1.5)%Math.PI-Math.PI/2;const a=f.a0+d*f.w;if(Math.abs(a-f.a)>1e-3)moving=true;f.a=a;
+  q.setFromAxisAngle(yax,a);pv.set(f.x,.08+((i%7)*.004),f.z);mtx.compose(pv,q,one);fil.setMatrixAt(i,mtx);}
+ fil.instanceMatrix.needsUpdate=true;return moving;}
+/* ------------------------------------------------------------------ controls ------------------------------------------------------------------ */
+function onParam(id){if(id==='mode'){$('#g_h').classList.toggle('hidden',P.mode!=='oer');$('#g_d').classList.toggle('hidden',P.mode!=='due');
+  /* Oersted starts with the circuit open and the Earth's field on, to see the needle jump */
+  $('#on').checked=P.mode!=='oer';$('#earth').checked=P.mode==='oer';refreshUI();probe=P.mode==='spira'||P.mode==='sol'?[0,.3,0]:P.mode==='due'?[0,.3,0]:[6,.3,0];
+  const mv=MODEV[P.mode];V.dist=mv[3];V.az=mv[4];V.el=mv[5];Iv=0;}
+ if(['mode','h','d','pair'].includes(id))build();
+ if(id==='on'||id==='I'){filAnim=2;}
+ if(id==='earth')compasses.forEach(c_=>c_.userData.om+=.001);
+ if(id==='mode'||id==='on')$('#expl').textContent=L(...EXPL[P.mode]);}
+function onLang(){$('#expl').textContent=L(...EXPL[P.mode]);}
+function onTheme(){if(V.ok)build();}
+$('#flip').onclick=()=>{sign=-sign;filAnim=2;};
+/* drag to turn, pinch or wheel to zoom, tap the card to move the probe */
+const pts_=new Map();let pinch=0,moved=0,last=null;cv.style.touchAction='none';
+cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);pts_.set(e.pointerId,[e.clientX,e.clientY]);moved=0;last=[e.clientX,e.clientY];if(pts_.size===2){const a=[...pts_.values()];pinch=Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1]);}});
+cv.addEventListener('pointermove',e=>{if(!pts_.has(e.pointerId))return;pts_.set(e.pointerId,[e.clientX,e.clientY]);
+ if(pts_.size===2){const a=[...pts_.values()],d=Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1]);if(pinch)V.dist=clamp(V.dist*pinch/d,22,140);pinch=d;moved=99;return;}
+ const dx=e.clientX-last[0],dy=e.clientY-last[1];moved+=Math.abs(dx)+Math.abs(dy);last=[e.clientX,e.clientY];if(moved>6){V.az-=dx*.007;V.el=clamp(V.el+dy*.005,.05,1.45);}});
+const up=e=>{if(!pts_.has(e.pointerId))return;pts_.delete(e.pointerId);if(pts_.size<2)pinch=0;if(moved<=6&&P.mode!=='oer'&&V.ok){const r=cv.getBoundingClientRect(),ray=new THREE.Raycaster();ray.setFromCamera({x:(e.clientX-r.left)/r.width*2-1,y:-((e.clientY-r.top)/r.height*2-1)},cam);
+  const hit=new THREE.Vector3();if(ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0,1,0),-.3),hit)&&Math.abs(hit.x)<27&&Math.abs(hit.z)<19)probe=[hit.x,.3,hit.z];}};
+cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+cv.addEventListener('wheel',e=>{e.preventDefault();V.dist=clamp(V.dist*(e.deltaY>0?1.08:.93),22,140);},{passive:false});
+/* ------------------------------------------------------------------ each frame ------------------------------------------------------------------ */
+const toScr=(x,y,z)=>{pv.set(x,y,z).project(cam);return[(pv.x+1)/2*W,(1-pv.y)/2*H,pv.z<1];};
+function handIcon(x,y,dir){/* right-hand rule: the thumb is the current, the curled fingers are the field */c.save();c.translate(x,y);
+ c.fillStyle=C.panel;rr(c,-44,-62,88,120,16);c.fill();c.strokeStyle=fa(.15);c.lineWidth=1;c.stroke();
+ c.strokeStyle='#f0a35e';c.lineWidth=3.5;c.lineCap='round';arrow(c,0,30*dir,0,-30*dir,'#f0a35e',3.5);
+ c.strokeStyle=C.gr;c.lineWidth=2.5;c.beginPath();c.ellipse(0,0,24,9,0,dir>0?.35:Math.PI+.35,dir>0?Math.PI*2-.35:Math.PI*3-.35);c.stroke();
+ const ax=dir>0?24*Math.cos(-.35):24*Math.cos(Math.PI-.35),ay=dir>0?9*Math.sin(-.35):9*Math.sin(Math.PI-.35);arrow(c,ax-dir*4,ay-3,ax,ay+(dir>0?-1:1)*1,C.gr,2.5);
+ txt(c,'I',10,-26*dir,'#f0a35e',13,'left',1);txt(c,'B',28,4,C.gr,13,'left',1);txt(c,L('mano destra','right hand'),0,48,C.mu,10,'center');c.restore();}
+let lastT=performance.now();
+function frame(now){requestAnimationFrame(frame);const dt=Math.min(.05,(now-lastT)/1000);lastT=now;clock+=dt;c=fit(cv);W=cv.W;H=cv.H;c.clearRect(0,0,W,H);
+ if(!V.ok){c.fillStyle=C.bg;c.fillRect(0,0,W,H);txt(c,L('Questa simulazione richiede WebGL.','This simulation needs WebGL.'),W/2,H/2,C.tx,14,'center');return;}
+ const target=P.on?P.I*sign:0;Iv+=(target-Iv)*Math.min(1,dt*5);uT.value=clock;
+ const dpr=Math.min(window.devicePixelRatio||1,2);if(gl.width!==Math.round(W*dpr)||gl.height!==Math.round(H*dpr)){R3.setPixelRatio(dpr);R3.setSize(W,H,false);cam.aspect=W/H;cam.updateProjectionMatrix();}
+ /* lines glow with the current; their pulses run along B */
+ const on=clamp(Math.abs(Iv)/3,0,1);for(const m of lineMat){m.uniforms.uOn.value=P.lines?on:0;m.uniforms.uDir.value=Math.sign(Iv||sign)*(.4+Math.abs(Iv)/6);}
+ for(const cm of cones){cm.visible=P.lines;cm.material.opacity=on*cm.userData.op*.85;const tg=cm.userData.tg.clone().multiplyScalar(Math.sign(Iv||sign));cm.quaternion.setFromUnitVectors(yax,tg);}
+ for(const t of wireTubes)t.material.emissiveIntensity=.08+.5*on;
+ /* moving charges, in the direction of the conventional current */
+ dots.visible=P.flow;if(P.flow){let n=0;const off=(clock*Iv*1.4)%2.2;for(const p of dotPath){for(let s=((off*p.k)%2.2+2.2)%2.2;s<p.L&&n<dots.instanceMatrix.count;s+=2.2){let a=s,i=0;while(i<p.seglen.length-1&&a>p.seglen[i]){a-=p.seglen[i];i++;}const A=p.pts[i],B=p.pts[i+1],f=a/p.seglen[i];
+   pv.set(A[0]+(B[0]-A[0])*f,A[1]+(B[1]-A[1])*f,A[2]+(B[2]-A[2])*f);mtx.compose(pv,q.identity(),one.set(on,on,on));dots.setMatrixAt(n++,mtx);one.set(1,1,1);}}dots.count=n;dots.instanceMatrix.needsUpdate=true;}
+ /* compasses: a needle is a little magnet, pulled towards B and swinging until friction stops it */
+ const b=[0,0,0];for(const cm of compasses){cm.visible=P.comp||cm===bigC;Bt([cm.position.x,.3,cm.position.z],b);const bh=Math.hypot(b[0],b[2]);const u=cm.userData;
+  if(bh>.3){const tt=Math.atan2(-b[2],b[0]),k=Math.min(60,6+bh*.9);for(let s=0;s<4;s++){u.om+=(k*Math.sin(tt-u.th)-3.2*u.om)*dt/4;u.th+=u.om*dt/4;}}else{u.om*=Math.exp(-dt*3);u.th+=u.om*dt;}u.nd.rotation.y=u.th;}
+ if(fil){fil.visible=P.fil;if(filAnim>0){filAnim=Math.max(0,filAnim-dt);placeFilings(dt);}}
+ /* probe */
+ let Bp=[0,0,0];if(P.mode!=='oer'){probeM.position.set(...probe);Bf(probe,Iv,Bp);if(P.earth)Bp[0]+=BE;const mg=Math.hypot(...Bp);probeArrow.position.set(...probe);
+  if(mg>.05){probeArrow.visible=true;probeArrow.setDirection(new THREE.Vector3(...Bp).normalize());probeArrow.setLength(clamp(2+Math.log10(1+mg)*4,2,14),1.6,.9);}else probeArrow.visible=false;}
+ /* two wires: the force on each, and the wires bending under it */
+ if(P.mode==='due'){const d=P.d,F=2e-7*Iv*Iv/(d*.01)*(P.pair==='same'?1:-1);for(let i=0;i<2;i++){const s=i?1:-1,a=forceArr[i];a.position.set(0,10,s*d/2);a.setDirection(new THREE.Vector3(0,0,-s*Math.sign(F||1)));a.setLength(1+Math.min(9,Math.abs(F)*4e3),1.4,.9);a.visible=Math.abs(F)>1e-6;}}
+ /* camera */
+ const ce=Math.cos(V.el),D=V.dist*Math.max(1,1.3/(W/H)); /* narrow screens: step back so the whole scene fits */cam.position.set(V.tgt.x+Math.sin(V.az)*ce*D,V.tgt.y+Math.sin(V.el)*D,V.tgt.z+Math.cos(V.az)*ce*D);cam.lookAt(V.tgt);R3.render(scene,cam);
+ /* labels on top */
+ const lab=(p,s,col,sz)=>{const q_=toScr(...p);if(!q_[2])return;c.save();c.shadowColor='rgba(0,0,0,.8)';c.shadowBlur=4;txt(c,s,q_[0],q_[1],col,sz||13,'center',1);c.restore();};
+ const vI=G.vis[0],mid=vI.pts[Math.floor(vI.pts.length/2)];if(P.on)lab([mid[0]+(P.mode==='oer'?0:0),mid[1]+(P.mode==='oer'?2.4:3),mid[2]+(P.mode==='oer'?0:2)],'I = '+nf(Math.abs(Iv),1)+' A','#f0a35e');
+ if(P.mode==='oer'){lab([-14,.1,-16],L('nord','north'),'#ef6b5b',12);const u=bigC.userData,dev=Math.abs(((u.th*180/Math.PI)+540)%360-180);lab([0,.4,6.8],nf(dev,0)+'°','#ffd166',15);}
+ if(P.mode==='sol'&&Math.abs(Iv)>.3){const sN=Math.sign(Iv)*-1;lab([sN*(L_SOL/2+4),4,0],'N','#ef6b5b',18);lab([-sN*(L_SOL/2+4),4,0],'S','#86aee6',18);}
+ if(P.mode==='spira'&&Math.abs(Iv)>.3){const sN=Math.sign(Iv)*-1;lab([sN*5,R_LOOP+3,0],'N','#ef6b5b',16);lab([-sN*5,R_LOOP+3,0],'S','#86aee6',16);}
+ if(P.mode==='filo'||P.mode==='due'||P.mode==='oer')handIcon(W-60,H-78,P.mode==='oer'?Math.sign(Iv||sign):Math.sign(Iv||sign));
+ /* readouts */
+ const Ib=Math.abs(Iv);if(P.mode==='oer'){const Bw=2e-7*Ib/(P.h*.01)*1e6,dev=Math.abs(((bigC.userData.th*180/Math.PI)+540)%360-180);ro('rB',nf(Bw,1)+' μT');ro('lF',L('Deviazione dell\'ago','Needle deflection'));ro('rF',nf(dev,1)+'°');
+  ro('lX',L('tan θ = B filo / B terra','tan θ = B wire / B Earth'));ro('rX',P.earth?'θ = '+nf(Math.atan(Bw/BE)*180/Math.PI,1)+'°':L('senza Terra: 90°','no Earth: 90°'));ro('lB',L('Campo del filo sull\'ago','Wire\'s field at the needle'));}
+ else{const mg=Math.hypot(...Bp);ro('lB',L('Campo nella sonda','Field at the probe'));ro('rB',nf(mg,1)+' μT');
+  if(P.mode==='filo'){const r=Math.hypot(probe[0],probe[2]);ro('lF','μ₀I / (2πr), r = '+nf(r,1)+' cm');ro('rF',nf(2e-7*Ib/(r*.01)*1e6,1)+' μT');ro('lX',L('Raddoppia r: B si dimezza','Double r: B halves'));ro('rX','');}
+  if(P.mode==='spira'){ro('lF',L('Al centro: μ₀I / (2R)','At the centre: μ₀I / (2R)'));ro('rF',nf(4*Math.PI*1e-7*Ib/(2*R_LOOP*.01)*1e6,1)+' μT');ro('lX','R');ro('rX',nf(R_LOOP,0)+' cm');}
+  if(P.mode==='sol'){const n=T_SOL/(L_SOL*.01);ro('lF',L('Dentro: μ₀ n I (bobina lunghissima)','Inside: μ₀ n I (very long coil)'));ro('rF',nf(4*Math.PI*1e-7*n*Ib*1e6,1)+' μT');ro('lX',L('spire per metro n','turns per metre n'));ro('rX',nf(n,0)+' /m');}
+  if(P.mode==='due'){const F=2e-7*Ib*Ib/(P.d*.01);ro('lF',L('Forza per metro μ₀I²/(2πd)','Force per metre μ₀I²/(2πd)'));ro('rF',sci(F*1e3,2)+' mN/m');ro('lX',L('I fili si…','The wires…'));ro('rX',P.pair==='same'?L('attraggono','attract'):L('respingono','repel'));}}
+ ro('cap',P.mode==='oer'?L('Chiudi il circuito e guarda l\'ago · trascina per ruotare','Close the circuit and watch the needle · drag to turn'):L('Tocca il cartoncino per spostare la sonda · trascina per ruotare','Tap the card to move the probe · drag to turn'));}
+if(!V.ok){$('#expl').textContent=L('Questa simulazione richiede WebGL.','This simulation needs WebGL.');}
+onParam('mode');requestAnimationFrame(frame);applyLang();
+</script>
+</body></html>
