@@ -182,7 +182,7 @@ $('#fire').onclick=()=>{if(fire())boom();};$('#pause').onclick=()=>paused=!pause
 function samp(p,t){const f=clamp(t/HS,0,p.S.length-1),i=Math.min(p.S.length-2,Math.floor(f)),u=f-i,a=p.S[i],b=p.S[i+1]||a;return a.map((v,j)=>v+(b[j]-v)*u);}
 const px=(p,t)=>p.S?samp(p,t)[0]:p.vx*t,py=(p,t)=>p.S?samp(p,t)[1]:p.h0+p.vy*t-.5*p.g*t*t,vel=(p,t)=>p.S?samp(p,t).slice(2):[p.vx,p.vy-p.g*t];
 const px0=(p,t)=>p.vx*t,py0=(p,t)=>p.h0+p.vy*t-.5*p.g*t*t; /* the same launch without air */
-let CK=1,OX=104;const X=x=>OX+x*sc,Y=y=>H-46-y*sc; /* CK: size of the cannon, follows the screen */
+let CK=1,OX=104;const X=x=>OX+x*sc,Y=y=>H-46-y*sc; /* CK: size of the cannon. It shrinks with the scene as the view widens, so a long shot looks long */
 
 /* ---------------- scenery: one look per planet, day (light theme) or night (dark theme) ---------------- */
 function rnd(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
@@ -318,8 +318,10 @@ loop(dt=>{c=fit(cv);W=cv.W;H=cv.H;clock+=dt;fireT+=dt;const PAL=[C.cy,C.pk,C.gr,
  tgHit=Math.max(0,tgHit-dt*1.2);stepFx(dt);
  /* view extents */
  let xm=120,ym=60;for(const s of shots){xm=Math.max(xm,s.R*1.12);ym=Math.max(ym,s.hmax*1.2);}if(pr){xm=Math.max(xm,pr.Rp*1.12);if(pr.k>0&&P.ghost){xm=Math.max(xm,px0(pr,pr.tl0)*1.05);ym=Math.max(ym,(pr.h0+pr.vy*pr.vy/(2*pr.g))*1.15);}ym=Math.max(ym,pr.Hp*1.2);}if(tg!==null)xm=Math.max(xm,tg*1.15);ym=Math.max(ym,P.h0*1.5);
- CK=clamp(Math.min(W/620,H/430),.6,1.9);OX=Math.round(108*CK);
- const k=Math.min(1,dt*9);vw+=(xm-vw)*k;vh+=(ym-vh)*k; /* quick: settles while the ball is still in the barrel */sc=Math.min((W-OX-40)/vw,(H-110)/vh);
+ /* the camera pulls back in about a second to frame the whole shot; the cannon gets smaller with everything else */
+ const k=Math.min(1,dt*3.2);vw+=(xm-vw)*k;vh+=(ym-vh)*k;
+ const CK0=clamp(Math.min(W/620,H/430),.6,1.9),sc0=Math.min((W-108*CK0-40)/120,(H-110)/60); /* size and scale of the close-up view (120 m wide) */
+ for(let i=0;i<3;i++){sc=Math.min((W-OX-40)/vw,(H-110)/vh);CK=CK0*clamp(Math.pow(sc/sc0,.9),.2,1);OX=Math.round(108*CK+14);}
  /* camera shake right after the shot */
  const sh=fireT<.25?(1-fireT/.25)*3:0;c.save();if(sh)c.translate((Math.random()-.5)*sh,(Math.random()-.5)*sh);
  /* scenery (cached) */
@@ -352,7 +354,7 @@ loop(dt=>{c=fit(cv);W=cv.W;H=cv.H;clock+=dt;fireT+=dt;const PAL=[C.cy,C.pk,C.gr,
  /* the ball, its shadow on the ground, and the vectors */
  if(pr){const x=px(pr,pr.t),y=Math.max(0,py(pr,pr.t)),[vxn,vyn]=vel(pr,pr.t),sx=X(x),sY=Y(y),inside=pr.alive&&Math.hypot(sx-ox,sY-oy)<BL*CK+4;
   const hgt=gy-sY;if(hgt>2){c.fillStyle='rgba(0,0,0,'+(.3*Math.max(0,1-hgt/400)).toFixed(3)+')';c.beginPath();c.ellipse(sx,gy+1,7,2,0,0,7);c.fill();}
-  if(!inside){drawBall(pr.ball,sx,sY,(BR[pr.ball]||5)*CK,pr.t*9);if(P.vec&&pr.alive)vecs(sx,sY,vxn,vyn,.7);}
+  if(!inside){drawBall(pr.ball,sx,sY,Math.max(3.2,(BR[pr.ball]||5)*CK),pr.t*9);if(P.vec&&pr.alive)vecs(sx,sY,vxn,vyn,.7);}
   if(P.zoom){const iw=Math.min(270,W*.36),ih=iw*.64,ix=W-iw-12,iy=12,z=5,mx=ix+iw*.45,my=iy+ih*.55;c.save();rr(c,ix,iy,iw,ih,12);c.clip();
     const sk=c.createLinearGradient(0,iy,0,iy+ih);sk.addColorStop(0,E.sky[0]);sk.addColorStop(1,E.sky[1]);c.fillStyle=sk;c.fillRect(ix,iy,iw,ih);
     const g0=my+y*z;const gg=c.createLinearGradient(0,g0,0,g0+ih);gg.addColorStop(0,E.ground[0]);gg.addColorStop(1,E.ground[1]);c.fillStyle=gg;c.fillRect(ix,g0,iw,ih);
