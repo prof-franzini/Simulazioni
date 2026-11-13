@@ -2,8 +2,8 @@
 <html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Fibra ottica</title>
 <style>
-:root{--bg0:#070b18;--bg:#0a0f1f;--hd:linear-gradient(90deg,#101a3d,#0a0f1f 70%);--side:#0d1328;--card:#121a36;--bd:#1c2548;--bd2:#2a3566;--tx:#e8ecff;--mu:#8d97bd;--ac:#4cc9f0;--actx:#06101f;--val:#ffd166;--btn:#18224a;--strong:#fff;--cy:#4cc9f0;--pk:#ff4d8d;--yl:#ffd166;--gr:#2ee6a6}
-body.light{--bg0:#e9edf7;--bg:#f6f8fd;--hd:linear-gradient(90deg,#dfe7fb,#f6f8fd 70%);--side:#eef1f8;--card:#ffffff;--bd:#d5dcee;--bd2:#bcc6e0;--tx:#16203f;--mu:#5c6890;--ac:#0a8fc0;--actx:#ffffff;--val:#b06a00;--btn:#eef2fb;--strong:#0b1330;--cy:#0a8fc0;--pk:#e0246e;--yl:#b97f00;--gr:#0c9f6e}
+:root{--bg0:#141412;--bg:#1d1d1a;--hd:linear-gradient(180deg,#22221e,#1a1a17);--side:#191917;--card:#242420;--bd:#31312b;--bd2:#43423a;--tx:#f1efe6;--mu:#a5a291;--ac:#d6f06a;--actx:#1c2108;--val:#e9cf78;--btn:#2c2c27;--strong:#fffdf5;--cy:#8fd6c4;--pk:#f2917c;--yl:#e9cf78;--gr:#c9ec62;--tagc:#d6f06a}
+body.light{--bg0:#ebe8df;--bg:#f6f4ee;--hd:linear-gradient(180deg,#f4f2ec,#ebe8df);--side:#efede5;--card:#fbfaf6;--bd:#dedbd0;--bd2:#cbc7b8;--tx:#23231d;--mu:#6c695b;--ac:#c8e65a;--actx:#1c2108;--val:#8a6a12;--btn:#f1efe7;--strong:#15150f;--cy:#2f8f7a;--pk:#c4553f;--yl:#9a7410;--gr:#5f8a12;--tagc:#5f7d0e}
 *{box-sizing:border-box}html,body{height:100%;margin:0}
 body{background:var(--bg0);color:var(--tx);font:14px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;overflow:hidden}
 header{display:flex;align-items:center;justify-content:space-between;padding:9px 16px;border-bottom:1px solid var(--bd);background:var(--hd)}
@@ -53,6 +53,22 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 @media(max-width:560px){header{padding:8px 10px;gap:8px}header>div:first-child{min-width:0}h1{font-size:16px;line-height:1.2}.tag{font-size:9.5px;letter-spacing:1.1px}.hb{gap:5px;flex:none}.hb button,.hb a{width:36px;height:36px}aside{padding:10px;grid-template-columns:1fr}#q{padding:12px}#q .box{padding:16px 18px}}
 @media(max-height:520px) and (min-width:560px) and (orientation:landscape){body{overflow:hidden;height:100%}main{flex-direction:row}.stage,.stage.tall{flex:1;height:auto;min-height:0}.stage.two{height:auto;min-height:0;flex-direction:row}.pane+.pane{border-left:1px solid var(--bd);border-top:0}aside{display:flex;width:270px;border-left:1px solid var(--bd);border-top:0;overflow:auto;padding:8px}header{padding:5px 12px}h1{font-size:15px}.tag{display:none}.hb button,.hb a{height:30px}}
 
+
+/* --- soft, modern shapes: pill buttons, rounder glassy panels --- */
+header{border-bottom:1px solid var(--bd);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.tag{color:var(--tagc)}h1{font-weight:650;letter-spacing:-.2px}
+.hb button,.hb a{border-radius:999px;background:var(--btn);border-color:var(--bd2)}
+.hb button:hover,.hb a:hover{border-color:var(--ac);color:var(--ac)}
+aside{gap:12px}
+.grp{border-radius:20px;padding:14px 16px;box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 6px 20px rgba(0,0,0,.12)}
+.grp h3{letter-spacing:1.5px}
+.seg{border-radius:999px;padding:4px;background:var(--bg0);border:1px solid var(--bd)}
+.seg button{border-radius:999px}
+.seg button.on{box-shadow:0 2px 10px rgba(200,230,90,.25)}
+.btn{border-radius:999px;padding:8px 14px}.btn.pri{box-shadow:0 4px 14px rgba(200,230,90,.25)}
+select{border-radius:12px}
+#q .box{border-radius:24px}#q h2{color:var(--ac)}body.light #q h2{color:var(--tagc)}
+.ro{border-bottom-color:var(--bd)}
 </style></head>
 <style>/* on a phone the stage takes the shape of the scene, so there are no empty bands */
 @media(max-width:820px) and (orientation:portrait){.stage.tall{height:auto;min-height:0;aspect-ratio:1.25}}</style>
@@ -60,7 +76,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 <body>
 <header><div><span class="tag" data-en="Physics · Total internal reflection">Fisica · Riflessione totale</span><h1 data-en="Optical fibre">Fibra ottica</h1></div>
 <div class="hb"><a href="index.html" title="Tutte le simulazioni / All simulations">⌂</a><button id="qbtn" title="Sfide / Challenges">?</button><button id="thm" title="Tema chiaro-scuro / Light-dark theme">☀</button><button id="lang" title="Lingua / Language">EN</button></div></header>
-<main><div class="stage tall"><span class="cap" id="cap" style="color:#9aa5cf"></span><canvas id="cv"></canvas></div>
+<main><div class="stage tall"><span class="cap" id="cap" style="color:#b3af9c"></span><canvas id="cv"></canvas></div>
 <aside>
 <div class="grp"><h3 data-en="Shape of the fibre">Forma della fibra</h3>
 <div class="row"><button class="btn" data-pre="0" data-en="Straight">Dritta</button><button class="btn" data-pre="1" data-en="Gentle bend">Curva dolce</button></div>
@@ -89,8 +105,8 @@ const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 let LANG='it';try{if(localStorage.getItem('simLang')==='en')LANG='en';}catch(e){}
 const L=(it,en)=>LANG==='it'?it:en;
 const FONT='system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
-const THEMES={dark:{bg:'#0a0f1f',grid:'#172040',grid2:'#263159',ax:'#4a568a',tx:'#e8ecff',mu:'#8d97bd',panel:'rgba(13,19,40,.9)',gnd:'#1a2342',wall:'#34416f',glass:'#8fa0d8',wire:'#8494cf',fg:'255,255,255',line:'140,215,255',base:[14,20,44],pos:[255,60,120],neg:[50,150,255],ramp:['#2a3a78','#1c2757'],road:[40,48,88],slab:[30,38,72],cy:'#4cc9f0',pk:'#ff4d8d',yl:'#ffd166',gr:'#2ee6a6',or:'#ff9f43',pu:'#b69cff',rd:'#ff5d5d',bl:'#5b8cff'},
-light:{bg:'#f6f8fd',grid:'#e4e9f5',grid2:'#c9d2e8',ax:'#8c98bd',tx:'#16203f',mu:'#5c6890',panel:'rgba(255,255,255,.93)',gnd:'#d5dcee',wall:'#8c99c4',glass:'#5b6b9e',wire:'#5f6fa8',fg:'20,30,60',line:'10,110,170',base:[244,246,252],pos:[226,36,110],neg:[30,110,232],ramp:['#c3cdec','#a9b8e2'],road:[168,178,206],slab:[200,208,230],cy:'#0a8fc0',pk:'#e0246e',yl:'#c08400',gr:'#0c9f6e',or:'#e07a10',pu:'#7a55e0',rd:'#e03535',bl:'#2f62e6'}};
+const THEMES={dark:{bg:'#1d1d1a',grid:'#292925',grid2:'#393832',ax:'#5e5c50',tx:'#f1efe6',mu:'#a5a291',panel:'rgba(34,34,30,.92)',gnd:'#34332c',wall:'#57554a',glass:'#bdb9a5',wire:'#a9a592',fg:'255,253,240',line:'200,226,150',base:[29,29,26],pos:[242,112,92],neg:[104,168,230],ramp:['#4a4840','#3a3932'],road:[58,57,50],slab:[52,50,44],cy:'#8fd6c4',pk:'#f2917c',yl:'#e9cf78',gr:'#c9ec62',or:'#f0a35e',pu:'#b9a8e6',rd:'#ef6b5b',bl:'#86aee6'},
+light:{bg:'#f6f4ee',grid:'#e8e5dc',grid2:'#d6d2c5',ax:'#a39f8e',tx:'#23231d',mu:'#6c695b',panel:'rgba(251,250,246,.94)',gnd:'#dcd8cc',wall:'#a8a493',glass:'#77735f',wire:'#7d796a',fg:'35,35,25',line:'95,125,20',base:[246,244,238],pos:[200,80,60],neg:[50,120,190],ramp:['#d8d4c6','#c8c3b2'],road:[180,176,162],slab:[210,206,194],cy:'#2f8f7a',pk:'#c4553f',yl:'#9a7410',gr:'#5f8a12',or:'#c26a1a',pu:'#6e55b8',rd:'#c53a2b',bl:'#2f64b0'}};
 const C=Object.assign({},THEMES.dark);const fa=a=>'rgba('+C.fg+','+a+')';
 function nf(x,d=1){if(!isFinite(x))return '–';let s=x.toFixed(d);if(+s===0)s=(0).toFixed(d);return LANG==='it'?s.replace('.',','):s;}
 const SUP={'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
@@ -183,7 +199,7 @@ const EX=[['Nel vetro la luce colpisce la parete molto di striscio: oltre l\'ang
 loop(dt=>{c=fit(cv);W=cv.W;H=cv.H;clock+=dt;sc=Math.min(W/17.6,H/10.4);ox=W/2;oy=H/2;if(dirty)trace();
  const n2=+P.out,water=P.out==='1.33',clad=P.out==='1.46';
  /* a dark room (or a tank of water) */
- const bg=c.createRadialGradient(W/2,H/2,30,W/2,H/2,Math.max(W,H)*.75);bg.addColorStop(0,water?'#0a2440':'#0c1024');bg.addColorStop(1,water?'#03101f':'#020308');c.fillStyle=bg;c.fillRect(0,0,W,H);
+ const bg=c.createRadialGradient(W/2,H/2,30,W/2,H/2,Math.max(W,H)*.75);bg.addColorStop(0,water?'#0a2440':'#1e1d1a');bg.addColorStop(1,water?'#03101f':'#0b0b09');c.fillStyle=bg;c.fillRect(0,0,W,H);
  if(water){c.strokeStyle='rgba(140,200,255,.06)';c.lineWidth=1.2;for(let k=0;k<7;k++){c.beginPath();for(let x=0;x<=W;x+=14)c.lineTo(x,H*(k+.5)/7+Math.sin(x*.012+clock*.7+k*1.7)*9);c.stroke();}}
  c.lineJoin='round';c.lineCap='round';const band=()=>{c.beginPath();G_.Lw.forEach((p,i)=>i?c.lineTo(X(p[0]),Y(p[1])):c.moveTo(X(p[0]),Y(p[1])));for(let i=G_.Rw.length-1;i>=0;i--)c.lineTo(X(G_.Rw[i][0]),Y(G_.Rw[i][1]));c.closePath();};
  /* cladding: a second glass around the core */
@@ -202,7 +218,7 @@ loop(dt=>{c=fit(cv);W=cv.W;H=cv.H;clock+=dt;sc=Math.min(W/17.6,H/10.4);ox=W/2;oy
  /* the glass walls */
  c.shadowColor='#7fd4ff';c.shadowBlur=8;c.strokeStyle='rgba(170,225,255,.7)';c.lineWidth=1.5;for(const w_ of[G_.Lw,G_.Rw]){c.beginPath();w_.forEach((p,i)=>i?c.lineTo(X(p[0]),Y(p[1])):c.moveTo(X(p[0]),Y(p[1])));c.stroke();}c.shadowBlur=0;
  /* laser */
- {const a0=Math.atan2(mid[1][1]-mid[0][1],mid[1][0]-mid[0][0]),an=a0+tilt;c.save();c.translate(X(Hd[0][0]),Y(Hd[0][1]));c.rotate(-an);const g=c.createLinearGradient(0,-12,0,12);g.addColorStop(0,'#59627f');g.addColorStop(.4,'#c9d0e6');g.addColorStop(1,'#2b3250');c.fillStyle=g;rr(c,-62,-11,56,22,5);c.fill();c.fillStyle='#3dff8a';c.fillRect(-8,-4,4,8);c.fillStyle='#2b3250';c.fillRect(-50,-11,3,22);c.fillRect(-40,-11,3,22);c.restore();}
+ {const a0=Math.atan2(mid[1][1]-mid[0][1],mid[1][0]-mid[0][0]),an=a0+tilt;c.save();c.translate(X(Hd[0][0]),Y(Hd[0][1]));c.rotate(-an);const g=c.createLinearGradient(0,-12,0,12);g.addColorStop(0,'#6b6858');g.addColorStop(.4,'#d6d2c4');g.addColorStop(1,'#3a3930');c.fillStyle=g;rr(c,-62,-11,56,22,5);c.fill();c.fillStyle='#3dff8a';c.fillRect(-8,-4,4,8);c.fillStyle='#3a3930';c.fillRect(-50,-11,3,22);c.fillRect(-40,-11,3,22);c.restore();}
  /* handles */
  Hd.forEach((h,i)=>{if(!i)return;c.fillStyle='rgba(255,209,102,.18)';c.beginPath();c.arc(X(h[0]),Y(h[1]),13,0,7);c.fill();c.fillStyle='#ffd166';c.beginPath();c.arc(X(h[0]),Y(h[1]),4.5,0,7);c.fill();});
  const ic=Math.asin(n2/N1)*180/Math.PI;ro('ric',nf(ic,1)+'°');ro('rout',nf(outI*100,0)+' %');const lost=outI<.97,ex=L(...EX[lost?1:0]);if($('#expl').textContent!==ex)$('#expl').textContent=ex;$('#rout').className=outI>.9?'c-gr':outI>.5?'c-yl':'c-pk';

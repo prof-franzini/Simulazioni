@@ -9,24 +9,24 @@
   /* Layout: site header, control bar, four stat tiles, one large histogram, then rolls + 36-combination grid beside the notes.
      Colours follow the rest of the site: dark by default, light when the visitor picks it (localStorage 'simTheme'). */
   color-scheme:dark;
-  --bg:#070b18; --surface:#121a36; --ink:#e8ecff; --ink-2:#a3acd0; --ink-3:#8d97bd; --line:#1c2548;
-  --bars:#4cc9f0; --bars-hi:#ffd166; --curve:#ff9f43; --chip:#18224a; --ac:#4cc9f0; --actx:#06101f;
-  --hd:linear-gradient(90deg,#101a3d,#0a0f1f 70%); --bd2:#2a3566;
+  --bg:#141412; --surface:#22221e; --ink:#f1efe6; --ink-2:#c4c0ae; --ink-3:#a5a291; --line:#31312b;
+  --bars:#d6f06a; --bars-hi:#e9cf78; --curve:#f0a35e; --chip:#2b2b25; --ac:#d6f06a; --actx:#1c2108;
+  --hd:linear-gradient(180deg,#22221e,#1a1a17); --bd2:#43423a;
   --font-display:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   --font-body:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
 }
 :root[data-theme="light"]{
   color-scheme:light;
-  --bg:#e9edf7; --surface:#ffffff; --ink:#16203f; --ink-2:#4a5680; --ink-3:#5c6890; --line:#d5dcee;
-  --bars:#0a8fc0; --bars-hi:#06587a; --curve:#e07a10; --chip:#e4f2fa; --ac:#0a8fc0; --actx:#ffffff;
-  --hd:linear-gradient(90deg,#dfe7fb,#f6f8fd 70%); --bd2:#bcc6e0;
+  --bg:#ebe8df; --surface:#fbfaf6; --ink:#23231d; --ink-2:#4a483d; --ink-3:#6c695b; --line:#dedbd0;
+  --bars:#8fb318; --bars-hi:#5f7d0e; --curve:#c26a1a; --chip:#eef3d6; --ac:#5f7d0e; --actx:#ffffff;
+  --hd:linear-gradient(180deg,#f4f2ec,#ebe8df); --bd2:#cbc7b8;
 }
 /* site header, same as the other simulations */
 .top{display:flex;align-items:center;justify-content:space-between;padding:9px 16px;border-bottom:1px solid var(--line);background:var(--hd);position:sticky;top:0;z-index:5}
 .top .tag{font-size:10.5px;text-transform:uppercase;letter-spacing:1.6px;color:var(--ac);display:block}
 .top .ttl{margin:0;font-size:19px;letter-spacing:.2px;font-weight:700}
 .hb{display:flex;gap:8px}
-.hb button,.hb a{width:38px;height:34px;display:grid;place-items:center;text-decoration:none;border-radius:9px;border:1px solid var(--bd2);background:var(--surface);color:var(--ink);font:600 13px system-ui;cursor:pointer}
+.hb button,.hb a{width:38px;height:38px;display:grid;place-items:center;text-decoration:none;border-radius:999px;border:1px solid var(--bd2);background:var(--surface);color:var(--ink);font:600 13px system-ui;cursor:pointer}
 .hb button:hover,.hb a:hover{border-color:var(--ac)}
 @media (max-width:560px){.top{padding:8px 10px}.top .ttl{font-size:16px}.hb{gap:5px}.hb button,.hb a{width:36px;height:36px}}
 *{box-sizing:border-box}
@@ -37,7 +37,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-siz
 header h1{font-family:var(--font-display);font-weight:800;font-size:clamp(28px,4vw,40px);line-height:1.1;margin:0;text-wrap:balance;letter-spacing:-.01em}
 header p{margin:6px 0 0;color:var(--ink-2);max-width:65ch}
 
-.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:20px}
 .card h2{font-family:var(--font-display);font-weight:600;font-size:19px;margin:0 0 10px}
 
 /* Controls */
@@ -45,12 +45,12 @@ form.controls{display:flex;flex-wrap:wrap;gap:18px 28px;align-items:flex-end}
 .field{display:flex;flex-direction:column;gap:6px}
 .field > label, .field > .lbl{font-weight:700;font-size:14px;color:var(--ink-2);text-transform:uppercase;letter-spacing:.04em}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-input[type=number]{font:inherit;font-size:20px;font-variant-numeric:tabular-nums;width:9.5em;padding:8px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+input[type=number]{font:inherit;font-size:20px;font-variant-numeric:tabular-nums;width:9.5em;padding:8px 12px;border-radius:999px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
 input[type=number]:focus-visible{outline:3px solid var(--bars);outline-offset:1px;border-color:var(--bars)}
 .chip{font:inherit;font-size:15px;padding:6px 12px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;font-variant-numeric:tabular-nums}
 .chip:hover{border-color:var(--bars)}
 .chip[aria-pressed="true"]{background:var(--chip);border-color:var(--bars);font-weight:700}
-.btn{font:inherit;font-weight:700;font-size:17px;padding:10px 20px;border-radius:10px;border:1.5px solid var(--ink);cursor:pointer}
+.btn{font:inherit;font-weight:700;font-size:17px;padding:10px 22px;border-radius:999px;border:1.5px solid var(--ink);cursor:pointer}
 .btn.primary{background:var(--ac);color:var(--actx);border-color:var(--ac)}
 .btn.secondary{background:transparent;color:var(--ink)}
 .btn:hover{filter:brightness(1.12)}
@@ -61,7 +61,7 @@ input[type=number]:focus-visible{outline:3px solid var(--bars);outline-offset:1p
 
 /* Stat tiles */
 .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:2px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:14px 16px;display:flex;flex-direction:column;gap:2px}
 .stat .k{font-size:14px;color:var(--ink-2);font-weight:700}
 .stat .v{font-family:var(--font-display);font-weight:800;font-size:30px;font-variant-numeric:tabular-nums;line-height:1.15}
 .stat .s{font-size:14px;color:var(--ink-3);font-variant-numeric:tabular-nums}
@@ -112,7 +112,7 @@ table.combo{border-collapse:separate;border-spacing:3px;font-variant-numeric:tab
 table.combo th{font-weight:400;padding:0}
 table.combo th .die{display:block;margin:auto}
 table.combo td{width:38px;height:34px;text-align:center;border-radius:6px;background:var(--bg);border:1px solid var(--line);font-weight:700;cursor:default;transition:background .1s,color .1s}
-table.combo td.hi{background:var(--bars);color:var(--actx);border-color:var(--bars)}
+table.combo td.hi{background:var(--bars);color:#1c2108;border-color:var(--bars)}
 .combo-caption{font-size:15px;color:var(--ink-2);margin:8px 0 0;max-width:46ch}
 .notes ol{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:10px}
 .notes li::marker{font-weight:700;color:var(--ink-2)}

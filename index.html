@@ -30,8 +30,8 @@
   <link rel="manifest" href="manifest.json" />
 
   <style>
-    :root{--bg0:#070b18;--hd:linear-gradient(90deg,#101a3d,#0a0f1f 70%);--card:#121a36;--bd:#1c2548;--bd2:#2a3566;--tx:#e8ecff;--mu:#8d97bd;--ac:#4cc9f0;--glow:rgba(76,201,240,.18);--tile:#0c1330;--new:#2ee6a6;--upd:#ffd166}
-    body.light{--bg0:#e9edf7;--hd:linear-gradient(90deg,#dfe7fb,#f6f8fd 70%);--card:#ffffff;--bd:#d5dcee;--bd2:#bcc6e0;--tx:#16203f;--mu:#5c6890;--ac:#0a8fc0;--glow:rgba(10,143,192,.16);--tile:#eef2fb;--new:#0c9f6e;--upd:#b06a00}
+    :root{--bg0:#141412;--hd:linear-gradient(180deg,#1f1f1b,#161614);--card:#22221e;--bd:#31312b;--bd2:#43423a;--tx:#f1efe6;--mu:#a5a291;--ac:#d6f06a;--glow:rgba(214,240,106,.14);--tile:#2b2b25;--new:#c9ec62;--upd:#e9cf78;--tagc:#d6f06a}
+    body.light{--bg0:#ebe8df;--hd:linear-gradient(180deg,#f4f2ec,#ebe8df);--card:#fbfaf6;--bd:#dedbd0;--bd2:#cbc7b8;--tx:#23231d;--mu:#6c695b;--ac:#5f7d0e;--glow:rgba(150,180,40,.2);--tile:#f1efe7;--new:#5f8a12;--upd:#8a6a12;--tagc:#5f7d0e}
     html{-webkit-text-size-adjust:100%;text-size-adjust:100%;scroll-behavior:smooth}*{box-sizing:border-box}
     body{margin:0;font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg0);color:var(--tx);min-height:100vh}
     header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 22px;border-bottom:1px solid var(--bd);background:var(--hd)}
@@ -67,6 +67,17 @@
     @media(pointer:coarse){.hb button{width:42px;height:40px}}
     @media(max-width:600px){header{padding:12px 14px}.tag{font-size:10px}main{padding:16px 14px 6px}h1{font-size:20px}.grid{grid-template-columns:1fr}section{scroll-margin-top:104px}}
     @media(prefers-reduced-motion:reduce){.card{transition:none}html{scroll-behavior:auto}}
+    /* --- soft, modern shapes --- */
+    header{-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+    h1{font-weight:650;letter-spacing:-.3px}
+    .hb button{border-radius:999px;background:var(--tile)}.hb button:hover{color:var(--ac)}
+    #find{border-radius:999px;padding:12px 18px}
+    nav a{padding:7px 14px}nav a:hover{background:var(--tile)}
+    .card{border-radius:22px;padding:16px;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)}
+    .card .em{border-radius:16px}
+    .card:hover,.card:focus-visible{box-shadow:0 10px 30px var(--glow)}
+    .chips i{padding:3px 10px}
+    .chips .tn{background:var(--new);color:#1c2108;border-color:var(--new)}body.light .chips .tn{color:#fff}
   </style>
 </head>
 <body>

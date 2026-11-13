@@ -2,8 +2,8 @@
 <html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Moto armonico</title>
 <style>
-:root{--bg0:#070b18;--bg:#0a0f1f;--hd:linear-gradient(90deg,#101a3d,#0a0f1f 70%);--side:#0d1328;--card:#121a36;--bd:#1c2548;--bd2:#2a3566;--tx:#e8ecff;--mu:#8d97bd;--ac:#4cc9f0;--actx:#06101f;--val:#ffd166;--btn:#18224a;--strong:#fff;--cy:#4cc9f0;--pk:#ff4d8d;--yl:#ffd166;--gr:#2ee6a6}
-body.light{--bg0:#e9edf7;--bg:#f6f8fd;--hd:linear-gradient(90deg,#dfe7fb,#f6f8fd 70%);--side:#eef1f8;--card:#ffffff;--bd:#d5dcee;--bd2:#bcc6e0;--tx:#16203f;--mu:#5c6890;--ac:#0a8fc0;--actx:#ffffff;--val:#b06a00;--btn:#eef2fb;--strong:#0b1330;--cy:#0a8fc0;--pk:#e0246e;--yl:#b97f00;--gr:#0c9f6e}
+:root{--bg0:#141412;--bg:#1d1d1a;--hd:linear-gradient(180deg,#22221e,#1a1a17);--side:#191917;--card:#242420;--bd:#31312b;--bd2:#43423a;--tx:#f1efe6;--mu:#a5a291;--ac:#d6f06a;--actx:#1c2108;--val:#e9cf78;--btn:#2c2c27;--strong:#fffdf5;--cy:#8fd6c4;--pk:#f2917c;--yl:#e9cf78;--gr:#c9ec62;--tagc:#d6f06a}
+body.light{--bg0:#ebe8df;--bg:#f6f4ee;--hd:linear-gradient(180deg,#f4f2ec,#ebe8df);--side:#efede5;--card:#fbfaf6;--bd:#dedbd0;--bd2:#cbc7b8;--tx:#23231d;--mu:#6c695b;--ac:#c8e65a;--actx:#1c2108;--val:#8a6a12;--btn:#f1efe7;--strong:#15150f;--cy:#2f8f7a;--pk:#c4553f;--yl:#9a7410;--gr:#5f8a12;--tagc:#5f7d0e}
 *{box-sizing:border-box}html,body{height:100%;margin:0}
 body{background:var(--bg0);color:var(--tx);font:14px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;overflow:hidden}
 header{display:flex;align-items:center;justify-content:space-between;padding:9px 16px;border-bottom:1px solid var(--bd);background:var(--hd)}
@@ -53,6 +53,22 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 @media(max-width:560px){header{padding:8px 10px;gap:8px}header>div:first-child{min-width:0}h1{font-size:16px;line-height:1.2}.tag{font-size:9.5px;letter-spacing:1.1px}.hb{gap:5px;flex:none}.hb button,.hb a{width:36px;height:36px}aside{padding:10px;grid-template-columns:1fr}#q{padding:12px}#q .box{padding:16px 18px}}
 @media(max-height:520px) and (min-width:560px) and (orientation:landscape){body{overflow:hidden;height:100%}main{flex-direction:row}.stage,.stage.tall{flex:1;height:auto;min-height:0}.stage.two{height:auto;min-height:0;flex-direction:row}.pane+.pane{border-left:1px solid var(--bd);border-top:0}aside{display:flex;width:270px;border-left:1px solid var(--bd);border-top:0;overflow:auto;padding:8px}header{padding:5px 12px}h1{font-size:15px}.tag{display:none}.hb button,.hb a{height:30px}}
 
+
+/* --- soft, modern shapes: pill buttons, rounder glassy panels --- */
+header{border-bottom:1px solid var(--bd);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.tag{color:var(--tagc)}h1{font-weight:650;letter-spacing:-.2px}
+.hb button,.hb a{border-radius:999px;background:var(--btn);border-color:var(--bd2)}
+.hb button:hover,.hb a:hover{border-color:var(--ac);color:var(--ac)}
+aside{gap:12px}
+.grp{border-radius:20px;padding:14px 16px;box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 6px 20px rgba(0,0,0,.12)}
+.grp h3{letter-spacing:1.5px}
+.seg{border-radius:999px;padding:4px;background:var(--bg0);border:1px solid var(--bd)}
+.seg button{border-radius:999px}
+.seg button.on{box-shadow:0 2px 10px rgba(200,230,90,.25)}
+.btn{border-radius:999px;padding:8px 14px}.btn.pri{box-shadow:0 4px 14px rgba(200,230,90,.25)}
+select{border-radius:12px}
+#q .box{border-radius:24px}#q h2{color:var(--ac)}body.light #q h2{color:var(--tagc)}
+.ro{border-bottom-color:var(--bd)}
 </style></head>
 <body>
 <header><div><span class="tag" data-en="Physics · From circular motion to oscillation">Fisica · Dal moto circolare all'oscillazione</span><h1 data-en="Simple harmonic motion">Moto armonico</h1></div>
@@ -105,8 +121,8 @@ const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 let LANG='it';try{if(localStorage.getItem('simLang')==='en')LANG='en';}catch(e){}
 const L=(it,en)=>LANG==='it'?it:en;
 const FONT='system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
-const THEMES={dark:{bg:'#0a0f1f',grid:'#172040',grid2:'#263159',ax:'#4a568a',tx:'#e8ecff',mu:'#8d97bd',panel:'rgba(13,19,40,.9)',gnd:'#1a2342',wall:'#34416f',glass:'#8fa0d8',wire:'#8494cf',fg:'255,255,255',line:'140,215,255',base:[14,20,44],pos:[255,60,120],neg:[50,150,255],ramp:['#2a3a78','#1c2757'],road:[40,48,88],slab:[30,38,72],cy:'#4cc9f0',pk:'#ff4d8d',yl:'#ffd166',gr:'#2ee6a6',or:'#ff9f43',pu:'#b69cff',rd:'#ff5d5d',bl:'#5b8cff'},
-light:{bg:'#f6f8fd',grid:'#e4e9f5',grid2:'#c9d2e8',ax:'#8c98bd',tx:'#16203f',mu:'#5c6890',panel:'rgba(255,255,255,.93)',gnd:'#d5dcee',wall:'#8c99c4',glass:'#5b6b9e',wire:'#5f6fa8',fg:'20,30,60',line:'10,110,170',base:[244,246,252],pos:[226,36,110],neg:[30,110,232],ramp:['#c3cdec','#a9b8e2'],road:[168,178,206],slab:[200,208,230],cy:'#0a8fc0',pk:'#e0246e',yl:'#c08400',gr:'#0c9f6e',or:'#e07a10',pu:'#7a55e0',rd:'#e03535',bl:'#2f62e6'}};
+const THEMES={dark:{bg:'#1d1d1a',grid:'#292925',grid2:'#393832',ax:'#5e5c50',tx:'#f1efe6',mu:'#a5a291',panel:'rgba(34,34,30,.92)',gnd:'#34332c',wall:'#57554a',glass:'#bdb9a5',wire:'#a9a592',fg:'255,253,240',line:'200,226,150',base:[29,29,26],pos:[242,112,92],neg:[104,168,230],ramp:['#4a4840','#3a3932'],road:[58,57,50],slab:[52,50,44],cy:'#8fd6c4',pk:'#f2917c',yl:'#e9cf78',gr:'#c9ec62',or:'#f0a35e',pu:'#b9a8e6',rd:'#ef6b5b',bl:'#86aee6'},
+light:{bg:'#f6f4ee',grid:'#e8e5dc',grid2:'#d6d2c5',ax:'#a39f8e',tx:'#23231d',mu:'#6c695b',panel:'rgba(251,250,246,.94)',gnd:'#dcd8cc',wall:'#a8a493',glass:'#77735f',wire:'#7d796a',fg:'35,35,25',line:'95,125,20',base:[246,244,238],pos:[200,80,60],neg:[50,120,190],ramp:['#d8d4c6','#c8c3b2'],road:[180,176,162],slab:[210,206,194],cy:'#2f8f7a',pk:'#c4553f',yl:'#9a7410',gr:'#5f8a12',or:'#c26a1a',pu:'#6e55b8',rd:'#c53a2b',bl:'#2f64b0'}};
 const C=Object.assign({},THEMES.dark);const fa=a=>'rgba('+C.fg+','+a+')';
 function nf(x,d=1){if(!isFinite(x))return '–';let s=x.toFixed(d);if(+s===0)s=(0).toFixed(d);return LANG==='it'?s.replace('.',','):s;}
 const SUP={'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
