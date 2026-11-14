@@ -370,10 +370,13 @@ function drawPSU(I){const v=Math.round(I*100)/100;if(v===psuShown||!psuCtx)retur
  x.font='bold 70px ui-monospace,Consolas,monospace';x.fillStyle='#7dff6a';x.fillText(v.toFixed(2).replace('.',','),430,68);x.fillStyle='#2f6a28';x.font='bold 26px system-ui';x.fillText('A',466,74);
  x.fillStyle='#8d8a7c';x.font='15px system-ui';x.textAlign='left';x.fillText('DC POWER SUPPLY 0–30 V · 0–10 A',22,140);x.textAlign='center';x.fillText('VOLTAGE',122,220);x.fillText('CURRENT',226,220);x.fillText('−',334,220);x.fillText('+',454,220);psuTex.needsUpdate=true;}
 /* a test lead with a crocodile clip at its end */
+let LEADFLOOR=-1e9;
 function lead(pts,red){const g=new THREE.Group(),m=new THREE.MeshStandardMaterial({color:red?0xc6382c:0x1d1d1b,roughness:.45});
- /* a soft cable: long spans sag a little, and the path is a smooth (centripetal) spline */
- const sp=[pts[0]];for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i],L=Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2]);if(L>10)sp.push([(a[0]+b[0])/2,(a[1]+b[1])/2-Math.min(L*.08,3),(a[2]+b[2])/2]);sp.push(b);}
- const cu=new THREE.CatmullRomCurve3(sp.map(p=>new THREE.Vector3(p[0],p[1],p[2])),false,'centripetal');g.add(new THREE.Mesh(new THREE.TubeGeometry(cu,Math.max(40,sp.length*14),.26,10,false),m));
+ /* a soft cable: long spans sag a little, and the path is a smooth (centripetal) spline;
+    it can never go below the bench top: the cable rests on it instead of sinking into it */
+ const lo=LEADFLOOR+.3,sp=[pts[0]];for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i],L=Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2]);if(L>10)sp.push([(a[0]+b[0])/2,Math.max(lo,(a[1]+b[1])/2-Math.min(L*.08,3)),(a[2]+b[2])/2]);sp.push(b);}
+ const c0=new THREE.CatmullRomCurve3(sp.map(p=>new THREE.Vector3(p[0],Math.max(lo,p[1]),p[2])),false,'centripetal'),dense=c0.getPoints(Math.max(60,sp.length*20));for(const p of dense)if(p.y<lo)p.y=lo;
+ const cu=new THREE.CatmullRomCurve3(dense,false,'centripetal');g.add(new THREE.Mesh(new THREE.TubeGeometry(cu,dense.length,.26,10,false),m));
  const e=pts[pts.length-1],p=pts[pts.length-2],d=new THREE.Vector3(e[0]-p[0],e[1]-p[1],e[2]-p[2]).normalize();
  const sl=new THREE.Mesh(new THREE.CylinderGeometry(.42,.5,2.2,12),m);sl.position.set(e[0]-d.x*1.1,e[1]-d.y*1.1,e[2]-d.z*1.1);sl.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d);g.add(sl);
  const cl=new THREE.Mesh(new THREE.BoxGeometry(.7,1.6,.45),metal(0xbfbcb0,.3));cl.position.set(e[0]+d.x*.4,e[1]+d.y*.4,e[2]+d.z*.4);cl.quaternion.copy(sl.quaternion);g.add(cl);return g;}
@@ -410,7 +413,7 @@ function build(){if(!V.ok)return;clear();scene.fog=null;if(bloom)bloom.enabled=!
  /* daylight is bright: a filmic curve keeps the white bench from clipping (the evening scene goes through the bloom pass instead) */
  R3.toneMapping=dark?THREE.NoToneMapping:THREE.ACESFilmicToneMapping;R3.toneMappingExposure=1.25;
  if(dark){HEMI.intensity=.36;HEMI.color.set(0xffefd6);HEMI.groundColor.set(0x2e2a24);DL.intensity=.42;DL.color.set(0xffe2b8);}else{HEMI.intensity=.6;HEMI.color.set(0xfffbf2);HEMI.groundColor.set(0x8a8170);DL.intensity=.7;DL.color.set(0xfff1dc);}
- const fy=m==='oer'?-.2:-26;root.add(room(fy,dark));bench=benchMesh(fy);root.add(bench);
+ const fy=m==='oer'?-.2:-26;LEADFLOOR=fy;root.add(room(fy,dark));bench=benchMesh(fy);root.add(bench);
  /* the power supply on the bench, and its leads */
  const Pz=m==='oer'?-24:-31,psu=psuMesh();psu.position.set(0,fy,Pz);root.add(psu);const tR=[8.05,fy+2.6,Pz+8.4],tB=[-4.05,fy+2.6,Pz+8.4],out=(t,dx)=>[[t[0],t[1],t[2]],[t[0]+dx*.3,fy+.9,t[2]+3.5],[t[0]+dx,fy+.35,t[2]-2]];
  if(m!=='oer'){/* a clear acrylic sheet held by four lab stands */
