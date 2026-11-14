@@ -394,12 +394,11 @@ function buildCic(dark){const FL=-160;
  for(let i=0;i<10;i++)mesh(new THREE.BoxGeometry(66,3,26),gr,-270,DY-15-i*15,-272-i*25,bot);for(const x of[-304,-236]){rod([x,DY,-262],[x,FL,-512],2.6,fl,bot);rod([x,DY+105,-260],[x,FL+105,-512],2.4,yl,bot);rod([x,FL,-512],[x,FL+105,-512],2,yl,bot);}
  person(-268,DY,-130,Math.PI/2+.25,bot);person(-120,FL,260,2.6,bot);
  /* the uniform magnetic field between the poles */
- st.bl=new THREE.Group();bot.add(st.bl);const bmat=new THREE.LineBasicMaterial({color:0x8fd6c4,transparent:true,opacity:.5}),pts=[];
- for(let x=-75;x<=75;x+=25)for(let z=-75;z<=75;z+=25){if(Math.hypot(x,z)>78)continue;pts.push(x,-11,z,x,11,z);const cn=mesh(new THREE.ConeGeometry(1.4,3.4,10),new THREE.MeshBasicMaterial({color:0x8fd6c4,transparent:true,opacity:.7}),x,8,z,st.bl);cn.userData.ns=1;}
- const lg=new THREE.BufferGeometry();lg.setAttribute('position',new THREE.Float32BufferAttribute(pts,3));st.bl.add(new THREE.LineSegments(lg,bmat));
+ st.bl=new THREE.Group();bot.add(st.bl);const bg=new THREE.TubeGeometry(new THREE.LineCurve3(new THREE.Vector3(0,0,0),new THREE.Vector3(0,1,0)),8,.9,8,false),bfm=flowMat(0xa8ffc0,0x3a9a5a,dark?.85:1,3);
+ for(let x=-75;x<=75;x+=25)for(let z=-75;z<=75;z+=25){if(Math.hypot(x,z)>78)continue;const t=mesh(bg,bfm,x,-12,z,st.bl);t.userData.ns=1;t.renderOrder=4;}
  /* a soft warm light inside the open magnet */
  const pl=new THREE.PointLight(0xffd9a8,dark?.6:.25,520,2);pl.position.set(0,70,40);bot.add(pl);
- st.av=fatArrow([2,1.7,.5],1.6);st.aF=fatArrow([2,.7,.6],1.6);st.aB=fatArrow([.4,1.3,1.4],1.6);
+ st.av=fatArrow([2,1.7,.5],.6);st.aF=fatArrow([2,.7,.6],.6);st.aB=fatArrow([.4,1.3,1.4],.6);
  labs=[[[0,0,0],['Elettromagnete: giogo e bobine (metà superiore sollevata)','Electromagnet: yoke and coils (upper half lifted)'],'#a5a291','mag'],[[-50,10,40],['Elettrodi a D (diametro 1,5 m)','Dees (1.5 m across)'],'#f0a35e'],[[0,10,-62],['Fessura: qui la particella accelera','Gap: here the particle is accelerated'],'#ffd27a'],
   [[0,14,0],['Sorgente di ioni','Ion source'],'#ffd27a'],[[73*Math.cos(ALD),14,73*Math.sin(ALD)],['Deflettore','Deflector'],'#c9c6bb'],[at(2.0).map((v,i)=>i===1?40:v),['Quadrupoli: mettono a fuoco il fascio','Quadrupoles: they focus the beam'],'#f2917c'],
   [[TP[0],215+FL,TP[2]],['Bersaglio dietro la schermatura','Target behind the shielding'],'#f2917c'],[[0,FL+300,-515],['Oscillatore a radiofrequenza','Radio-frequency oscillator'],'#8fd6c4'],[[42,45,-330],['Linee risonanti','Resonant lines'],'#c8a070'],[[-120,FL+200,260],['1,75 m','1.75 m'],'#a5a291']];
@@ -429,12 +428,12 @@ function buildCic(dark){const FL=-160;
  st.vis=dt=>{const cph=Math.cos(st.PHI),k=Math.abs(cph);top.position.y+=((P.mag?0:LIFT)-top.position.y)*Math.min(1,dt*2.2);
   for(let i=0;i<2;i++){const vr=(i?-1:1)*cph,col=vr>0?new THREE.Color(1,.22,.12):new THREE.Color(.15,.4,1);for(const m of st.dm[i])m.emissive.copy(col).multiplyScalar(.55*k);}
   st.gapM.color.set(cph>0?0xff6040:0x4a8cff);st.gapM.opacity=P.efld?.4*k:0;for(const a of st.ea){a.visible=P.efld&&k>.12;a.setDirection(new THREE.Vector3(cph>0?-1:1,0,0));a.position.x=cph>0?3:-3;a.setLength(6*k+.01,2.4*k+.01,1.6);}
-  st.bl.visible=P.bfld;st.src.scale.setScalar(.8+.3*Math.sin(clock*9));for(const f of st.fil)f.scale.x=f.scale.z=.9+.1*Math.sin(clock*13+f.position.x);
+  st.bl.visible=P.bfld;if(P.bfld){const hgt=top.position.y+24;for(const t of st.bl.children)t.scale.y=hgt;uFlow.value=.9;}st.src.scale.setScalar(.8+.3*Math.sin(clock*9));for(const f of st.fil)f.scale.x=f.scale.z=.9+.1*Math.sin(clock*13+f.position.x);
   st.flash=Math.max(0,(st.flash||0)-dt*1.5);st.tgt.material.color.setRGB(.6+3*st.flash,.35+2.4*st.flash,.2+1.2*st.flash);const ex=st.parts.some(p=>p.st==='ext');st.view.material.color.setRGB(ex?.8:.25,ex?2.2:.5,ex?1.2:.35);
   for(const p of st.parts){p.head.visible=p.st==='acc'||p.st==='ext';p.head.position.set(p.x*100,.4,p.z*100);}
   /* explanations on the lead particle: velocity, force towards the centre, field */
   const ref=st.parts.find(p=>p.st==='acc')||st.parts.find(p=>p.st==='ext'),show=P.expC&&ref;st.av.visible=st.aF.visible=st.aB.visible=!!show;
-  if(show){const P0=[ref.x*100,.4,ref.z*100];st.av.userData.set(P0,[ref.ux,0,ref.uz],44);st.aB.userData.set(P0,[0,1,0],30);st.aF.visible=ref.st==='acc';if(ref.st==='acc')st.aF.userData.set(P0,[-ref.uz*sgn,0,ref.ux*sgn],32);}
+  if(show){const P0=[ref.x*100,.4,ref.z*100];st.av.userData.set(P0,[ref.ux,0,ref.uz],20);st.aB.userData.set(P0,[0,1,0],14);st.aF.visible=ref.st==='acc';if(ref.st==='acc')st.aF.userData.set(P0,[-ref.uz*sgn,0,ref.ux*sgn],15);}
   /* the oscillator screen: frequency, voltage and the sine wave with the present phase */
   st.scrT+=dt;if(st.scrT>.03){st.scrT=0;const x=st.scr.x,w=800,h=452;x.fillStyle='#0b0f0d';x.fillRect(0,0,w,h);x.strokeStyle='rgba(125,255,106,.12)';x.lineWidth=1;for(let i=1;i<10;i++){x.beginPath();x.moveTo(i*w/10,0);x.lineTo(i*w/10,h);x.stroke();}for(let i=1;i<5;i++){x.beginPath();x.moveTo(0,i*h/5+30);x.lineTo(w,i*h/5+30);x.stroke();}
    x.font='bold 46px ui-monospace,Consolas,monospace';x.fillStyle='#7dff6a';x.textBaseline='top';x.textAlign='left';x.fillText('f = '+fmtF(st.f||0),28,22);x.fillStyle='#ffb35c';x.textAlign='right';x.fillText('V = '+nf(P.V0,0)+' kV',w-28,22);x.textAlign='left';
@@ -490,6 +489,7 @@ function buildSpe(dark){const TOP=-17,FL=TOP-82;
  const wl=mesh(new THREE.CylinderGeometry(58,58,6.4,96,1,true,-Math.PI/2,Math.PI),metal(0xb5b2a6,.3),55,0,0);wl.material.side=THREE.DoubleSide;
  for(const x of[10,55,100])sup(x,20,-14.2);
  /* the detector plate: a film whose picture builds up hit by hit */
+ st.doors=ISOH.map(col=>{const g=new THREE.Group(),m=new THREE.MeshBasicMaterial({color:col});for(const x of[-1.4,1.4]){const p=new THREE.Mesh(new THREE.BoxGeometry(.4,8,.4),m);p.position.set(x,.5,0);g.add(p);}const t=new THREE.Mesh(new THREE.BoxGeometry(3.2,.45,.4),m);t.position.y=4.5;g.add(t);g.traverse(o=>o.userData.ns=1);g.visible=false;root.add(g);return g;});
  st.film=scrn(110,5,2048,96);const fm=new THREE.MeshBasicMaterial({map:st.film.t});st.film.m.material=fm;st.film.m.position.set((XP0+XP1)/2*100,0,-.25);root.add(st.film.m);
  mesh(new THREE.BoxGeometry(112,6.4,.5),dkp,(XP0+XP1)/2*100,0,-.6);
  st.base=()=>{const x=st.film.x;x.fillStyle=dark?'#101412':'#1a1d1b';x.fillRect(0,0,2048,96);x.strokeStyle='rgba(230,230,210,.55)';x.fillStyle='rgba(230,230,210,.7)';x.font='14px system-ui';
@@ -527,7 +527,8 @@ function buildSpe(dark){const TOP=-17,FL=TOP-82;
   if(st.lobj){root.remove(st.lobj);st.lobj.geometry.dispose();st.lobj=null;}
   if(seg.length){let g;if(st.lsFat){g=new THREE.LineSegmentsGeometry();g.setPositions(seg);g.setColors(cols);st.lobj=new THREE.LineSegments2(g,st.lmat);}else{g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(seg,3));g.setAttribute('color',new THREE.Float32BufferAttribute(cols,3));st.lobj=new THREE.LineSegments(g,st.lmat);}st.lobj.frustumCulled=false;root.add(st.lobj);}
   const Es=P.Es*1e3,B1=P.B1*1e-3,B2=P.B2*1e-3,vs=Es/B1,I=iso();for(const a of st.ea)a.setLength(1.5+3.1*Math.min(1,P.Es/20),1.2,.8);
-  st.dyn=I.map((s,k)=>[[2*s[1]*AMU*vs/(QE*B2)*100,7+k*6,1],[s[0],s[0]],ISOH[k]]).filter(l=>l[0][0]>2&&l[0][0]<112);
+  st.dyn=I.map((s,k)=>[[2*s[1]*AMU*vs/(QE*B2)*100,5,.8],[s[0],s[0]],ISOH[k],1,1]).filter(l=>l[0][0]>2&&l[0][0]<112);
+  st.doors.forEach((d,k)=>{const x=k<I.length?2*I[k][1]*AMU*vs/(QE*B2)*100:-1;d.visible=x>2&&x<112;d.position.set(x,0,.6);});
   const rs=I.map(s=>s[1]*AMU*vs/(QE*B2));ro('rVs',nf(vs/1e3,1)+' km/s');ro('rRs',I.map((s,k)=>s[0]+' '+fmtL(rs[k])).slice(0,3).join(' · '));
   ro('rDx',I.length>1?fmtL(2*Math.abs(rs[1]-rs[0])):'–');ro('rN',st.hits.length+'');
   ro('cap',vs<VSRC*.9||vs>VSRC*1.1?L('Nessuno ione della sorgente ha v = E/B₁: la sorgente emette tra 90 e 110 km/s','No ion from the source has v = E/B₁: the source emits between 90 and 110 km/s'):L('Trascina per ruotare · rotellina per lo zoom','Drag to turn · wheel to zoom'));};
@@ -698,14 +699,14 @@ function onTheme(){if(!V.ok)return;buildAll();enterSlide(SL[CUR]);const g=V.goal
 const pv=new THREE.Vector3();const toScr=(x,y,z)=>{pv.set(x,y,z).project(cam);return[(pv.x+1)/2*W,(1-pv.y)/2*H,pv.z<1];};
 /* labels are queued, kept inside the view and pushed apart so that they never overlap; a thin line joins a moved label to its point */
 let LQ=[],SIDE=false;
-function label(p,t,col,big,al){if(al<=.01)return;const q=toScr(...p);if(!q[2]||q[0]<-40||q[0]>W+40||q[1]<-40||q[1]>H+40)return;LQ.push({ax:q[0],ay:q[1],t,col,big,al});}
+function label(p,t,col,big,al,free){if(al<=.01)return;const q=toScr(...p);if(!q[2]||q[0]<-40||q[0]>W+40||q[1]<-40||q[1]>H+40)return;LQ.push({ax:q[0],ay:q[1],t,col,big,al,free});}
 function flushLabels(){const sm=W<760;for(const l of LQ){l.fs=l.big?(l.t.length<=2?(sm?16:20):(sm?14:19)):(sm?11:12.5);c.font='600 '+l.fs+'px '+FONT;l.w=c.measureText(l.t).width+(l.big?20:16);l.h=l.big?l.fs+12:l.fs+11;
-  l.x=SIDE&&!l.big?(l.ax<W/2?l.w/2+10:W-l.w/2-10):clamp(l.ax,l.w/2+6,W-l.w/2-6);l.y=clamp(l.ay,l.h/2+6,H-l.h/2-6);}
+  const sd=SIDE&&!l.big&&!l.free;l.sd=sd;l.x=sd?(l.ax<W/2?l.w/2+10:W-l.w/2-10):clamp(l.ax,l.w/2+6,W-l.w/2-6);l.y=clamp(l.free?l.ay-l.h*1.4:l.ay,l.h/2+6,H-l.h/2-6);}
  for(let it=0;it<16;it++){let moved=false;for(let i=0;i<LQ.length;i++)for(let j=i+1;j<LQ.length;j++){const a=LQ[i],b=LQ[j],ox=(a.w+b.w)/2+4-Math.abs(a.x-b.x),oy=(a.h+b.h)/2+3-Math.abs(a.y-b.y);
    if(ox>0&&oy>0){const d=(b.y>=a.y?1:-1)*oy/2;a.y-=d;b.y+=d;moved=true;}}
   for(const l of LQ)l.y=clamp(l.y,l.h/2+6,H-l.h/2-6);if(!moved)break;}
  for(const l of LQ){c.save();c.globalAlpha=l.al;
-  if(Math.hypot(l.x-l.ax,l.y-l.ay)>l.h*.7){c.strokeStyle=l.col;c.globalAlpha=l.al*.7;c.lineWidth=1.2;c.beginPath();const ex=SIDE&&!l.big?(l.ax<l.x?l.x-l.w/2:l.x+l.w/2):clamp(l.ax,l.x-l.w/2+8,l.x+l.w/2-8),ey=SIDE&&!l.big?l.y:l.y+(l.ay>l.y?l.h/2:-l.h/2);c.moveTo(ex,ey);c.lineTo(l.ax,l.ay);c.stroke();
+  if(Math.hypot(l.x-l.ax,l.y-l.ay)>l.h*.7){c.strokeStyle=l.col;c.globalAlpha=l.al*.7;c.lineWidth=1.2;c.beginPath();const ex=l.sd?(l.ax<l.x?l.x-l.w/2:l.x+l.w/2):clamp(l.ax,l.x-l.w/2+8,l.x+l.w/2-8),ey=l.sd?l.y:l.y+(l.ay>l.y?l.h/2:-l.h/2);c.moveTo(ex,ey);c.lineTo(l.ax,l.ay);c.stroke();
    const an=Math.atan2(l.ay-ey,l.ax-ex);c.fillStyle=l.col;c.beginPath();c.moveTo(l.ax,l.ay);c.lineTo(l.ax-8*Math.cos(an-.45),l.ay-8*Math.sin(an-.45));c.lineTo(l.ax-8*Math.cos(an+.45),l.ay-8*Math.sin(an+.45));c.closePath();c.fill();c.globalAlpha=l.al;}
   c.fillStyle=LIGHT?'rgba(251,250,246,.9)':'rgba(16,18,20,.78)';rr(c,l.x-l.w/2,l.y-l.h/2,l.w,l.h,l.h/2);c.fill();c.strokeStyle=l.col;c.globalAlpha=l.al*.75;c.lineWidth=1;c.stroke();c.globalAlpha=l.al;
   txt(c,l.t,l.x,l.y,LIGHT&&!l.big?'#23231d':l.col,l.fs,'center',1);c.restore();}
@@ -735,7 +736,7 @@ function frame(now){requestAnimationFrame(frame);const dt=Math.min(.05,(now-last
  const la=V.arrived>=0?clamp((clock-V.arrived-.2)/.8,0,1):0;
  if(!s.k){for(const l of INTRO)label(W3(ST[l[0]],l[1]),L(...l[2]),l[3],true,la);}
  else{for(const i of s.labs||[]){const l=st.labs[i];if(!l)continue;const p=l[3]==='mag'&&st.topG?[0,st.topG.position.y+150,-60]:l[0];label(W3(st,p),L(...l[1]),l[2],false,la);}
-  if(s.dyn&&st.dyn){const dy=typeof st.dyn==='function'?st.dyn():st.dyn;for(const l of dy)label(W3(st,l[0]),l[1][0],l[2],l[1][0].length<=2,la*(l[3]==null?1:l[3]));}}
+  if(s.dyn&&st.dyn){const dy=typeof st.dyn==='function'?st.dyn():st.dyn;for(const l of dy)label(W3(st,l[0]),l[1][0],l[2],l[1][0].length<=2,la*(l[3]==null?1:l[3]),!!l[4]);}}
  SIDE=!!s.side;flushLabels();
  for(const p of pops){p.a+=dt;const q=toScr(...p.p);if(!q[2]||!s.dyn)continue;c.save();c.globalAlpha=Math.max(0,1-p.a/1.3)*la;if(!LIGHT){c.shadowColor='rgba(0,0,0,.8)';c.shadowBlur=5;}txt(c,p.t,q[0]+46,q[1]-14-p.a*30,p.col,13,'left',1);c.restore();}pops=pops.filter(p=>p.a<1.3);
  if(s.ov&&st&&st.overlay&&la>0){c.save();c.globalAlpha=la;st.overlay();c.restore();}}
