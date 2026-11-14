@@ -294,7 +294,7 @@ function buildMoto(dark){const FL=-175;
  st.demo=()=>{const s=SPEC[P.sp],sg=Math.sign(s.q*bsM)||1;st.launch(sg*.6,0,0,1,1);};
  st.update=dt=>{const H_=dt*st.rate();for(const p of st.parts){if(!p.alive)continue;const n=subs(p,H_),h=H_/n;
    for(let i=0;i<n;i++){step(p,h);const X=p.x*100,Y=p.y*100,Z=p.z*100;
-    if(Y<st.FL+1){p.alive=false;spark(X,st.FL+1,Z,p.s.col,2.5);break;}if(Math.hypot(p.x,p.y,p.z)>9){p.alive=false;break;}
+    if(Y<st.FL+1){p.alive=false;spark(X,st.FL+1,Z,p.s.col,2.5);break;}if(Math.abs(p.y)>HF+.35||Math.hypot(p.x,p.z)>RF+1.6){p.alive=false;break;}
     if(Math.hypot(X-p.lx,Y-p.ly,Z-p.lz)>1.2){tPush(p.tr,X,Y,Z,p.col);p.lx=X;p.ly=Y;p.lz=Z;}}
    if(p.tr.pts.length>18000){p.tr.pts.splice(0,p.tr.pts.length-18000);p.tr.cols.splice(0,p.tr.cols.length-18000);}}};
  /* aiming: press on the pad, drag, let go */
@@ -417,11 +417,11 @@ function buildCic(dark){const FL=-160;
      if(p.x*nx<0&&!p.last){const rl=p.x>0,ph=st.PHI+p.phi,dK=(rl?1:-1)*q*V0*Math.cos(ph);let K=kin(p.p)+dK;if(K<1e3*QE)K=1e3*QE;p.p=mom(K);if(rl)p.turns++;
       const tt=p.turns+(rl?0:.5);p.hist.push([tt,K]);p.ph.push([tt,wrap((rl?0:Math.PI)+(s.q<0?Math.PI:0)+ph)*180/Math.PI]);if(p.hist.length>3000){p.hist.shift();p.ph.shift();}
       if(rl&&p===st.parts[Math.floor(st.parts.length/2)]&&P.expC&&P.spd<=8)pop([0,9,nz*100],(dK>=0?'+':'−')+fmtE(Math.abs(dK)),dK>=0?(LIGHT?'#4f7a0a':'#c9ec62'):(LIGHT?'#b8442f':'#f2917c'));}
-     p.x=nx;p.z=nz;p.ux=ux;p.uz=uz;const r=Math.hypot(nx,nz);
+     const d0=wrap(Math.atan2(p.z,p.x)-ALD),d1=wrap(Math.atan2(nz,nx)-ALD);p.x=nx;p.z=nz;p.ux=ux;p.uz=uz;const r=Math.hypot(nx,nz);
      /* once the orbit radius p/(|q|B) reaches the extraction radius, the particle makes its last turn (no more kicks)
         and the deflector pulls it out as soon as it passes in front of it */
      if(p.p/(Math.abs(q)*B)>=R_EX)p.last=true;
-     if(p.last&&Math.abs(wrap(Math.atan2(nz,nx)-ALD))<.2){p.st='ext';}
+     if(p.last&&Math.abs(d0)<.4&&Math.abs(d1)<.4&&(d0<=0)!==(d1<=0)){p.st='ext';p.x=E0[0];p.z=E0[1];p.ux=dT[0];p.uz=dT[1];}
      else if(r>=R_WALL){p.st='lost';spark(nx*100,0,nz*100,[1,.7,.4],3);}
      else if(p.turns>900)p.st='stall';}
     else if(p.st==='ext'){const g=gam(p.p),v=p.p/(g*s.m);p.x+=p.ux*v*h;p.z+=p.uz*v*h;if((p.x-st.T[0])*dT[0]+(p.z-st.T[1])*dT[1]>-.06){p.st='hit';st.hits++;st.lastHit=kin(p.p);st.flash=1;spark(p.x*100,0,p.z*100,[1,.8,.5],7);}}
@@ -446,7 +446,7 @@ function buildCic(dark){const FL=-160;
   const lp=r0&&r0.ph.length?r0.ph[r0.ph.length-1][1]:0;
   ro('cap',!r0?'':r0.st==='hit'?L('Estratta: ','Extracted: ')+fmtE(st.lastHit)+L(' sul bersaglio',' on the target'):r0.st==='lost'?L('La particella ha urtato la parete','The particle hit the wall'):r0.st==='stall'?L('Fuori passo: la particella non guadagna più energia','Out of step: the particle gains no more energy'):r0.st==='ext'?L('Il deflettore la porta nella linea di fascio','The deflector sends it into the beam line'):Math.abs(lp)>90?L('Fuori passo: ora la tensione la frena','Out of step: the voltage now slows it down'):L('In accelerazione: due spinte a ogni giro','Accelerating: two kicks per turn'));};
  st.dyn=()=>{const out=[];if(!P.expC)return out;const cph=Math.cos(st.PHI);const pa=clamp((Math.abs(cph)-.1)/.6,0,1);out.push([[42,16,0],[cph>0?'+':'−'],cph>0?'#ff6b55':'#6aa8ff',pa]);out.push([[-42,16,0],[cph>0?'−':'+'],cph>0?'#6aa8ff':'#ff6b55',pa]);
-  const ref=st.parts.find(p=>p.st==='acc');if(ref)out.push([[ref.x*100,22,ref.z*100],[fmtE(kin(ref.p))+' · r = '+fmtL(Math.hypot(ref.x,ref.z))],'#ffd27a']);return out;};
+  return out;};
  st.overlay=()=>{if(!P.grf||!st.parts.length)return;const w=Math.min(340,W*.5),h=Math.min(132,(H-60)/2-8);if(w<190||h<80)return;const x0=10,y0=H-2*h-22;
   const km=st.kmax()/QE/1e6,tm=Math.max(8,...st.parts.map(p=>p.turns+1));
   chart(c,x0,y0,w,h,{xmin:0,xmax:tm,ymin:0,ymax:km*1.15,xl:L('giri','turns'),yl:'E (MeV)',series:[{pts:[[0,km],[tm,km]],col:C.mu,w:1}].concat(st.parts.map(p=>({pts:p.hist.map(a=>[a[0],a[1]/QE/1e6]),col:'rgb('+p.col.map(v=>v*255|0)+')',w:1.8})))});
@@ -605,21 +605,21 @@ const SL=[
    'If v is perpendicular to B the path is a circle. If v also has a part along B, that part feels no force at all: the proton climbs, winding along a helix. If v is parallel to B the force is zero and the proton goes straight. As soon as it leaves the field, every particle carries on in a straight line.'],
   f:'F = q v B sin θ',P:{vecs:true},every:15,run:st=>{st.clear();P.sp='p';fitBm(.6);shot(st,-.75,0,0,1,1,0,-.6);shot(st,.6,0,0,1,1,90,-.62);shot(st,.6,0,0,1,1,85,-.6);}},
  /* ---------- 2. the mass spectrometer ---------- */
- {k:'S',c:[30,-30,-10,440,.55,.5],labs:[0,1,3,4],
+ {k:'S',c:[30,-30,-10,440,.55,.5],labs:[0,1,3,4],side:true,
   t:['Lo spettrometro di massa','The mass spectrometer'],
   b:['Un apparecchio da tavolo che «pesa» gli atomi. Gli ioni (atomi che hanno perso un elettrone) escono dalla sorgente, attraversano un filtro di velocità, poi entrano in un campo magnetico che li fa curvare su mezzo cerchio. Il punto in cui colpiscono la lastra dipende dalla loro massa. Qui analizziamo il neon.',
    'A tabletop instrument that "weighs" atoms. The ions (atoms that have lost an electron) leave the source, cross a velocity filter, then enter a magnetic field that bends them along half a circle. The point where they hit the plate depends on their mass. Here we analyse neon.']},
- {k:'S',c:[0,0,-48,125,.95,.5],labs:[0,1,2],
+ {k:'S',c:[0,0,-48,125,.95,.5],labs:[0,1,2],side:true,
   t:['Il selettore di velocità','The velocity selector'],
   b:['Nel tubo di vetro agiscono due campi incrociati: un campo elettrico E (frecce rosse, tra le piastre di rame) e un campo magnetico B₁ (tra i poli). Spingono lo ione in versi opposti. Solo chi ha la velocità giusta, per cui le due forze si annullano, va dritto e passa la fenditura; gli ioni troppo lenti o troppo veloci vengono deviati e si schiantano sulle pareti (i piccoli lampi).',
    'Two crossed fields act inside the glass tube: an electric field E (red arrows, between the copper plates) and a magnetic field B₁ (between the poles). They push the ion in opposite directions. Only ions with the right speed, for which the two forces cancel, go straight and pass the slit; ions too slow or too fast are deflected and crash into the walls (the small flashes).'],
   f:'q E = q v B₁  →  v = E / B₁'},
- {k:'S',c:[55,0,12,310,.3,.95],labs:[2,3],dyn:true,
+ {k:'S',c:[55,0,12,310,.3,.95],labs:[2,3],dyn:true,side:true,
   t:['Il magnete deflettore','The deflecting magnet'],
   b:['Oltre la fenditura c\'è solo il campo magnetico B₂. Ogni ione percorre mezzo cerchio e torna indietro verso la lastra. Poiché ora hanno tutti la stessa velocità, il raggio dipende soltanto dalla massa: gli isotopi più pesanti, come il ²²Ne, fanno un arco più largo.',
    'Past the slit there is only the magnetic field B₂. Each ion follows half a circle and comes back towards the plate. Since they now all have the same speed, the radius depends only on the mass: the heavier isotopes, like ²²Ne, make a wider arc.'],
   f:'r = m v / (q B₂)'},
- {k:'S',c:[57,0,12,205,0,.45],labs:[],dyn:true,ov:true,
+ {k:'S',c:[57,0,12,205,0,.45],labs:[],dyn:true,ov:true,side:true,
   t:['La lastra: lo spettro di massa','The plate: the mass spectrum'],
   b:['Ogni ione colpisce la lastra a una distanza 2r dalla fenditura e vi lascia un segno. Il neon naturale lascia tre righe: ²⁰Ne (90%), ²²Ne (9%) e il rarissimo ²¹Ne (0,3%), quasi invisibile. Contando gli ioni a ogni distanza si ottiene lo spettro di massa (il grafico): così si scoprì che gli elementi hanno isotopi.',
    'Each ion hits the plate at a distance 2r from the slit and leaves a mark. Natural neon leaves three lines: ²⁰Ne (90%), ²²Ne (9%) and the very rare ²¹Ne (0.3%), almost invisible. Counting the ions at each distance gives the mass spectrum (the graph): this is how it was discovered that elements have isotopes.'],
@@ -634,12 +634,12 @@ const SL=[
   b:['Due bobine di rame, percorse da migliaia di ampere, magnetizzano il giogo di ferro. Tra i poli il campo B (linee verdi) è verticale e quasi uniforme, come tra le bobine che abbiamo visto all\'inizio: è lui a far girare le particelle in cerchio.',
    'Two copper coils, carrying thousands of amperes, magnetise the iron yoke. Between the poles the field B (green lines) is vertical and nearly uniform, as between the coils we saw at the start: it is what makes the particles go round.'],
   f:'F = q v × B'},
- {k:'C',c:[0,0,0,360,-.2,.78],labs:[1,3],P:{spd:1.6,expC:true,bfld:false},
+ {k:'C',c:[0,0,0,360,-.2,.78],labs:[],P:{spd:1.6,expC:true,bfld:false},
   t:['Le due «D» e la spirale','The two dees and the spiral'],
   b:['Due elettrodi cavi di rame a forma di D. Dentro una D il campo elettrico è nullo: il protone, partito dalla sorgente al centro, percorre mezzo cerchio senza guadagnare energia. Poi attraversa la fessura, riceve una spinta ed entra nell\'altra D su un cerchio un po\' più grande. Giro dopo giro la traiettoria diventa una spirale.',
    'Two hollow copper electrodes shaped like a D. Inside a dee the electric field is zero: the proton, which started from the source at the centre, follows half a circle without gaining energy. Then it crosses the gap, gets a push and enters the other dee on a slightly larger circle. Turn after turn the path becomes a spiral.'],
   f:'r = m v / (q B)'},
- {k:'C',c:[0,0,-20,200,.08,.55],labs:[2],dyn:true,P:{spd:.6,expC:true},
+ {k:'C',c:[0,0,-20,200,.08,.55],labs:[],dyn:true,P:{spd:.6,expC:true},
   t:['La fessura: la spinta che accelera','The gap: the push that accelerates'],
   b:['Nella fessura tra le due D c\'è un campo elettrico (le frecce gialle). È lui, non il campo magnetico, a dare energia: quando il protone lo attraversa riceve una spinta e accelera. Il campo però è alternato: le D cambiano polarità (rosso positivo, blu negativo) proprio ogni mezzo giro, così quando il protone torna nella fessura dall\'altra parte trova di nuovo il campo nel verso giusto e viene spinto ancora. Due spinte a ogni giro, ciascuna da qV (le scritte verdi).',
    'In the gap between the two dees there is an electric field (the yellow arrows). It is this field, not the magnetic one, that gives energy: when the proton crosses it, it gets a push and accelerates. The field, however, alternates: the dees change polarity (red positive, blue negative) exactly every half turn, so when the proton comes back to the gap on the other side it again finds the field pointing the right way and is pushed again. Two pushes per turn, each worth qV (the green numbers).'],
@@ -649,7 +649,7 @@ const SL=[
   b:['Le grandi valvole incandescenti producono la tensione alternata e la portano alle D attraverso due lunghe linee risonanti. Lo schermo mostra l\'onda: la frequenza è fissa, perché il tempo di un giro non dipende dalla velocità. Per un protone in 0,7 T sono circa 10 milioni di oscillazioni al secondo.',
    'The big glowing valves produce the alternating voltage and bring it to the dees through two long resonant lines. The screen shows the wave: the frequency is fixed, because the time of one turn does not depend on the speed. For a proton in 0.7 T that is about 10 million oscillations per second.'],
   f:'f = q B / (2π m)'},
- {k:'C',c:st=>[st.E0[0]*100,0,st.E0[1]*100,290,.55,.95],labs:[4],P:{spd:2,expC:true},
+ {k:'C',c:st=>[st.E0[0]*100,0,st.E0[1]*100,290,.55,.95],labs:[],P:{spd:2,expC:true},
   t:['L\'estrazione','Extraction'],
   b:['Quando l\'orbita arriva al bordo delle D, un deflettore elettrostatico strappa il protone dalla spirale e lo manda nella linea di fascio, in linea retta. L\'energia finale dipende solo dal campo e dal raggio della macchina, non dalla tensione: una tensione più bassa richiede solo più giri.',
    'When the orbit reaches the edge of the dees, an electrostatic deflector pulls the proton out of the spiral and sends it into the beam line, in a straight line. The final energy depends only on the field and the radius of the machine, not on the voltage: a lower voltage only needs more turns.'],
@@ -697,15 +697,16 @@ function onTheme(){if(!V.ok)return;buildAll();enterSlide(SL[CUR]);const g=V.goal
 /* ================================================================== labels drawn over the 3D view ================================================================== */
 const pv=new THREE.Vector3();const toScr=(x,y,z)=>{pv.set(x,y,z).project(cam);return[(pv.x+1)/2*W,(1-pv.y)/2*H,pv.z<1];};
 /* labels are queued, kept inside the view and pushed apart so that they never overlap; a thin line joins a moved label to its point */
-let LQ=[];
+let LQ=[],SIDE=false;
 function label(p,t,col,big,al){if(al<=.01)return;const q=toScr(...p);if(!q[2]||q[0]<-40||q[0]>W+40||q[1]<-40||q[1]>H+40)return;LQ.push({ax:q[0],ay:q[1],t,col,big,al});}
 function flushLabels(){const sm=W<760;for(const l of LQ){l.fs=l.big?(l.t.length<=2?(sm?16:20):(sm?14:19)):(sm?11:12.5);c.font='600 '+l.fs+'px '+FONT;l.w=c.measureText(l.t).width+(l.big?20:16);l.h=l.big?l.fs+12:l.fs+11;
-  l.x=clamp(l.ax,l.w/2+6,W-l.w/2-6);l.y=clamp(l.ay,l.h/2+6,H-l.h/2-6);}
+  l.x=SIDE&&!l.big?(l.ax<W/2?l.w/2+10:W-l.w/2-10):clamp(l.ax,l.w/2+6,W-l.w/2-6);l.y=clamp(l.ay,l.h/2+6,H-l.h/2-6);}
  for(let it=0;it<16;it++){let moved=false;for(let i=0;i<LQ.length;i++)for(let j=i+1;j<LQ.length;j++){const a=LQ[i],b=LQ[j],ox=(a.w+b.w)/2+4-Math.abs(a.x-b.x),oy=(a.h+b.h)/2+3-Math.abs(a.y-b.y);
    if(ox>0&&oy>0){const d=(b.y>=a.y?1:-1)*oy/2;a.y-=d;b.y+=d;moved=true;}}
   for(const l of LQ)l.y=clamp(l.y,l.h/2+6,H-l.h/2-6);if(!moved)break;}
  for(const l of LQ){c.save();c.globalAlpha=l.al;
-  if(Math.hypot(l.x-l.ax,l.y-l.ay)>l.h*.7){c.strokeStyle=l.col;c.globalAlpha=l.al*.7;c.lineWidth=1.2;c.beginPath();c.moveTo(l.ax,l.ay);c.lineTo(clamp(l.ax,l.x-l.w/2+8,l.x+l.w/2-8),l.y+(l.ay>l.y?l.h/2:-l.h/2));c.stroke();c.fillStyle=l.col;c.beginPath();c.arc(l.ax,l.ay,2.6,0,7);c.fill();c.globalAlpha=l.al;}
+  if(Math.hypot(l.x-l.ax,l.y-l.ay)>l.h*.7){c.strokeStyle=l.col;c.globalAlpha=l.al*.7;c.lineWidth=1.2;c.beginPath();const ex=SIDE&&!l.big?(l.ax<l.x?l.x-l.w/2:l.x+l.w/2):clamp(l.ax,l.x-l.w/2+8,l.x+l.w/2-8),ey=SIDE&&!l.big?l.y:l.y+(l.ay>l.y?l.h/2:-l.h/2);c.moveTo(ex,ey);c.lineTo(l.ax,l.ay);c.stroke();
+   const an=Math.atan2(l.ay-ey,l.ax-ex);c.fillStyle=l.col;c.beginPath();c.moveTo(l.ax,l.ay);c.lineTo(l.ax-8*Math.cos(an-.45),l.ay-8*Math.sin(an-.45));c.lineTo(l.ax-8*Math.cos(an+.45),l.ay-8*Math.sin(an+.45));c.closePath();c.fill();c.globalAlpha=l.al;}
   c.fillStyle=LIGHT?'rgba(251,250,246,.9)':'rgba(16,18,20,.78)';rr(c,l.x-l.w/2,l.y-l.h/2,l.w,l.h,l.h/2);c.fill();c.strokeStyle=l.col;c.globalAlpha=l.al*.75;c.lineWidth=1;c.stroke();c.globalAlpha=l.al;
   txt(c,l.t,l.x,l.y,LIGHT&&!l.big?'#23231d':l.col,l.fs,'center',1);c.restore();}
  LQ=[];}
@@ -735,7 +736,7 @@ function frame(now){requestAnimationFrame(frame);const dt=Math.min(.05,(now-last
  if(!s.k){for(const l of INTRO)label(W3(ST[l[0]],l[1]),L(...l[2]),l[3],true,la);}
  else{for(const i of s.labs||[]){const l=st.labs[i];if(!l)continue;const p=l[3]==='mag'&&st.topG?[0,st.topG.position.y+150,-60]:l[0];label(W3(st,p),L(...l[1]),l[2],false,la);}
   if(s.dyn&&st.dyn){const dy=typeof st.dyn==='function'?st.dyn():st.dyn;for(const l of dy)label(W3(st,l[0]),l[1][0],l[2],l[1][0].length<=2,la*(l[3]==null?1:l[3]));}}
- flushLabels();
+ SIDE=!!s.side;flushLabels();
  for(const p of pops){p.a+=dt;const q=toScr(...p.p);if(!q[2]||!s.dyn)continue;c.save();c.globalAlpha=Math.max(0,1-p.a/1.3)*la;if(!LIGHT){c.shadowColor='rgba(0,0,0,.8)';c.shadowBlur=5;}txt(c,p.t,q[0]+46,q[1]-14-p.a*30,p.col,13,'left',1);c.restore();}pops=pops.filter(p=>p.a<1.3);
  if(s.ov&&st&&st.overlay&&la>0){c.save();c.globalAlpha=la;st.overlay();c.restore();}}
 applyLang();
