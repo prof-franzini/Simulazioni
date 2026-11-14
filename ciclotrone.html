@@ -271,7 +271,7 @@ function buildMoto(dark){const FL=-175;
  /* the coils' power supply on the floor, with its cables */
  const rk=mesh(new THREE.BoxGeometry(70,150,56),new THREE.MeshPhysicalMaterial({color:0x2b2f34,roughness:.4,clearcoat:.5,envMap:ENV,envMapIntensity:.5}),-330,FL+75,-150);rk.rotation.y=.5;
  st.scr=scrn(54,30,512,284);st.scr.m.position.set(-330+Math.sin(.5)*28.2,FL+110,-150+Math.cos(.5)*28.2);st.scr.m.rotation.y=.5;root.add(st.scr.m);st.shown='';
- for(const[y,k]of[[-HF*100,0],[HF*100,1]]){const a=Math.PI*1.18,pts=[[-330+Math.sin(.5)*20,FL+30+k*12,-150+Math.cos(.5)*20],[-300,FL+1.5,-80],[Math.cos(a)*150,FL+1.5,Math.sin(a)*150],[Math.cos(a)*192,FL+20,Math.sin(a)*192],[Math.cos(a)*186,y,Math.sin(a)*186]];tube(pts,2.2,paint(k?0xb8392b:0x1d1d1b,.5));}
+ for(const[y,k]of[[-HF*100,0],[HF*100,1]]){const a=Math.PI*1.18,pts=[[-330+Math.sin(.5)*20,FL+30+k*12,-150+Math.cos(.5)*20],[-300,FL+4+k*5,-80],[Math.cos(a)*150,FL+4+k*5,Math.sin(a)*150],[Math.cos(a)*(196+k*6),FL+24,Math.sin(a)*(196+k*6)],[Math.cos(a)*(190+k*6),y,Math.sin(a)*(190+k*6)]];tube(pts,2.6,paint(k?0xd0402e:0x2f78d0,.45,{emissive:k?0x3a0c06:0x081a3a}));}
  /* the region of uniform field: its edges, flowing field lines, the launch pad */
  const edge=hdr(.35,1.1,1.25,{transparent:true,opacity:.65});for(const y of[-HF*100,HF*100]){const t=mesh(new THREE.TorusGeometry(RF*100,.5,8,200),edge,0,y,0);t.rotation.x=Math.PI/2;t.userData.ns=1;}
  st.lines=new THREE.Group();root.add(st.lines);for(let x=-128;x<=128;x+=32)for(let z=-128;z<=128;z+=32){if(Math.hypot(x,z)>132)continue;const tb=mesh(new THREE.TubeGeometry(new THREE.LineCurve3(new THREE.Vector3(x,-HF*100,z),new THREE.Vector3(x,HF*100,z)),8,.45,6,false),flowMat(0x9fe8f0,0x3a8f9a,dark?.55:.8,4),0,0,0,st.lines);tb.userData.ns=1;}
@@ -288,7 +288,7 @@ function buildMoto(dark){const FL=-175;
  st.rate=()=>{const s=SPEC[P.sp],v=vOf(P.vm),g=1/Math.sqrt(1-(v/CL)**2),T=2*Math.PI*g*s.m/(Math.abs(s.q)*QE*BOf(P.Bm));return Math.min(T/3.4,1.1/v);};
  st.make=(x,z,dx,dz,f)=>{const s=SPEC[P.sp],v=Math.min(.995*CL,vOf(P.vm)*f),th=P.ang*Math.PI/180,l=Math.hypot(dx,dz)||1;const p={s,x,y:0,z,v,g:1/Math.sqrt(1-(v/CL)**2),ux:Math.sin(th)*dx/l,uz:Math.sin(th)*dz/l,uy:Math.cos(th)*bsM,alive:true,lx:1e9,ly:0,lz:0};
   if(!v){p.ux=p.uz=0;p.uy=0;}return p;};
- st.launch=(x,z,dx,dz,f)=>{const p=st.make(x,z,dx,dz,f);p.tr=trail(3);p.col=p.s.col.map(c=>c*(dark?1:.55));p.head=mesh(new THREE.SphereGeometry(2.4,20,14),hdr(...p.s.col.map(c=>c*1.4)));p.head.userData.ns=1;
+ st.launch=(x,z,dx,dz,f,y0)=>{const p=st.make(x,z,dx,dz,f);if(y0)p.y=y0;p.tr=trail(3);p.col=p.s.col.map(c=>c*(dark?1:.55));p.head=mesh(new THREE.SphereGeometry(2.4,20,14),hdr(...p.s.col.map(c=>c*1.4)));p.head.userData.ns=1;
   st.parts.push(p);if(st.parts.length>12){const o=st.parts.shift();tKill(o.tr);root.remove(o.head);}st.last=p;return p;};
  st.clear=()=>{for(const p of st.parts){tKill(p.tr);root.remove(p.head);}st.parts=[];st.last=null;};
  st.demo=()=>{const s=SPEC[P.sp],sg=Math.sign(s.q*bsM)||1;st.launch(sg*.6,0,0,1,1);};
@@ -376,9 +376,10 @@ function buildCic(dark){const FL=-160;
  const sgnM=mesh(new THREE.PlaneGeometry(90,45),new THREE.MeshStandardMaterial({map:ctex(512,256,texSign),roughness:.6}),130.5,130,-10,sg);sgnM.rotation.y=Math.PI/2;
  /* the radio-frequency oscillator: a cabinet with a screen, and big glowing vacuum tubes on top */
  mesh(new THREE.BoxGeometry(300,210,130),new THREE.MeshPhysicalMaterial({color:0x262b31,roughness:.42,clearcoat:.4,envMap:ENV,envMapIntensity:.5}),0,FL+105,-515,bot);
- st.scr=scrn(120,68,800,452);st.scr.m.position.set(0,FL+140,-449.4);bot.add(st.scr.m);
- for(let i=0;i<5;i++){const k=mesh(new THREE.CylinderGeometry(5,5.5,3,24),paint(0x1b1b19),-80+i*40,FL+70,-449,bot);k.rotation.x=Math.PI/2;}
- const sgn2=mesh(new THREE.PlaneGeometry(80,40),new THREE.MeshStandardMaterial({map:ctex(512,256,texSign),roughness:.6}),110,FL+60,-449.4,bot);
+ mesh(new THREE.BoxGeometry(3,84,124),paint(0x15181b,.35,{metalness:.4}),151.5,FL+138,-515,bot);st.scr=scrn(112,63,800,452);st.scr.m.position.set(153.2,FL+138,-515);st.scr.m.rotation.y=Math.PI/2;bot.add(st.scr.m);
+ mesh(new THREE.BoxGeometry(2,26,124),paint(0x1f2328,.5,{metalness:.3}),151,FL+76,-515,bot);
+ for(let i=0;i<5;i++){const k=mesh(new THREE.CylinderGeometry(5,5.5,4,24),metal(0x9a9da1,.35),153,FL+76,-555+i*20,bot);k.rotation.z=Math.PI/2;}
+ const sgn2=mesh(new THREE.PlaneGeometry(80,40),new THREE.MeshStandardMaterial({map:ctex(512,256,texSign),roughness:.6}),95,FL+45,-449.4,bot);
  st.fil=[];for(const x of[-105,-35,35,105]){mesh(new THREE.CylinderGeometry(15,15,4,32),bm,x,FL+212,-515,bot);const gb=mesh(new THREE.CylinderGeometry(13,13,62,40,1,true),glassMat(.14),x,FL+245,-515,bot);gb.renderOrder=2;
   mesh(new THREE.SphereGeometry(13,32,16,0,Math.PI*2,0,Math.PI/2),glassMat(.14),x,FL+276,-515,bot).renderOrder=2;mesh(new THREE.CylinderGeometry(7,7,12,24),paint(0x2a2622,.5,{metalness:.6}),x,FL+266,-515,bot);
   /* the glowing filament, and the orange haze it makes inside the glass */
@@ -574,7 +575,7 @@ P.mix='ne';P.enr=false;P.Es=10;P.B1=100;P.fast=false;P.labS=true;
 (function(){const I=MIX[P.mix],vs=P.Es*1e3/(P.B1*1e-3);P.B2=clamp(Math.round(I[I.length-1][1]*AMU*vs/(QE*.5)*1e3/5)*5,30,1800);})();
 function fitBm(r){const s=SPEC[P.sp],v=vOf(P.vm),g=1/Math.sqrt(1-(v/CL)**2),B=g*s.m*v/(Math.abs(s.q)*QE*r);P.Bm=clamp(Math.log10(B/1e-5)/5.3*100,0,100);}
 /* coils: a proton, launched from (x, z) towards (dx, dz), with speed factor f and angle ang between v and B */
-const shot=(st,x,z,dx,dz,f,ang)=>{P.sp='p';P.ang=ang;st.launch(x,z,dx,dz,f);};
+const shot=(st,x,z,dx,dz,f,ang,y0)=>{P.sp='p';P.ang=ang;st.launch(x,z,dx,dz,f,y0);};
 const cicLive=st=>st.parts.some(p=>p.st==='acc'||p.st==='ext');
 const SL=[
  {k:null,c:[60,60,0,4300,0,.42],
@@ -598,11 +599,11 @@ const SL=[
   b:['Tre protoni partono insieme dallo stesso punto, con velocità diverse. Il più veloce descrive il cerchio più grande, ma tutti e tre tornano al punto di partenza nello stesso istante: il tempo per fare un giro non dipende dalla velocità. Guarda: si ritrovano sempre insieme. È proprio questo il segreto del ciclotrone.',
    'Three protons start together from the same point, with different speeds. The fastest one makes the largest circle, but all three come back to the starting point at the same moment: the time to go round does not depend on the speed. Watch: they always meet again. This is exactly the secret of the cyclotron.'],
   f:'T = 2π m / (q B)',P:{vecs:false},every:7.2,run:st=>{st.clear();P.sp='p';fitBm(.6);for(const f of[.5,1,1.4])shot(st,.84,0,0,1,f,90);}},
- {k:'M',c:[0,30,0,720,-.6,.3],
+ {k:'M',c:[0,0,0,680,0,.14],
   t:['Dipende dall\'angolo','It depends on the angle'],
   b:['Se v è perpendicolare a B la traiettoria è un cerchio. Se v ha anche una parte lungo B, quella parte non sente alcuna forza: il protone sale avvitandosi su un\'elica. Se v è parallela a B la forza è nulla e il protone va dritto. Appena esce dal campo, ogni particella prosegue in linea retta.',
    'If v is perpendicular to B the path is a circle. If v also has a part along B, that part feels no force at all: the proton climbs, winding along a helix. If v is parallel to B the force is zero and the proton goes straight. As soon as it leaves the field, every particle carries on in a straight line.'],
-  f:'F = q v B sin θ',P:{vecs:true},every:8,run:st=>{st.clear();P.sp='p';fitBm(.6);shot(st,0,-.2,0,1,1,0);shot(st,.6,0,0,1,1,90);shot(st,.6,0,0,1,1,80);}},
+  f:'F = q v B sin θ',P:{vecs:true},every:15,run:st=>{st.clear();P.sp='p';fitBm(.6);shot(st,-.75,0,0,1,1,0,-.6);shot(st,.6,0,0,1,1,90,-.62);shot(st,.6,0,0,1,1,85,-.6);}},
  /* ---------- 2. the mass spectrometer ---------- */
  {k:'S',c:[30,-30,-10,440,.55,.5],labs:[0,1,3,4],
   t:['Lo spettrometro di massa','The mass spectrometer'],
@@ -624,7 +625,7 @@ const SL=[
    'Each ion hits the plate at a distance 2r from the slit and leaves a mark. Natural neon leaves three lines: ²⁰Ne (90%), ²²Ne (9%) and the very rare ²¹Ne (0.3%), almost invisible. Counting the ions at each distance gives the mass spectrum (the graph): this is how it was discovered that elements have isotopes.'],
   f:'x = 2r  →  m = q B₂ x / (2 v)'},
  /* ---------- 3. the cyclotron ---------- */
- {k:'C',c:[40,-20,120,1300,-.55,.36],labs:[0,7,6,9],P:{spd:4,expC:false,bfld:false,grf:false},
+ {k:'C',c:[40,-20,120,1300,-.55,.36],labs:[0,7,6],P:{spd:4,expC:false,bfld:false,grf:false},
   t:['Un acceleratore grande come una stanza','An accelerator the size of a room'],
   b:['Il magnete pesa più di 200 tonnellate; la sua metà superiore è sollevata per guardare dentro. Le particelle girano tra i poli, in una camera a vuoto larga 1,6 m, guadagnano energia a ogni giro e alla fine escono verso il bersaglio lungo la linea di fascio.',
    'The magnet weighs more than 200 tonnes; its upper half is lifted so we can look inside. The particles turn between the poles, in a vacuum chamber 1.6 m wide, gain energy at every turn and finally leave towards the target along the beam line.']},
@@ -639,11 +640,11 @@ const SL=[
    'Two hollow copper electrodes shaped like a D. Inside a dee the electric field is zero: the proton, which started from the source at the centre, follows half a circle without gaining energy. Then it crosses the gap, gets a push and enters the other dee on a slightly larger circle. Turn after turn the path becomes a spiral.'],
   f:'r = m v / (q B)'},
  {k:'C',c:[0,0,-20,200,.08,.55],labs:[2],dyn:true,P:{spd:.6,expC:true},
-  t:['La fessura: qui si accelera','The gap: here it accelerates'],
-  b:['Tra le D c\'è una tensione alternata: le D cambiano colore (rosso positivo, blu negativo) quando la polarità si inverte. L\'inversione avviene ogni mezzo giro, così il protone trova sempre il campo elettrico a favore e a ogni passaggio guadagna un\'energia qV (le scritte verdi). Il tempo di mezzo giro non cambia mai: per questo il ritmo resta lo stesso.',
-   'There is an alternating voltage between the dees: the dees change colour (red positive, blue negative) when the polarity reverses. The reversal happens every half turn, so the proton always finds the electric field on its side and at each crossing gains an energy qV (the green numbers). The time of half a turn never changes: this is why the rhythm stays the same.'],
-  f:'ΔE = q V  ·  due volte a giro'},
- {k:'C',c:[0,10,-430,690,1.15,.28],labs:[7,8],P:{spd:2.5,expC:false},
+  t:['La fessura: la spinta che accelera','The gap: the push that accelerates'],
+  b:['Nella fessura tra le due D c\'è un campo elettrico (le frecce gialle). È lui, non il campo magnetico, a dare energia: quando il protone lo attraversa riceve una spinta e accelera. Il campo però è alternato: le D cambiano polarità (rosso positivo, blu negativo) proprio ogni mezzo giro, così quando il protone torna nella fessura dall\'altra parte trova di nuovo il campo nel verso giusto e viene spinto ancora. Due spinte a ogni giro, ciascuna da qV (le scritte verdi).',
+   'In the gap between the two dees there is an electric field (the yellow arrows). It is this field, not the magnetic one, that gives energy: when the proton crosses it, it gets a push and accelerates. The field, however, alternates: the dees change polarity (red positive, blue negative) exactly every half turn, so when the proton comes back to the gap on the other side it again finds the field pointing the right way and is pushed again. Two pushes per turn, each worth qV (the green numbers).'],
+    f:'ΔE = q V  ·  due volte a giro'},
+ {k:'C',c:[60,0,-470,640,1.3,.26],labs:[7,8],P:{spd:2.5,expC:false},
   t:['L\'oscillatore a radiofrequenza','The radio-frequency oscillator'],
   b:['Le grandi valvole incandescenti producono la tensione alternata e la portano alle D attraverso due lunghe linee risonanti. Lo schermo mostra l\'onda: la frequenza è fissa, perché il tempo di un giro non dipende dalla velocità. Per un protone in 0,7 T sono circa 10 milioni di oscillazioni al secondo.',
    'The big glowing valves produce the alternating voltage and bring it to the dees through two long resonant lines. The screen shows the wave: the frequency is fixed, because the time of one turn does not depend on the speed. For a proton in 0.7 T that is about 10 million oscillations per second.'],
@@ -695,8 +696,19 @@ function onLang(){if(ST.M)ST.M.shown='';cardFill();}
 function onTheme(){if(!V.ok)return;buildAll();enterSlide(SL[CUR]);const g=V.goal;if(g){camSnap([g.to.t.x,g.to.t.y,g.to.t.z,g.to.d,g.to.a,g.to.e]);}shadowAt(...shadowOf(SL[CUR]));}
 /* ================================================================== labels drawn over the 3D view ================================================================== */
 const pv=new THREE.Vector3();const toScr=(x,y,z)=>{pv.set(x,y,z).project(cam);return[(pv.x+1)/2*W,(1-pv.y)/2*H,pv.z<1];};
-function label(p,t,col,big,al){const q=toScr(...p);if(!q[2]||q[0]<-80||q[0]>W+80||q[1]<0||q[1]>H||al<=.01)return;c.save();c.globalAlpha=al;const fs=big?20:(W<620?11:12.5);c.font='600 '+fs+'px '+FONT;const w=c.measureText(t).width+(big?20:16),hh=big?30:fs+11;
- c.fillStyle=LIGHT?'rgba(251,250,246,.88)':'rgba(16,18,20,.74)';rr(c,q[0]-w/2,q[1]-hh/2,w,hh,hh/2);c.fill();c.strokeStyle=col;c.globalAlpha=al*.75;c.lineWidth=1;c.stroke();c.globalAlpha=al;txt(c,t,q[0],q[1],LIGHT&&!big?'#23231d':col,fs,'center',1);c.restore();}
+/* labels are queued, kept inside the view and pushed apart so that they never overlap; a thin line joins a moved label to its point */
+let LQ=[];
+function label(p,t,col,big,al){if(al<=.01)return;const q=toScr(...p);if(!q[2]||q[0]<-40||q[0]>W+40||q[1]<-40||q[1]>H+40)return;LQ.push({ax:q[0],ay:q[1],t,col,big,al});}
+function flushLabels(){const sm=W<760;for(const l of LQ){l.fs=l.big?(l.t.length<=2?(sm?16:20):(sm?14:19)):(sm?11:12.5);c.font='600 '+l.fs+'px '+FONT;l.w=c.measureText(l.t).width+(l.big?20:16);l.h=l.big?l.fs+12:l.fs+11;
+  l.x=clamp(l.ax,l.w/2+6,W-l.w/2-6);l.y=clamp(l.ay,l.h/2+6,H-l.h/2-6);}
+ for(let it=0;it<16;it++){let moved=false;for(let i=0;i<LQ.length;i++)for(let j=i+1;j<LQ.length;j++){const a=LQ[i],b=LQ[j],ox=(a.w+b.w)/2+4-Math.abs(a.x-b.x),oy=(a.h+b.h)/2+3-Math.abs(a.y-b.y);
+   if(ox>0&&oy>0){const d=(b.y>=a.y?1:-1)*oy/2;a.y-=d;b.y+=d;moved=true;}}
+  for(const l of LQ)l.y=clamp(l.y,l.h/2+6,H-l.h/2-6);if(!moved)break;}
+ for(const l of LQ){c.save();c.globalAlpha=l.al;
+  if(Math.hypot(l.x-l.ax,l.y-l.ay)>l.h*.7){c.strokeStyle=l.col;c.globalAlpha=l.al*.7;c.lineWidth=1.2;c.beginPath();c.moveTo(l.ax,l.ay);c.lineTo(clamp(l.ax,l.x-l.w/2+8,l.x+l.w/2-8),l.y+(l.ay>l.y?l.h/2:-l.h/2));c.stroke();c.fillStyle=l.col;c.beginPath();c.arc(l.ax,l.ay,2.6,0,7);c.fill();c.globalAlpha=l.al;}
+  c.fillStyle=LIGHT?'rgba(251,250,246,.9)':'rgba(16,18,20,.78)';rr(c,l.x-l.w/2,l.y-l.h/2,l.w,l.h,l.h/2);c.fill();c.strokeStyle=l.col;c.globalAlpha=l.al*.75;c.lineWidth=1;c.stroke();c.globalAlpha=l.al;
+  txt(c,l.t,l.x,l.y,LIGHT&&!l.big?'#23231d':l.col,l.fs,'center',1);c.restore();}
+ LQ=[];}
 const W3=(st,p)=>{const g=st.g.position;return[p[0]+g.x,p[1]+g.y,p[2]+g.z];};
 const INTRO=[['M',[0,110,0],['1 · Bobine','1 · Coils'],'#f0a35e'],['S',[30,60,0],['2 · Spettrometro di massa','2 · Mass spectrometer'],'#8fd6c4'],['C',[0,260,0],['3 · Ciclotrone','3 · Cyclotron'],'#e9cf78']];
 /* ================================================================== main loop ================================================================== */
@@ -723,6 +735,7 @@ function frame(now){requestAnimationFrame(frame);const dt=Math.min(.05,(now-last
  if(!s.k){for(const l of INTRO)label(W3(ST[l[0]],l[1]),L(...l[2]),l[3],true,la);}
  else{for(const i of s.labs||[]){const l=st.labs[i];if(!l)continue;const p=l[3]==='mag'&&st.topG?[0,st.topG.position.y+150,-60]:l[0];label(W3(st,p),L(...l[1]),l[2],false,la);}
   if(s.dyn&&st.dyn){const dy=typeof st.dyn==='function'?st.dyn():st.dyn;for(const l of dy)label(W3(st,l[0]),l[1][0],l[2],l[1][0].length<=2,la*(l[3]==null?1:l[3]));}}
+ flushLabels();
  for(const p of pops){p.a+=dt;const q=toScr(...p.p);if(!q[2]||!s.dyn)continue;c.save();c.globalAlpha=Math.max(0,1-p.a/1.3)*la;if(!LIGHT){c.shadowColor='rgba(0,0,0,.8)';c.shadowBlur=5;}txt(c,p.t,q[0]+46,q[1]-14-p.a*30,p.col,13,'left',1);c.restore();}pops=pops.filter(p=>p.a<1.3);
  if(s.ov&&st&&st.overlay&&la>0){c.save();c.globalAlpha=la;st.overlay();c.restore();}}
 applyLang();
