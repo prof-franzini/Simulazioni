@@ -42,6 +42,8 @@ body.light .chap button{background:rgba(60,50,20,.06);border-color:rgba(0,0,0,.0
 .cb p{margin:0 0 12px;font-size:15px;line-height:1.55}
 .fx{display:inline-block;font:600 15px/1.4 ui-monospace,"SF Mono",Consolas,monospace;color:var(--fx);background:rgba(143,214,196,.09);border:1px solid rgba(143,214,196,.25);border-radius:12px;padding:8px 12px}
 .fx:empty{display:none}
+.foot .lnk{display:none;flex:1;text-align:center;text-decoration:none;white-space:nowrap;border-radius:999px;padding:10px 14px;font:600 14px system-ui;background:var(--ac);border:1px solid var(--ac);color:var(--actx);box-shadow:0 4px 14px rgba(200,230,90,.25);transition:transform .2s}
+.foot .lnk.on{display:block}.foot .lnk:active{transform:scale(.96)}.foot .pri.sm,body.light .foot .pri.sm{flex:none;background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.13);color:var(--tx);box-shadow:none}body.light .foot .pri.sm{background:rgba(255,255,255,.72);border-color:rgba(0,0,0,.08)}
 .foot{display:flex;align-items:center;gap:10px}
 .foot button{border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.07);color:var(--tx);border-radius:999px;padding:10px 16px;font:600 14px system-ui;cursor:pointer;transition:transform .2s}
 body.light .foot button{background:rgba(255,255,255,.72);border-color:rgba(0,0,0,.08)}
@@ -60,7 +62,7 @@ body.light .foot button{background:rgba(255,255,255,.72);border-color:rgba(0,0,0
 /* phone in landscape: everything smaller, card on the right */
 @media (max-height:520px) and (orientation:landscape){header{padding:4px 12px}.tag{display:none}h1{font-size:14px}.hb button,.hb a{height:28px;width:34px}
  main{padding:6px calc(6px + env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) calc(6px + env(safe-area-inset-left));gap:8px}.stage{border-radius:16px}
- aside{width:min(44%,380px);padding:10px 12px;gap:8px;border-radius:16px}.chap button{padding:5px 4px;font-size:11px}.cb h2{font-size:16px;margin:2px 0 6px}.cb p{font-size:13px;line-height:1.45;margin-bottom:8px}.fx{font-size:12.5px;padding:5px 9px}.foot button{padding:7px 12px;font-size:13px}.tap{display:none}}
+ aside{width:min(44%,380px);padding:10px 12px;gap:8px;border-radius:16px}.chap button{padding:5px 4px;font-size:11px}.cb h2{font-size:16px;margin:2px 0 6px}.cb p{font-size:13px;line-height:1.45;margin-bottom:8px}.fx{font-size:12.5px;padding:5px 9px}.foot button{padding:7px 12px;font-size:13px}.foot .lnk{padding:7px 10px;font-size:13px}.tap{display:none}}
 @media(prefers-reduced-motion:reduce){.cb,#rot .ph{transition:none;animation:none}}
 </style>
 </head>
@@ -73,7 +75,7 @@ body.light .foot button{background:rgba(255,255,255,.72);border-color:rgba(0,0,0
 <nav class="chap" id="chap"><button data-c="M" data-en="1 · Coils">1 · Bobine</button><button data-c="S" data-en="2 · Spectrometer">2 · Spettrometro</button><button data-c="C" data-en="3 · Cyclotron">3 · Ciclotrone</button></nav>
 <div class="dots" id="dots"></div>
 <div class="cb" id="cb"><span class="ct" id="ct"></span><h2 id="tt"></h2><p id="tb"></p><div class="fx" id="fx"></div></div>
-<div class="foot"><button id="prev" title="Indietro / Back">◀</button><span id="cnt"></span><button id="next" class="pri"></button></div>
+<div class="foot"><button id="prev" title="Indietro / Back">◀</button><span id="cnt"></span><button id="next" class="pri"></button><a class="lnk" id="lnk" href="sincrotrone.html"></a></div>
 </aside>
 </main>
 <div id="rot"><div class="ph"></div><p data-en="Turn your phone sideways: the laboratory is seen much better in landscape.">Gira il telefono in orizzontale: il laboratorio si vede molto meglio.</p><button id="pok" data-en="Continue anyway">Continua così</button></div>
@@ -680,7 +682,7 @@ const SL=[
   t:['Il limite: la relatività','The limit: relativity'],
   b:['I grafici mostrano l\'energia che cresce giro dopo giro e la fase con cui il protone attraversa la fessura. Ad alta energia, però, la massa efficace cresce: il protone impiega un po\' di più a fare un giro e perde il passo con l\'oscillatore. Per andare oltre si fa scendere la frequenza durante l\'accelerazione (sincrociclotrone) o si costruisce un sincrotrone.',
    'The graphs show the energy growing turn after turn and the phase at which the proton crosses the gap. At high energy, however, the effective mass grows: the proton takes a little longer to go round and gets out of step with the oscillator. To go further, the frequency is lowered during the acceleration (synchrocyclotron) or a synchrotron is built.'],
-  f:'f = q B / (2π γ m)'}];
+  f:'f = q B / (2π γ m)',link:['Vai al sincrotrone ▶','Go to the synchrotron ▶']}];
 const CHN={M:['Le bobine','The coils'],S:['Lo spettrometro di massa','The mass spectrometer'],C:['Il ciclotrone','The cyclotron']};
 /* ================================================================== camera ================================================================== */
 const ease=u=>u<.5?4*u*u*u:1-Math.pow(-2*u+2,3)/2,wrapA=a=>Math.atan2(Math.sin(a),Math.cos(a));
@@ -702,9 +704,10 @@ function go(i,instant){const n=SL.length;i=(i%n+n)%n;const prev=SL[CUR],s=SL[i];
 let cardT=0;
 function cardFill(){const s=SL[CUR];$('#ct').textContent=s.k?L(...CHN[s.k]):L('Introduzione','Introduction');$('#tt').textContent=L(...s.t);$('#tb').textContent=L(...s.b);
  $('#fx').textContent=(s.f||'').replace('due volte a giro',L('due volte a giro','twice per turn'));
+ $('#lnk').classList.toggle('on',!!s.link);$('#lnk').textContent=s.link?L(...s.link):'';
  $$('#chap button').forEach(b=>b.classList.toggle('on',b.dataset.c===s.k));
  const same=SL.map((x,j)=>[x,j]).filter(a=>a[0].k===s.k);$('#dots').innerHTML=s.k?same.map(a=>'<i class="'+(a[1]===CUR?'on':'')+'"></i>').join(''):'';
- $('#cnt').textContent=(CUR+1)+' / '+SL.length;$('#next').textContent=CUR===SL.length-1?L('↺ Ricomincia','↺ Start again'):L('Avanti ▶','Next ▶');$('#cb').scrollTop=0;}
+ $('#cnt').textContent=(CUR+1)+' / '+SL.length;$('#next').classList.toggle('sm',!!s.link);$('#next').textContent=s.link?'↺':CUR===SL.length-1?L('↺ Ricomincia','↺ Start again'):L('Avanti ▶','Next ▶');$('#next').title=s.link?L('Ricomincia','Start again'):'';$('#cb').scrollTop=0;}
 function card(anim){clearTimeout(cardT);if(!anim){cardFill();$('#cb').classList.remove('out');return;}$('#cb').classList.add('out');cardT=setTimeout(()=>{cardFill();$('#cb').classList.remove('out');},380);}
 $('#next').onclick=()=>go(CUR+1);$('#prev').onclick=()=>go(CUR-1);
 $('#stage').addEventListener('click',()=>go(CUR+1));
