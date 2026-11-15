@@ -729,7 +729,10 @@ function flushLabels(){const sm=W<760,band=W<600;
   l.x=l.sd?(l.ax<W/2?l.w/2+10:W-l.w/2-10):clamp(l.ax,l.w/2+6,W-l.w/2-6);
   l.y=l.bd?(l.bd<0?l.h/2+7:H-l.h/2-7):clamp(l.free?l.ay-l.h*(band?1.5:1.9):l.ay,l.h/2+6,H-l.h/2-6);}
  /* small screens: plain labels sit in a band along the top (or bottom) edge, away from the apparatus; isotope tags sit in one row */
- for(const sgn of[-1,1]){const row=LQ.filter(l=>l.bd===sgn);if(!row.length)continue;spreadRow(row);let tot=6;for(const l of row)tot+=l.w+6;if(tot>W)row.forEach((l,i)=>{if(i%2)l.y-=sgn*(l.h+4);});}
+ for(const sgn of[-1,1]){const row=LQ.filter(l=>l.bd===sgn).sort((a,b)=>a.ax-b.ax);if(!row.length)continue;
+  /* as many rows as needed: each label goes in the first row that still has room for it */
+  const rows=[];for(const l of row){let r=rows.find(q=>q.w+l.w+6<=W-12);if(!r){r={w:0,ls:[]};rows.push(r);}r.w+=l.w+6;r.ls.push(l);}
+  rows.forEach((r,k)=>{for(const l of r.ls)l.y-=sgn*k*(l.h+4);spreadRow(r.ls);});}
  const fr=LQ.filter(l=>l.free);if(fr.length>1){const y=Math.min(...fr.map(l=>l.y));for(const l of fr)l.y=y;spreadRow(fr);}
  for(let it=0;it<16;it++){let moved=false;for(let i=0;i<LQ.length;i++)for(let j=i+1;j<LQ.length;j++){const a=LQ[i],b=LQ[j];if((a.bd&&b.bd)||(a.free&&b.free))continue;const ox=(a.w+b.w)/2+4-Math.abs(a.x-b.x),oy=(a.h+b.h)/2+3-Math.abs(a.y-b.y);
    if(ox>0&&oy>0){const d=(b.y>=a.y?1:-1)*oy/2;if(a.bd){b.y+=2*d;}else if(b.bd){a.y-=2*d;}else{a.y-=d;b.y+=d;}moved=true;}}

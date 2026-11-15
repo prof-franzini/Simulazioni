@@ -273,31 +273,62 @@ const sm=u=>u*u*(3-2*u);
 const fmtK=K=>nf(K,K<20?1:0)+' MeV',fmtM=f=>nf(f/1e6,2)+' MHz';
 function texPlot(x,w,h){x.fillStyle='#0b0f0d';x.fillRect(0,0,w,h);x.strokeStyle='rgba(125,255,106,.14)';x.lineWidth=1;for(let i=1;i<8;i++){x.beginPath();x.moveTo(i*w/8,0);x.lineTo(i*w/8,h);x.stroke();}for(let i=1;i<5;i++){x.beginPath();x.moveTo(0,i*h/5);x.lineTo(w,i*h/5);x.stroke();}
  for(const[col,f]of[['#7dff6a',u=>.82-.6*sm(u)],['#ffb35c',u=>.82-.55*Math.sqrt(sm(u))],['#5ccdff',u=>.5+.3*Math.sin(u*19)*Math.exp(-u*2)]]){x.strokeStyle=col;x.lineWidth=3;x.beginPath();for(let i=0;i<=w;i+=4){const u=i/w,Y=f(u)*h;i?x.lineTo(i,Y):x.moveTo(i,Y);}x.stroke();}}
+/* the cross-section of a bending magnet, 10 pixels per centimetre */
+const SECT=[[-62,-46],[30,-46],[30,-26],[22,-26],[22,-8],[-18,-8],[-18,-26],[-34,-26],[-34,26],[-18,26],[-18,8],[22,8],[22,26],[30,26],[30,46],[-62,46]];
+function texSect(x,w,h){const S=10,X=r=>(r+70)*S,Y=y=>(52-y)*S;x.clearRect(0,0,w,h);
+ const path=()=>{x.beginPath();SECT.forEach((p,i)=>i?x.lineTo(X(p[0]),Y(p[1])):x.moveTo(X(p[0]),Y(p[1])));x.closePath();};
+ /* iron: one lamination seen face-on, brushed, with the paint showing along its outer edge */
+ x.save();path();x.clip();const g=x.createLinearGradient(0,0,w,h);g.addColorStop(0,'#aab3ba');g.addColorStop(.45,'#87919a');g.addColorStop(1,'#9da6ad');x.fillStyle=g;x.fillRect(0,0,w,h);
+ for(let i=0;i<1500;i++){x.strokeStyle='rgba('+(rnd()<.5?'255,255,255,':'20,25,30,')+(.03+rnd()*.05)+')';x.lineWidth=1;const xx=rnd()*w,yy=rnd()*h,l=20+rnd()*90;x.beginPath();x.moveTo(xx,yy);x.lineTo(xx+l,yy+(rnd()-.5)*4);x.stroke();}
+ path();x.strokeStyle='#2f6fae';x.lineWidth=16;x.stroke();path();x.strokeStyle='rgba(15,30,50,.55)';x.lineWidth=3;x.stroke();
+ /* pole faces are bare machined steel, with small shims at their edges */
+ x.strokeStyle='#dfe5ea';x.lineWidth=9;for(const y of[-8,8]){x.beginPath();x.moveTo(X(-18),Y(y));x.lineTo(X(22),Y(y));x.stroke();}x.restore();
+ x.fillStyle='#cfd6dc';for(const sg of[-1,1])for(const r of[-18,17]){x.fillRect(X(r),Y(sg>0?8:-7.1),5*S,.9*S);}
+ x.strokeStyle='rgba(20,25,30,.6)';x.lineWidth=2;x.beginPath();x.moveTo(X(-62),Y(0));x.lineTo(X(-34),Y(0));x.stroke();
+ /* tie rods that hold the laminations together */
+ for(const[r,y]of[[-48,36],[-48,-36],[-48,13],[-48,-13],[-8,37],[-8,-37],[18,37],[18,-37]]){x.fillStyle='#3a4046';x.beginPath();x.arc(X(r),Y(y),2.1*S,0,7);x.fill();x.fillStyle='#b9c0c6';x.beginPath();x.arc(X(r),Y(y),1.5*S,0,7);x.fill();x.fillStyle='#6d757c';x.beginPath();x.arc(X(r),Y(y),.6*S,0,7);x.fill();}
+ /* coils: hollow copper conductors in epoxy, cooling water flowing inside each one */
+ for(const[r0,r1]of[[-33,-19],[23,37]])for(const[y0,y1]of[[9,25],[-25,-9]]){x.fillStyle='#2c4a3c';rr(x,X(r0),Y(y1),(r1-r0)*S,(y1-y0)*S,8);x.fill();x.strokeStyle='#16261f';x.lineWidth=3;x.stroke();
+  const cw=(r1-r0-1)/3,ch=(y1-y0-1)/4;for(let i=0;i<3;i++)for(let j=0;j<4;j++){const cx=r0+.5+cw*(i+.5),cy=y0+.5+ch*(j+.5),px=X(cx-cw/2+.3),py=Y(cy+ch/2-.3),pw=(cw-.6)*S,ph=(ch-.6)*S;
+   const cg=x.createLinearGradient(px,py,px+pw,py+ph);cg.addColorStop(0,'#f0b07a');cg.addColorStop(.5,'#c9783c');cg.addColorStop(1,'#a85c28');x.fillStyle=cg;rr(x,px,py,pw,ph,7);x.fill();
+   x.fillStyle='#1c3a52';x.beginPath();x.arc(X(cx),Y(cy),.85*S,0,7);x.fill();x.fillStyle='#63bdf5';x.beginPath();x.arc(X(cx),Y(cy),.58*S,0,7);x.fill();}}
+ /* vacuum chamber: a thin steel tube, empty inside, with the beam in its centre */
+ x.fillStyle='#07090d';x.beginPath();x.arc(X(0),Y(0),5.4*S,0,7);x.fill();x.strokeStyle='#e3e7ea';x.lineWidth=.9*S;x.beginPath();x.arc(X(0),Y(0),5.4*S,0,7);x.stroke();x.strokeStyle='rgba(60,70,80,.8)';x.lineWidth=2;x.beginPath();x.arc(X(0),Y(0),5.9*S,0,7);x.stroke();}
 function frameAt(p,par){const g=new THREE.Group();g.position.set(p.x,BH,p.z);g.rotation.y=Math.atan2(-p.tz,p.tx);(par||root).add(g);return g;}
 const nearPt=(x,y,z,d0,d1)=>1-clamp((Math.hypot(cam.position.x-x,cam.position.y-y,cam.position.z-z)/CAMK-d0)/(d1-d0),0,1);
 class RingCurve extends THREE.Curve{getPoint(t,o){const p=pathAt(t*CIRC);return(o||new THREE.Vector3()).set(p.x,BH,p.z);}}
 function buildSyn(dark){
  const st={ph:'inj',t:0,tc:0,s:SI-LI,K:.05,B:B0,sx:null,kicked:false,flash:0,kick:0,amp:0,hist:[],hT:0,scrT:0,cph:0,L:{}};
  const fl=paint(0x23282e,.45,{metalness:.4}),bm=metal(0xb8b4a8,.3),stl=metal(0xa3a8ad,.32),conc=new THREE.MeshStandardMaterial({map:ctex(512,512,texConc,1),roughness:.9});
- const yk=new THREE.MeshStandardMaterial({color:0x2f6fae,metalness:.3,roughness:.4,envMap:ENV,envMapIntensity:.7,flatShading:true,side:THREE.DoubleSide});
+ const yk=new THREE.MeshStandardMaterial({color:0x2f6fae,metalness:.3,roughness:.4,envMap:ENV,envMapIntensity:.7,side:THREE.DoubleSide});
  const cuD=new THREE.MeshStandardMaterial({map:ctex(64,512,texWind,1),metalness:.85,roughness:.35,envMap:ENV,emissive:0x000000,side:THREE.DoubleSide}),cuQ=metal(0xc8793a,.3);st.cuD=cuD;
  const glass=glassMat(.13);
  /* ---------- the eight bending magnets: C-shaped yokes open towards the outside, a coil around each pole ---------- */
  const rect=(r0,r1,y0,y1)=>[[r0,y0],[r1,y0],[r1,y1],[r0,y1]];
  const YB=[[-62,-46],[30,-46],[30,-26],[22,-26],[22,-8],[-18,-8],[-18,-26],[-34,-26],[-34,0],[-62,0]],YT=YB.map(p=>[p[0],-p[1]]);
- function sector(pr,c,th0,th1,mat,par,caps){const v=pr.map(p=>new THREE.Vector2(RHO+p[0],p[1])),lp=v.concat([v[0].clone()]);
-  mesh(new THREE.LatheGeometry(lp,Math.max(8,Math.ceil((th1-th0)/.03)),Math.PI/2-th1,th1-th0),mat,c[0],BH,c[1],par);
+ function sector(pr,c,th0,th1,mat,par,caps){const v=pr.map(p=>new THREE.Vector2(RHO+p[0],p[1])),lp=[];for(let i=0;i<v.length;i++){lp.push(v[i].clone(),v[(i+1)%v.length].clone());}
+  mesh(new THREE.LatheGeometry(lp,Math.max(10,Math.ceil((th1-th0)/.02)),Math.PI/2-th1,th1-th0),mat,c[0],BH,c[1],par);
   if(caps){const sg=new THREE.ShapeGeometry(new THREE.Shape(v));for(const th of[th0,th1])mesh(sg,mat,c[0],BH,c[1],par).rotation.y=-th;}}
  const gEnd=bbox(70,16,14,2),gStand=bbox(84,BH-46,58,2.5),LIFT=150,SHOW=1;
  st.topG=new THREE.Group();root.add(st.topG);
- for(let i=0;i<NC;i++){const c=arcC(i),th0=phiS(i)+.03,th1=phiS(i+1)-.03,tp=i===SHOW?st.topG:root;
-  sector(YB,c,th0,th1,yk,root,true);sector(YT,c,th0,th1,yk,tp,true);
-  for(const sg of[-1,1]){const par=sg>0?tp:root,y0=sg>0?9:-25,y1=sg>0?25:-9;sector(rect(-33,-19,y0,y1),c,th0,th1,cuD,par);sector(rect(23,37,y0,y1),c,th0,th1,cuD,par);
-   for(const[th,k]of[[th0,-1],[th1,1]]){const m=mesh(gEnd,cuD,c[0]+(RHO+2)*Math.cos(th)-k*Math.sin(th)*8,BH+sg*17,c[1]+(RHO+2)*Math.sin(th)+k*Math.cos(th)*8,par);m.rotation.y=-th;}}
-  for(const th of[th0+.17,th1-.17]){const m=mesh(gStand,fl,c[0]+(RHO-16)*Math.cos(th),(BH-46)/2,c[1]+(RHO-16)*Math.sin(th));m.rotation.y=-th;}}
+ st.cutB=new THREE.Group();root.add(st.cutB);st.cutT=new THREE.Group();st.topG.add(st.cutT);
+ for(let i=0;i<NC;i++){const c=arcC(i),th0=phiS(i)+.03,th1=phiS(i+1)-.03,tm=(th0+th1)/2;
+  for(const[a0,a1,cut]of(i===SHOW?[[th0,tm,0],[tm,th1,1]]:[[th0,th1,0]])){const bt=cut?st.cutB:root,tp=i===SHOW?(cut?st.cutT:st.topG):root;
+   sector(YB,c,a0,a1,yk,bt,true);sector(YT,c,a0,a1,yk,tp,true);
+   for(const sg of[-1,1]){const par=sg>0?tp:bt,y0=sg>0?9:-25,y1=sg>0?25:-9;sector(rect(-33,-19,y0,y1),c,a0,a1,cuD,par);sector(rect(23,37,y0,y1),c,a0,a1,cuD,par);
+    for(const[th,k]of[[th0,-1],[th1,1]]){if(th<a0-1e-6||th>a1+1e-6)continue;const m=mesh(gEnd,cuD,c[0]+(RHO+2)*Math.cos(th)-k*Math.sin(th)*8,BH+sg*17,c[1]+(RHO+2)*Math.sin(th)+k*Math.cos(th)*8,par);m.rotation.y=-th;}}}
+  for(const th of[th0+.17,th1-.17]){const m=mesh(gStand,fl,c[0]+(RHO-16)*Math.cos(th),(BH-46)/2,c[1]+(RHO-16)*Math.sin(th),i===SHOW&&th>tm?st.cutB:root);m.rotation.y=-th;}}
  /* the field between the poles of the magnet that opens up */
  {const c=arcC(SHOW),bg=new THREE.TubeGeometry(new THREE.LineCurve3(new THREE.Vector3(0,0,0),new THREE.Vector3(0,1,0)),8,.8,8,false);st.bfm=flowMat(0xa8ffc0,0x3a9a5a,dark?.85:1,3);st.bl=new THREE.Group();root.add(st.bl);
   for(let j=0;j<9;j++)for(const r of[-11,2,15]){const th=phiS(SHOW)+.08+j*(Math.PI/4-.16)/8;const t=mesh(bg,st.bfm,c[0]+(RHO+r)*Math.cos(th),BH-8,c[1]+(RHO+r)*Math.sin(th),st.bl);t.userData.ns=1;t.renderOrder=4;}}
+ /* the cross-section: laminated iron, hollow water-cooled copper conductors, the steel vacuum chamber; flux lines close through the yoke */
+ {const c=arcC(SHOW),tm=phiS(SHOW)+Math.PI/8,ct=Math.cos(tm),sn=Math.sin(tm);st.sec=new THREE.Group();root.add(st.sec);st.secP=[c[0]+RHO*ct,c[1]+RHO*sn];
+  const tx=ctex(1150,1040,texSect,0,'sect');const pm=new THREE.MeshStandardMaterial({map:tx,transparent:true,alphaTest:.5,metalness:.25,roughness:.55,envMap:ENV,envMapIntensity:.5});
+  const pl_=mesh(new THREE.PlaneGeometry(115,104),pm,c[0]+(RHO-12.5)*ct-sn*.5,BH,c[1]+(RHO-12.5)*sn+ct*.5,st.sec);pl_.rotation.y=-tm;pl_.userData.ns=1;
+  st.secM=flowMat(0xa8ffc0,0x3a9a5a,dark?.95:1,7);[-12,-3,6,15].forEach((x0,k)=>{const xr=-42-k*5,yt=31+k*3.6,xm=(x0+xr)/2;
+   const pts=[[x0,0],[x0,yt*.72],[xm,yt],[xr,yt*.55],[xr,0],[xr,-yt*.55],[xm,-yt],[x0,-yt*.72]].map(q=>new THREE.Vector3(c[0]+(RHO+q[0])*ct-sn*1.6,BH+q[1],c[1]+(RHO+q[0])*sn+ct*1.6));
+   const t=mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts,true,'centripetal'),120,.6,8,true),st.secM,0,0,0,st.sec);t.userData.ns=1;t.renderOrder=4;});
+  st.sec.visible=false;}
  /* ---------- the vacuum pipe, drawn as glass so that the beam shows ---------- */
  const pipe=mesh(new THREE.TubeGeometry(new RingCurve(),640,5.5,12,true),glass,0,0,0);pipe.renderOrder=2;pipe.userData.ns=1;
  /* ---------- quadrupoles, sextupoles, pumps and monitors in the straight sections ---------- */
@@ -355,7 +386,7 @@ function buildSyn(dark){
  /* ---------- the control desk in the middle of the ring, safety lines on the floor, people for the scale ---------- */
  mesh(bbox(260,6,90,2),paint(0x3a3d42,.5),0,78,-40);for(const x of[-110,110])mesh(bbox(8,76,80,2),fl,x,38,-40);
  for(let i=-1;i<=1;i++){const g=new THREE.Group();g.position.set(i*84,112,-66+Math.abs(i)*12);g.rotation.y=-i*.28;root.add(g);mesh(bbox(78,50,4,1.5),paint(0x15181b,.35,{metalness:.4}),0,0,0,g);const sc=mesh(new THREE.PlaneGeometry(72,44),new THREE.MeshBasicMaterial({map:ctex(512,320,texPlot)}),0,0,2.2,g);sc.userData.ns=1;mesh(new THREE.CylinderGeometry(2.5,2.5,26,12),fl,0,-36,-2,g);}
- const wm=new THREE.MeshStandardMaterial({color:0xf2c230,roughness:.6});for(const[r0,r1]of[[AP+170,AP+178],[AP-240,AP-234]]){const r=mesh(new THREE.RingGeometry(r0,r1,160),wm,0,1.3,0);r.rotation.x=-Math.PI/2;r.userData.ns=1;}
+ const wm=new THREE.MeshStandardMaterial({color:0xf2c230,roughness:.6});for(const[r0,r1]of[[AP+170,AP+178],[AP-240,AP-234]]){const r=mesh(new THREE.RingGeometry(r0,r1,160),wm,0,2.2,0);r.rotation.x=-Math.PI/2;r.userData.ns=1;}
  person(60,0,30,Math.PI+.4);person(CX+150,0,CZ+10,.5);{const p=at(-LI+150);person(p.x-120,0,p.z+10,-1.9);}{const p=pathAt(5*CELL);person(p.x-150,0,p.z-150,2.2);}
  const pl=new THREE.PointLight(0xffd9a8,dark?.5:.2,1600,2);pl.position.set(0,320,0);root.add(pl);
  /* ---------- the beam: beads, a glowing tail, a soft halo, and a faint glow along the whole orbit ---------- */
@@ -383,6 +414,9 @@ function buildSyn(dark){
    qf:[P3(q,BH+44),['Quadrupolo focalizzante','Focusing quadrupole'],'#f2917c'],qd:[P3(q2,BH+44),['Quadrupolo defocalizzante','Defocusing quadrupole'],'#e9cf78'],sx:[P3(pathAt(3*CELL-45),BH+32),['Sestupoli','Sextupoles'],'#7fd69a'],
    cav:[[pC.x,BH+96,pC.z],['Cavità a radiofrequenza','Radio-frequency cavity'],'#f0a35e'],amp:[[CX,214,CZ],['Amplificatore RF','RF amplifier'],'#8fd6c4'],
    kick:[P3(pathAt(SKICK),BH+62),['Kicker: magnete rapido','Kicker: fast magnet'],'#b9a3e6'],sepX:[P3(pathAt(SX+52),BH+34),['Setto di estrazione','Extraction septum'],'#8fd6c4'],tgt:[[TP.x,250,TP.z],['Bersaglio dietro la schermatura','Target behind the shielding'],'#f2917c'],
+   sYoke:[[sh[0]+(RHO-48)*Math.cos(tm),BH+26,sh[1]+(RHO-48)*Math.sin(tm)],['Giogo di ferro (lamierini)','Iron yoke (laminations)'],'#6aa8ff'],sPole:[[sh[0]+(RHO+12)*Math.cos(tm),BH+17,sh[1]+(RHO+12)*Math.sin(tm)],['Polo','Pole'],'#c9d0d6'],
+   sCoil:[[sh[0]+(RHO+30)*Math.cos(tm),BH+17,sh[1]+(RHO+30)*Math.sin(tm)],['Bobina: rame cavo raffreddato ad acqua','Coil: hollow water-cooled copper'],'#f0a35e'],sCh:[[sh[0]+(RHO+4.5)*Math.cos(tm),BH-3,sh[1]+(RHO+4.5)*Math.sin(tm)],['Camera a vuoto con il fascio','Vacuum chamber with the beam'],'#e9cf78'],
+   sB:[[sh[0]+(RHO-47)*Math.cos(tm),BH-20,sh[1]+(RHO-47)*Math.sin(tm)],['Linee del campo B','Field lines of B'],'#8be0a4'],
    light:[[a5[0]+(RHO+420)*Math.cos(t5)-Math.sin(t5)*300,BH+30,a5[1]+(RHO+420)*Math.sin(t5)+Math.cos(t5)*300],['Luce di sincrotrone','Synchrotron light'],'#8fd0ff'],desk:[[0,150,-50],['Sala di controllo','Control desk'],'#a5a291']};}
  /* ---------- the machine cycle: injection, acceleration, flat top, extraction, magnets back down ---------- */
  st.start=ph=>{st.sx=null;st.kicked=false;st.t=0;st.tc=0;st.hist=[];st.hT=0;if(ph==='inj'){st.ph='inj';st.s=SI-LI;st.K=.05;}else if(ph==='acc'){st.ph='acc';st.s=SI+80;st.K=K0;}else{st.ph='top';st.K=K1;st.s=SX+CIRC*.4;}};
@@ -415,6 +449,7 @@ function buildSyn(dark){
   /* magnets: the coils glow more and more as the current rises with the energy */
   cuD.emissive.setRGB(1,.33,.07).multiplyScalar((dark?.75:.3)*bf);
   st.topG.position.y+=((P.open?LIFT:0)-st.topG.position.y)*Math.min(1,dt*2.2);const lift=st.topG.position.y;st.bl.visible=lift>4;if(st.bl.visible){for(const t of st.bl.children)t.scale.y=16+lift;st.bfm.uniforms.uOp.value=(dark?.3:.45)+.6*bf;uFlow.value=.5+.9*bf;}
+  st.cutB.visible=st.cutT.visible=!P.cut;st.sec.visible=P.cut;if(P.cut){st.secM.uniforms.uOp.value=(dark?.45:.6)+.5*bf;uFlow.value=.5+.9*bf;}
   /* the cavity: its field follows the bunch, one oscillation per turn; colours and arrows only in close-up */
   st.amp+=((ring?1:0)-st.amp)*Math.min(1,dt*3);const cph=Math.cos(6.2832*(st.s-SCAV)/CIRC);st.cph=cph;const k=Math.abs(cph)*st.amp,nr=nearPt(st.pC.x,BH,st.pC.z,620,900);
   st.cavM.emissive.setRGB(cph>0?1:.15,cph>0?.22:.4,cph>0?.12:1).multiplyScalar(.5*k*nr);st.gapM.color.set(cph>0?0xff7048:0x4a8cff);st.gapM.opacity=.5*k*nr;
@@ -468,7 +503,7 @@ function shadowAt(x,z,half){DL.target.position.set(x,0,z);DL.target.updateMatrix
 if(V.ok){scene.add(DL.target);if(MOB)DL.shadow.mapSize.set(2048,2048);shadowAt(0,200,1750);}
 /* ================================================================== the slides ================================================================== */
 P.spd=1;P.injK=2.6;P.TR=15;P.beta=1;P.open=false;P.vecs=false;P.light=false;P.store=false;P.elec=false;
-const DEF={spd:1,injK:2.6,TR:15,beta:1,open:false,vecs:false,light:false,store:false,elec:false,pop:false};
+const DEF={cut:false,spd:1,injK:2.6,TR:15,beta:1,open:false,vecs:false,light:false,store:false,elec:false,pop:false};
 const linMid=lineAt(pI,dI,-760),extMid=lineAt(pX,dE,470),showC=(()=>{const c=arcC(1),t=phiS(1)+Math.PI/8;return[c[0]+RHO*Math.cos(t),c[1]+RHO*Math.sin(t)];})(),q3=pathAt(3*CELL);
 const SL=[
  {ch:'A',c:[0,40,120,3750,.32,.5],labs:['inj','ring','ext'],big:true,
@@ -491,6 +526,11 @@ const SL=[
   b:['Otto magneti a forma di C, ognuno curva il fascio di 45°: otto volte 45° fa un giro completo. Tra i poli il campo B è verticale (le linee verdi; la metà superiore di questo magnete è sollevata per guardare dentro). La forza di Lorentz F (rossa) spinge i protoni verso il centro dell\'anello, perpendicolare alla velocità v (gialla): li fa curvare senza cambiarne l\'energia. Tra un magnete e l\'altro non c\'è forza e il fascio va dritto.',
    'Eight C-shaped magnets, each bending the beam by 45°: eight times 45° makes a full turn. Between the poles the field B is vertical (the green lines; the upper half of this magnet is lifted to look inside). The Lorentz force F (red) pushes the protons towards the centre of the ring, perpendicular to the velocity v (yellow): it bends them without changing their energy. Between one magnet and the next there is no force and the beam goes straight.'],
   f:'q v B = m v² / r  →  r = p / (q B)'},
+ {ch:'B',c:[showC[0]-14,BH,showC[1]-6,262,-.62,.2],labs:['sYoke','sB','sPole','sCoil','sCh'],side:true,P:{cut:true,spd:1.25},
+  t:['Dentro il dipolo: la sezione','Inside the dipole: the cross-section'],
+  b:['Tagliamo il magnete a metà. Il giogo di ferro a forma di C è fatto di migliaia di lamierini sottili, così il campo può cambiare in fretta durante la rampa. Il ferro guida il campo: le linee verdi attraversano il traferro, la stretta fessura tra i due poli dove passa il fascio, e si richiudono dentro il giogo. Le bobine sono barre di rame cave: portano migliaia di ampere e l\'acqua che scorre al loro interno (i fori azzurri) le raffredda. Al centro, la camera a vuoto d\'acciaio con il fascio, largo pochi millimetri.',
+   'Let us cut the magnet in half. The C-shaped iron yoke is made of thousands of thin laminations, so the field can change quickly during the ramp. The iron guides the field: the green lines cross the gap, the narrow slot between the two poles where the beam passes, and close inside the yoke. The coils are hollow copper bars: they carry thousands of amperes and the water flowing inside them (the blue holes) cools them. At the centre, the steel vacuum chamber with the beam, a few millimetres wide.'],
+  f:'B ≈ μ₀ N I / g'},
  {ch:'B',c:[q3.x,BH,q3.z,560,-.3,.3],labs:['qf','sx','qd'],P:{beta:1.9,spd:1.25},
   t:['I quadrupoli: tengono unito il fascio','The quadrupoles: they keep the beam together'],
   b:['Nel tubo viaggiano miliardi di protoni che si respingono a vicenda e devono fare più di un milione di giri senza toccare le pareti. Ci pensano i quadrupoli, vere lenti magnetiche: uno (rosso) stringe il fascio in orizzontale, il successivo (giallo) in verticale, e alternandoli si ottiene un effetto di messa a fuoco in entrambe le direzioni. I protoni oscillano attorno all\'orbita ideale senza mai allontanarsene; i sestupoli (verdi) correggono le piccole differenze di energia.',
@@ -557,7 +597,10 @@ function flushLabels(){const sm=W<760,band=W<600;
   l.x=l.sd?(l.ax<W/2?l.w/2+10:W-l.w/2-10):clamp(l.ax,l.w/2+6,W-l.w/2-6);
   l.y=l.bd?(l.bd<0?l.h/2+7:H-l.h/2-7):clamp(l.free?l.ay-l.h*(band?1.5:1.9):l.ay,l.h/2+6,H-l.h/2-6);}
  /* small screens: plain labels sit in a band along the top (or bottom) edge, away from the apparatus; isotope tags sit in one row */
- for(const sgn of[-1,1]){const row=LQ.filter(l=>l.bd===sgn);if(!row.length)continue;spreadRow(row);let tot=6;for(const l of row)tot+=l.w+6;if(tot>W)row.forEach((l,i)=>{if(i%2)l.y-=sgn*(l.h+4);});}
+ for(const sgn of[-1,1]){const row=LQ.filter(l=>l.bd===sgn).sort((a,b)=>a.ax-b.ax);if(!row.length)continue;
+  /* as many rows as needed: each label goes in the first row that still has room for it */
+  const rows=[];for(const l of row){let r=rows.find(q=>q.w+l.w+6<=W-12);if(!r){r={w:0,ls:[]};rows.push(r);}r.w+=l.w+6;r.ls.push(l);}
+  rows.forEach((r,k)=>{for(const l of r.ls)l.y-=sgn*k*(l.h+4);spreadRow(r.ls);});}
  const fr=LQ.filter(l=>l.free);if(fr.length>1){const y=Math.min(...fr.map(l=>l.y));for(const l of fr)l.y=y;spreadRow(fr);}
  for(let it=0;it<16;it++){let moved=false;for(let i=0;i<LQ.length;i++)for(let j=i+1;j<LQ.length;j++){const a=LQ[i],b=LQ[j];if((a.bd&&b.bd)||(a.free&&b.free))continue;const ox=(a.w+b.w)/2+4-Math.abs(a.x-b.x),oy=(a.h+b.h)/2+3-Math.abs(a.y-b.y);
    if(ox>0&&oy>0){const d=(b.y>=a.y?1:-1)*oy/2;if(a.bd){b.y+=2*d;}else if(b.bd){a.y-=2*d;}else{a.y-=d;b.y+=d;}moved=true;}}
@@ -574,7 +617,7 @@ function flushLabels(){const sm=W<760,band=W<600;
 let lastT=performance.now();
 function frame(now){requestAnimationFrame(frame);const dt=Math.min(.05,(now-lastT)/1000);lastT=now;clock+=dt;UT.value=clock;c=fit(cv);W=cv.W;H=cv.H;c.clearRect(0,0,W,H);
  if(!V.ok){c.fillStyle=C.bg;c.fillRect(0,0,W,H);txt(c,L('Questa simulazione richiede WebGL.','This simulation needs WebGL.'),W/2,H/2,C.tx,14,'center');return;}
- const dpr=Math.min(window.devicePixelRatio||1,MOB?1.5:2);if(gl.width!==Math.round(W*dpr)||gl.height!==Math.round(H*dpr)){R3.setPixelRatio(dpr);R3.setSize(W,H,false);if(composer){composer.setPixelRatio(dpr);composer.setSize(W,H);}cam.aspect=W/H;cam.updateProjectionMatrix();}
+ const dpr=Math.min(window.devicePixelRatio||1,MOB?1.75:2);if(gl.width!==Math.round(W*dpr)||gl.height!==Math.round(H*dpr)){R3.setPixelRatio(dpr);R3.setSize(W,H,false);if(composer){composer.setPixelRatio(dpr);composer.setSize(W,H);}cam.aspect=W/H;cam.updateProjectionMatrix();}
  for(const t of trails)if(t.mat&&t.mat.resolution)t.mat.resolution.set(W,H);
  const s=SL[CUR],st=ST;T+=dt;
  /* the camera: smooth flights between the slides, then a slow drift */
@@ -588,7 +631,7 @@ function frame(now){requestAnimationFrame(frame);const dt=Math.min(.05,(now-last
  /* labels emerge once the camera has arrived */
  const la=V.arrived>=0?clamp((clock-V.arrived-.2)/.8,0,1):0;
  for(const k of s.labs||[]){const l=st.L[k];if(l)label(l[0],L(...l[1]),l[2],!!s.big,la);}
- SIDE=false;flushLabels();
+ SIDE=!!s.side;flushLabels();
  for(const p of pops){p.a+=dt;const q=toScr(...p.p);if(!q[2]||!s.pop)continue;c.save();c.globalAlpha=Math.max(0,1-p.a/1.4)*la;if(!LIGHT){c.shadowColor='rgba(0,0,0,.8)';c.shadowBlur=5;}txt(c,p.t,q[0],q[1]-10-p.a*34,p.col,W<600?13:16,'center',1);c.restore();}pops=pops.filter(p=>p.a<1.4);
  let hb=0;if(s.ov&&la>0){c.save();c.globalAlpha=la;hb=st.overlay()||0;c.restore();}
  st.hud(hb);}
