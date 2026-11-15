@@ -168,7 +168,7 @@ try{R3=new THREE.WebGLRenderer({canvas:gl,antialias:true});scene=new THREE.Scene
  /* two rim lights, cool and warm, carve the edges of the machines out of the dark */
  RIM1=new THREE.DirectionalLight(0x7fd8e6,.55);RIM1.position.set(500,300,-900);scene.add(RIM1);RIM2=new THREE.DirectionalLight(0xffb070,.3);RIM2.position.set(900,200,500);scene.add(RIM2);
  /* bloom through a multisampled target, so the edges stay antialiased (WebGL2) */
- if(THREE.EffectComposer&&THREE.UnrealBloomPass&&R3.capabilities.isWebGL2&&THREE.WebGLMultisampleRenderTarget){const rt=new THREE.WebGLMultisampleRenderTarget(256,256,{format:THREE.RGBAFormat});rt.samples=4;
+ if(THREE.EffectComposer&&THREE.UnrealBloomPass&&R3.capabilities.isWebGL2&&THREE.WebGLMultisampleRenderTarget){const rt=new THREE.WebGLMultisampleRenderTarget(256,256,{format:THREE.RGBAFormat,stencilBuffer:true});rt.samples=4;
   composer=new THREE.EffectComposer(R3,rt);composer.addPass(new THREE.RenderPass(scene,cam));bloom=new THREE.UnrealBloomPass(new THREE.Vector2(256,256),.95,.55,1.0);composer.addPass(bloom);}
  V.ok=true;}catch(e){V.ok=false;}
 const metal=(color,rough,o)=>new THREE.MeshStandardMaterial(Object.assign({color,metalness:1,roughness:rough,envMap:ENV},o||{}));
@@ -764,7 +764,7 @@ function frame(now){requestAnimationFrame(frame);const dt=Math.min(.05,(now-last
  if(V.goal){const g=V.goal;g.k+=dt/g.dur;const k=Math.min(1,g.k),u=ease(k);V.tgt.lerpVectors(g.f.t,g.to.t,u);V.dist=g.f.d+(g.to.d-g.f.d)*u+g.hop*Math.sin(Math.PI*u);V.az=g.f.a+wrapA(g.to.a-g.f.a)*u;V.el=g.f.e+(g.to.e-g.f.e)*u+(g.hop?.25*Math.sin(Math.PI*u):0);
   if(!g.swapped&&u>=.5){g.swapped=true;shadowAt(...g.sh);}if(g.k>=1){V.goal=null;V.arrived=clock;const k_=SL[CUR].k;showSt(k_?[k_]:null);}}
  const da=V.arrived>=0?clamp((clock-V.arrived)/3,0,1):0,az=V.az+da*.07*Math.sin((clock-V.arrived)*.16),el=V.el+da*.025*Math.sin((clock-V.arrived)*.11);
- CAMK=Math.max(1,1.25/(W/H))*(W<600&&SL[CUR].k&&((SL[CUR].labs||[]).length||SL[CUR].dyn)?1.12:1);const ce=Math.cos(el),D=V.dist*CAMK;cam.position.set(V.tgt.x+Math.sin(az)*ce*D,V.tgt.y+Math.sin(el)*D,V.tgt.z+Math.cos(az)*ce*D);cam.lookAt(V.tgt);
+ CAMK=Math.max(1,1.25/(W/H))*(W<600&&SL[CUR].k&&((SL[CUR].labs||[]).length||SL[CUR].dyn)?1.12:1);const ce=Math.cos(el),D=V.dist*CAMK;cam.position.set(V.tgt.x+Math.sin(az)*ce*D,V.tgt.y+Math.sin(el)*D,V.tgt.z+Math.cos(az)*ce*D);cam.lookAt(V.tgt);{const nr_=clamp(D*.08,2,300),fr_=D*2.2+3500;if(Math.abs(cam.near-nr_)>nr_*.02||Math.abs(cam.far-fr_)>50){cam.near=nr_;cam.far=fr_;cam.updateProjectionMatrix();}}
  if(composer&&bloom&&bloom.enabled)composer.render();else R3.render(scene,cam);
  /* labels emerge once the camera has arrived */
  const la=V.arrived>=0?clamp((clock-V.arrived-.2)/.8,0,1):0;

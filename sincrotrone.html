@@ -152,7 +152,7 @@ try{R3=new THREE.WebGLRenderer({canvas:gl,antialias:true});scene=new THREE.Scene
  /* two rim lights, cool and warm, carve the edges of the machines out of the dark */
  RIM1=new THREE.DirectionalLight(0x7fd8e6,.55);RIM1.position.set(500,300,-900);scene.add(RIM1);RIM2=new THREE.DirectionalLight(0xffb070,.3);RIM2.position.set(900,200,500);scene.add(RIM2);
  /* bloom through a multisampled target, so the edges stay antialiased (WebGL2) */
- if(THREE.EffectComposer&&THREE.UnrealBloomPass&&R3.capabilities.isWebGL2&&THREE.WebGLMultisampleRenderTarget){const rt=new THREE.WebGLMultisampleRenderTarget(256,256,{format:THREE.RGBAFormat});rt.samples=4;
+ if(THREE.EffectComposer&&THREE.UnrealBloomPass&&R3.capabilities.isWebGL2&&THREE.WebGLMultisampleRenderTarget){const rt=new THREE.WebGLMultisampleRenderTarget(256,256,{format:THREE.RGBAFormat,stencilBuffer:true});rt.samples=4;
   composer=new THREE.EffectComposer(R3,rt);composer.addPass(new THREE.RenderPass(scene,cam));bloom=new THREE.UnrealBloomPass(new THREE.Vector2(256,256),.95,.55,1.0);composer.addPass(bloom);}
  V.ok=true;}catch(e){V.ok=false;}
 const metal=(color,rough,o)=>new THREE.MeshStandardMaterial(Object.assign({color,metalness:1,roughness:rough,envMap:ENV},o||{}));
@@ -551,8 +551,8 @@ const SL=[
    'Once the wanted energy is reached, the field stops growing. A very fast magnet, the kicker, switches on for an instant and shifts the bunch; the septum takes it into the extraction line, towards the target. Then the magnets go back to their starting value and the cycle begins again. Stopping the ramp earlier selects the energy: in hospitals (in Italy at CNAO in Pavia) protons between 60 and 250 MeV are used to hit a tumour exactly at the wanted depth.']},
  {ch:'C',c:[0,40,-100,3300,2.55,.4],labs:['light'],P:{light:true,store:true,elec:true,spd:1.15},run:st=>{st.start('top');},
   t:['La luce di sincrotrone','Synchrotron light'],
-  b:['Una carica che curva emette luce. Per i protoni di questa macchina la perdita è trascurabile, ma immaginiamo di far girare nell\'anello degli elettroni, 1836 volte più leggeri: a parità di energia irraggiano diecimila miliardi di volte di più. A ogni magnete esce un ventaglio di luce intensissima, fino ai raggi X, lungo la tangente. Esistono sincrotroni costruiti apposta per produrla, come Elettra a Trieste: con questa luce si studiano proteine, materiali e opere d\'arte.',
-   'A charge that bends emits light. For the protons of this machine the loss is negligible, but let us imagine sending electrons round the ring, 1836 times lighter: at the same energy they radiate ten million million times more. At each magnet a fan of very intense light, up to X-rays, leaves along the tangent. There are synchrotrons built on purpose to produce it, like Elettra in Trieste: this light is used to study proteins, materials and works of art.'],
+  b:['Una carica che curva emette luce. Per i protoni di questa macchina la perdita è trascurabile, ma immaginiamo di far girare nell\'anello degli elettroni, 1836 volte più leggeri: a parità di energia irraggiano almeno diecimila miliardi di volte di più (circa 10¹³). A ogni magnete esce un ventaglio di luce intensissima, fino ai raggi X, lungo la tangente. Esistono sincrotroni costruiti apposta per produrla, come Elettra a Trieste: con questa luce si studiano proteine, materiali e opere d\'arte.',
+   'A charge that bends emits light. For the protons of this machine the loss is negligible, but let us imagine sending electrons round the ring, 1836 times lighter: at the same energy they radiate at least ten trillion times more (about 10¹³). At each magnet a fan of very intense light, up to X-rays, leaves along the tangent. There are synchrotrons built on purpose to produce it, like Elettra in Trieste: this light is used to study proteins, materials and works of art.'],
   f:'P ∝ E⁴ / (m⁴ r²)'},
  {ch:'C',c:[0,40,0,3900,-.9,.32],labs:[],
   t:['Da 20 metri a 27 chilometri','From 20 metres to 27 kilometres'],
@@ -623,7 +623,7 @@ function frame(now){requestAnimationFrame(frame);const dt=Math.min(.05,(now-last
  /* the camera: smooth flights between the slides, then a slow drift */
  if(V.goal){const g=V.goal;g.k+=dt/g.dur;const k=Math.min(1,g.k),u=ease(k);V.tgt.lerpVectors(g.f.t,g.to.t,u);V.dist=g.f.d+(g.to.d-g.f.d)*u+g.hop*Math.sin(Math.PI*u);V.az=g.f.a+wrapA(g.to.a-g.f.a)*u;V.el=g.f.e+(g.to.e-g.f.e)*u+(g.hop?.12*Math.sin(Math.PI*u):0);if(g.k>=1){V.goal=null;V.arrived=clock;}}
  const da=V.arrived>=0?clamp((clock-V.arrived)/3,0,1):0,az=V.az+da*.08*Math.sin((clock-V.arrived)*.16),el=V.el+da*.025*Math.sin((clock-V.arrived)*.11);
- CAMK=Math.max(1,1.25/(W/H))*(W<600&&(s.labs||[]).length?1.12:1);const ce=Math.cos(el),D=V.dist*CAMK;cam.position.set(V.tgt.x+Math.sin(az)*ce*D,V.tgt.y+Math.sin(el)*D,V.tgt.z+Math.cos(az)*ce*D);cam.lookAt(V.tgt);
+ CAMK=Math.max(1,1.25/(W/H))*(W<600&&(s.labs||[]).length?1.12:1);const ce=Math.cos(el),D=V.dist*CAMK;cam.position.set(V.tgt.x+Math.sin(az)*ce*D,V.tgt.y+Math.sin(el)*D,V.tgt.z+Math.cos(az)*ce*D);cam.lookAt(V.tgt);{const nr_=clamp(D*.08,2,300),fr_=D*2.2+3500;if(Math.abs(cam.near-nr_)>nr_*.02||Math.abs(cam.far-fr_)>50){cam.near=nr_;cam.far=fr_;cam.updateProjectionMatrix();}}
  /* the machine runs its cycle all the time; some slides restart it from the phase they talk about */
  inSt(st,()=>{st.update(dt);st.vis(dt);if(s.every&&T>=NEXT){NEXT+=s.every;s.run(st);}});
  stepSparks(dt);
