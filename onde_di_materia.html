@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Onde di materia</title>
+<style>
+:root{--bg0:#141412;--bg:#1d1d1a;--hd:linear-gradient(180deg,#22221e,#1a1a17);--side:#191917;--card:#242420;--bd:#31312b;--bd2:#43423a;--tx:#f1efe6;--mu:#a5a291;--ac:#d6f06a;--actx:#1c2108;--val:#e9cf78;--btn:#2c2c27;--strong:#fffdf5;--cy:#8fd6c4;--pk:#f2917c;--yl:#e9cf78;--gr:#c9ec62;--tagc:#d6f06a}
+body.light{--bg0:#ebe8df;--bg:#f6f4ee;--hd:linear-gradient(180deg,#f4f2ec,#ebe8df);--side:#efede5;--card:#fbfaf6;--bd:#dedbd0;--bd2:#cbc7b8;--tx:#23231d;--mu:#6c695b;--ac:#c8e65a;--actx:#1c2108;--val:#8a6a12;--btn:#f1efe7;--strong:#15150f;--cy:#2f8f7a;--pk:#c4553f;--yl:#9a7410;--gr:#5f8a12;--tagc:#5f7d0e}
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{background:var(--bg0);color:var(--tx);font:14px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+header{display:flex;align-items:center;justify-content:space-between;padding:9px 16px;border-bottom:1px solid var(--bd);background:var(--hd)}
+h1{margin:0;font-size:19px;letter-spacing:.2px}
+.tag{font-size:10.5px;text-transform:uppercase;letter-spacing:1.6px;color:var(--ac);display:block}
+.hb{display:flex;gap:8px}
+.hb button,.hb a{width:38px;height:34px;display:grid;place-items:center;text-decoration:none;border-radius:9px;border:1px solid var(--bd2);background:var(--card);color:var(--tx);font:600 13px system-ui;cursor:pointer}
+.hb button:hover,.hb a:hover{border-color:var(--ac)}
+main{flex:1;display:flex;min-height:0}
+.stage{flex:1;position:relative;min-width:0;background:var(--bg)}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:crosshair}
+.stage.two{display:flex}.pane{flex:1;position:relative;min-width:0;min-height:0}.pane+.pane{border-left:1px solid var(--bd)}
+.cap{position:absolute;left:10px;top:8px;font-size:10.5px;text-transform:uppercase;letter-spacing:1.4px;color:var(--mu);pointer-events:none;z-index:2}
+aside{width:312px;overflow:auto;padding:12px;border-left:1px solid var(--bd);background:var(--side);display:flex;flex-direction:column;gap:10px}
+aside>div:not(.grp){display:flex;flex-direction:column;gap:10px}
+.grp{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px 12px}
+.grp h3{margin:0 0 8px;font-size:10.5px;text-transform:uppercase;letter-spacing:1.3px;color:var(--mu);font-weight:600}
+.sl{display:block;margin:7px 0}.sl .ln{display:flex;justify-content:space-between;font-size:13px;gap:8px}
+.sl output{color:var(--val);font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+input[type=range]{width:100%;accent-color:var(--ac);margin:4px 0 0}
+.ck{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:13px;cursor:pointer}.ck input{accent-color:var(--ac);width:16px;height:16px;margin:0}
+.seg{display:flex;background:var(--bg);border-radius:9px;padding:3px;gap:3px;margin:4px 0}
+.seg button{flex:1;border:0;background:transparent;color:var(--mu);padding:6px 4px;border-radius:7px;font:inherit;font-size:13px;cursor:pointer}
+.seg button.on{background:var(--ac);color:var(--actx);font-weight:600}
+.btn{border:1px solid var(--bd2);background:var(--btn);color:var(--tx);border-radius:9px;padding:7px 10px;font:inherit;font-size:13px;cursor:pointer;flex:1;white-space:nowrap}
+.btn:hover{border-color:var(--ac)}.btn.pri{background:var(--ac);color:var(--actx);border-color:var(--ac);font-weight:600}
+select{width:100%;background:var(--bg);color:var(--tx);border:1px solid var(--bd2);border-radius:8px;padding:7px;font:inherit;font-size:13px;margin:3px 0}
+.lb{font-size:12px;color:var(--mu);margin-top:6px;display:block}
+.ro{display:flex;justify-content:space-between;gap:8px;font-size:13px;padding:4px 0;border-bottom:1px dashed var(--bd)}.ro:last-child{border-bottom:0}
+.ro b{font-variant-numeric:tabular-nums;color:var(--strong);white-space:nowrap}
+.row{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 2px}
+.gc{width:100%;height:210px;display:block}
+.tb{width:100%;border-collapse:collapse;font-size:13px}.tb th{font-weight:500;color:var(--mu);font-size:11px;text-align:right;padding:2px 3px}
+.tb td{text-align:right;padding:4px 3px;font-variant-numeric:tabular-nums;border-top:1px dashed var(--bd)}.tb td:first-child{text-align:left;font-weight:700}
+.hint{font-size:12px;color:var(--mu);margin:4px 0 0}
+.c-cy{color:var(--cy)!important}.c-pk{color:var(--pk)!important}.c-yl{color:var(--yl)!important}.c-gr{color:var(--gr)!important}
+.hidden{display:none!important}
+#q{position:fixed;inset:0;background:rgba(4,7,16,.6);display:flex;align-items:center;justify-content:center;z-index:9;padding:20px}
+#q .box{background:var(--card);border:1px solid var(--bd2);border-radius:16px;max-width:520px;padding:20px 24px;box-shadow:0 20px 60px #0006}
+#q h2{margin:0 0 10px;font-size:16px;color:var(--val)}#q li{margin:9px 0;font-size:14.5px}#q ul{padding-left:20px;margin:0}
+/* --- mobile --- */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+.stage canvas{-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#q .box{max-height:86vh;overflow:auto}
+@media(pointer:coarse){input[type=range]{height:30px}.ck{margin:9px 0}.ck input{width:20px;height:20px}.seg button{padding:9px 4px}.btn{padding:10px}select{padding:10px 8px}.hb button,.hb a{width:40px;height:38px}}
+@media(max-width:820px){body{overflow:auto;height:auto}main{flex-direction:column}.stage{flex:none;height:60vh;height:60svh;min-height:300px}.stage.tall{height:84vh;height:84svh;min-height:460px}.stage.two{height:92vh;height:92svh;min-height:560px;flex-direction:column}.pane+.pane{border-left:0;border-top:1px solid var(--bd)}aside{width:auto;border-left:0;border-top:1px solid var(--bd);overflow:visible;display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));align-items:start;padding-bottom:calc(16px + env(safe-area-inset-bottom))}}
+@media(max-width:560px){header{padding:8px 10px;gap:8px}header>div:first-child{min-width:0}h1{font-size:16px;line-height:1.2}.tag{font-size:9.5px;letter-spacing:1.1px}.hb{gap:5px;flex:none}.hb button,.hb a{width:36px;height:36px}aside{padding:10px;grid-template-columns:1fr}#q{padding:12px}#q .box{padding:16px 18px}}
+@media(max-height:520px) and (min-width:560px) and (orientation:landscape){body{overflow:hidden;height:100%}main{flex-direction:row}.stage,.stage.tall{flex:1;height:auto;min-height:0}.stage.two{height:auto;min-height:0;flex-direction:row}.pane+.pane{border-left:1px solid var(--bd);border-top:0}aside{display:flex;width:270px;border-left:1px solid var(--bd);border-top:0;overflow:auto;padding:8px}header{padding:5px 12px}h1{font-size:15px}.tag{display:none}.hb button,.hb a{height:30px}}
+
+
+/* --- soft, modern shapes: pill buttons, rounder glassy panels --- */
+header{border-bottom:1px solid var(--bd);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.tag{color:var(--tagc)}h1{font-weight:650;letter-spacing:-.2px}
+.hb button,.hb a{border-radius:999px;background:var(--btn);border-color:var(--bd2)}
+.hb button:hover,.hb a:hover{border-color:var(--ac);color:var(--ac)}
+aside{gap:12px}
+.grp{border-radius:20px;padding:14px 16px;box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 6px 20px rgba(0,0,0,.12)}
+.grp h3{letter-spacing:1.5px}
+.seg{border-radius:999px;padding:4px;background:var(--bg0);border:1px solid var(--bd)}
+.seg button{border-radius:999px}
+.seg button.on{box-shadow:0 2px 10px rgba(200,230,90,.25)}
+.btn{border-radius:999px;padding:8px 14px}.btn.pri{box-shadow:0 4px 14px rgba(200,230,90,.25)}
+select{border-radius:12px}
+#q .box{border-radius:24px}#q h2{color:var(--ac)}body.light #q h2{color:var(--tagc)}
+.ro{border-bottom-color:var(--bd)}
+/* --- glass --- */
+body{background:radial-gradient(900px 620px at 6% -10%,rgba(214,240,106,.14),transparent 60%),radial-gradient(820px 620px at 104% 106%,rgba(233,207,120,.11),transparent 60%),radial-gradient(700px 520px at 62% 38%,rgba(143,214,196,.06),transparent 70%),var(--bg0);background-attachment:fixed}body.light{background:radial-gradient(900px 620px at 6% -10%,rgba(200,230,90,.38),transparent 60%),radial-gradient(820px 620px at 104% 106%,rgba(233,200,120,.38),transparent 60%),radial-gradient(700px 520px at 62% 38%,rgba(143,214,196,.18),transparent 70%),var(--bg0);background-attachment:fixed}
+header{background:rgba(32,32,27,.42);border-bottom:1px solid rgba(255,255,255,.07);-webkit-backdrop-filter:blur(22px) saturate(1.4);backdrop-filter:blur(22px) saturate(1.4)}
+body.light header{background:rgba(255,255,255,.42);border-bottom-color:rgba(0,0,0,.06)}
+main{gap:12px;padding:12px}
+.stage{border-radius:24px;overflow:hidden;border:1px solid rgba(255,255,255,.08);box-shadow:0 22px 50px rgba(0,0,0,.38)}
+body.light .stage{border-color:rgba(255,255,255,.9);box-shadow:0 18px 44px rgba(70,60,20,.14)}
+.cap{left:16px;top:12px}
+aside{background:transparent;border:0!important;padding:0 2px 14px}
+.grp{background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.025));border:1px solid rgba(255,255,255,.09);-webkit-backdrop-filter:blur(22px) saturate(1.4);backdrop-filter:blur(22px) saturate(1.4);
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 12px 32px rgba(0,0,0,.28)}
+body.light .grp{background:linear-gradient(180deg,rgba(255,255,255,.78),rgba(255,255,255,.48));border-color:rgba(255,255,255,.85);box-shadow:inset 0 1px 0 #fff,0 10px 26px rgba(70,60,20,.10)}
+.hb button,.hb a{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.13)}
+body.light .hb button,body.light .hb a{background:rgba(255,255,255,.62);border-color:rgba(0,0,0,.08)}
+.seg{background:rgba(0,0,0,.24);border-color:rgba(255,255,255,.06)}body.light .seg{background:rgba(60,50,20,.06);border-color:rgba(0,0,0,.04)}
+.btn{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.13)}body.light .btn{background:rgba(255,255,255,.72);border-color:rgba(0,0,0,.08)}
+.btn.pri,body.light .btn.pri{background:var(--ac);border-color:var(--ac);color:var(--actx)}
+select{background:rgba(0,0,0,.24);border-color:rgba(255,255,255,.1)}body.light select{background:rgba(255,255,255,.72)}
+#q{background:rgba(10,10,8,.4);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+#q .box{background:rgba(40,40,34,.62);border-color:rgba(255,255,255,.12);-webkit-backdrop-filter:blur(22px) saturate(1.4);backdrop-filter:blur(22px) saturate(1.4)}body.light #q .box{background:rgba(255,255,255,.7)}
+@media(max-width:820px){main{padding:10px;gap:10px}.stage{border-radius:20px}}
+/* --- liquid glass --- */
+.grp,.seg,.btn,.hb button,.hb a{position:relative;border-color:transparent!important}
+.grp::before,.seg::before,.btn::before,.hb button::before,.hb a::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.3px;pointer-events:none;background:linear-gradient(140deg,rgba(255,255,255,.62),rgba(255,255,255,.14) 22%,rgba(255,255,255,.03) 48%,rgba(255,255,255,.10) 72%,rgba(255,255,255,.42));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+body.light .grp::before,body.light .seg::before,body.light .btn::before,body.light .hb button::before,body.light .hb a::before{background:linear-gradient(140deg,rgba(255,255,255,1),rgba(255,255,255,.55) 25%,rgba(120,110,80,.12) 55%,rgba(255,255,255,.35) 75%,rgba(255,255,255,.95))}
+.grp{box-shadow:inset 0 1px 1px rgba(255,255,255,.22),inset 0 -1px 2px rgba(0,0,0,.28),0 14px 34px rgba(0,0,0,.30)}body.light .grp{box-shadow:inset 0 1px 1px #fff,0 12px 28px rgba(70,60,20,.12)}
+.btn,.hb button,.hb a{box-shadow:inset 0 1px 1px rgba(255,255,255,.22),inset 0 -1px 2px rgba(0,0,0,.28);transition:transform .25s cubic-bezier(.3,1.3,.45,1),background .2s,color .2s}
+.btn:active,.hb button:active,.hb a:active{transform:scale(.94)}
+/* segmented control: one lime pill that slides to the chosen option */
+.seg{isolation:isolate;box-shadow:inset 0 1px 3px rgba(0,0,0,.35)}body.light .seg{box-shadow:inset 0 1px 3px rgba(60,50,20,.12)}
+.seg .thumb{position:absolute;top:4px;bottom:4px;left:0;width:0;border-radius:999px;z-index:0;pointer-events:none;
+ background:linear-gradient(180deg,#e6f98f,var(--ac) 55%,#b9d64a);box-shadow:inset 0 1px 1px rgba(255,255,255,.75),inset 0 -1px 1px rgba(60,80,0,.25),0 4px 14px rgba(200,230,90,.32)}
+.seg.ready .thumb{transition:transform .5s cubic-bezier(.3,1.3,.45,1),width .5s cubic-bezier(.3,1.3,.45,1),opacity .2s}
+.seg button{position:relative;z-index:1;transition:color .3s ease}
+.seg.ready button.on{background:transparent!important;box-shadow:none!important}
+.seg button:active{transform:scale(.95)}
+/* checkboxes become iOS switches */
+.ck input{-webkit-appearance:none;appearance:none;width:40px!important;height:24px!important;margin:0;flex:none;border-radius:999px;position:relative;cursor:pointer;
+ background:rgba(255,255,255,.14);box-shadow:inset 0 1px 2px rgba(0,0,0,.35),inset 0 0 0 1px rgba(255,255,255,.08);transition:background .3s ease}
+body.light .ck input{background:rgba(60,50,20,.14);box-shadow:inset 0 1px 2px rgba(60,50,20,.2)}
+.ck input::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:999px;background:linear-gradient(180deg,#fff,#eceae2);
+ box-shadow:0 2px 6px rgba(0,0,0,.35),inset 0 -1px 1px rgba(0,0,0,.08);transition:transform .45s cubic-bezier(.3,1.3,.45,1),width .25s ease}
+.ck input:checked,body.light .ck input:checked{background:linear-gradient(180deg,#e6f98f,var(--ac))}
+.ck input:checked::after{transform:translateX(16px)}
+.ck input:active::after{width:25px}.ck input:checked:active::after{transform:translateX(11px)}
+.ck input:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){.seg.ready .thumb,.ck input::after,.btn,.hb button{transition:none}}
+</style>
+</head>
+<body>
+<header><div><span class="tag" data-en="Physics · Quantum physics">Fisica · Fisica quantistica</span><h1 data-en="Matter waves">Onde di materia</h1></div>
+<div class="hb"><a href="index.html" title="Tutte le simulazioni / All simulations">⌂</a><button id="qbtn" title="Sfide / Challenges">?</button><button id="thm" title="Tema chiaro-scuro / Light-dark theme">☀</button><button id="lang" title="Lingua / Language">EN</button></div></header>
+<main><div class="stage tall"><span class="cap" id="cap"></span><canvas id="gl"></canvas><canvas id="cv"></canvas></div>
+<aside>
+<div class="grp"><h3 data-en="Guided tour">Visita guidata</h3>
+<div class="row"><button class="btn pri" id="tour" data-en="▶ Start the tour">▶ Inizia la visita</button></div>
+<div class="row hidden" id="tourNav"><button class="btn" id="tPrev" data-en="◀ Back">◀ Indietro</button><button class="btn pri" id="tNext" data-en="Next ▶">Avanti ▶</button><button class="btn" id="tEnd" style="flex:none">✕</button></div>
+</div>
+<div class="grp"><h3 data-en="Experiment">Esperimento</h3>
+<div class="seg" id="mode" style="font-size:12px"><button data-v="bal" data-en="Balls">Palline</button><button data-v="fen" class="on" data-en="Electrons">Elettroni</button><button data-v="tun" data-en="Tunnel effect">Effetto tunnel</button></div>
+<p class="hint" id="expl" style="font-size:13px;line-height:1.5;color:var(--tx)"></p>
+</div>
+<div class="grp"><h3 data-en="Electrons">Elettroni</h3>
+<label class="sl"><span class="ln"><span data-en="Accelerating voltage">Tensione di accelerazione</span><output id="o_U"></output></span><input type="range" id="U" min="30" max="150" step="5" value="100"></label>
+<label class="sl"><span class="ln"><span data-en="Shower of electrons">Pioggia di elettroni</span><output id="o_rain"></output></span><input type="range" id="rain" min="0" max="400" step="10" value="60"></label>
+<div class="row"><button class="btn pri" id="go" data-en="Launch">Lancia</button><button class="btn" id="pause" data-en="Pause">Pausa</button><button class="btn" id="clr" data-en="Clear">Pulisci</button></div>
+<label class="ck"><input type="checkbox" id="auto" checked><span data-en="Launch one after another">Lancia uno dopo l'altro</span></label>
+<p class="hint" data-en="The wave you see belongs to one electron. The shower adds many more, each landing where the same wave says it is likely.">L'onda che vedi appartiene a un solo elettrone. La pioggia ne aggiunge molti altri, e ciascuno arriva dove la stessa onda dice che è probabile.</p>
+</div>
+<div id="gF">
+<div class="grp"><h3 data-en="Slits">Fenditure</h3>
+<div class="seg" id="nsl"><button data-v="1" data-en="One">Una</button><button data-v="2" class="on" data-en="Two">Due</button><button data-v="3" data-en="Three">Tre</button></div>
+<label class="sl"><span class="ln"><span data-en="Distance between the slits d">Distanza tra le fenditure d</span><output id="o_d"></output></span><input type="range" id="d" min="20" max="72" step="4" value="48"></label>
+<label class="sl"><span class="ln"><span data-en="Width of each slit">Larghezza di ogni fenditura</span><output id="o_a"></output></span><input type="range" id="a" min="4" max="16" step="2" value="8"></label>
+<label class="ck" id="detL"><input type="checkbox" id="det"><span data-en="Detector at the slits: which way?">Rivelatore alle fenditure: da dove passa?</span></label>
+</div>
+</div>
+<div id="gT" class="hidden">
+<div class="grp"><h3 data-en="Potential barrier">Barriera di potenziale</h3>
+<label class="sl"><span class="ln"><span data-en="Height V₀">Altezza V₀</span><output id="o_V0"></output></span><input type="range" id="V0" min="20" max="200" step="5" value="120"></label>
+<label class="sl"><span class="ln"><span data-en="Thickness">Spessore</span><output id="o_w"></output></span><input type="range" id="w" min="2" max="12" step="1" value="4"></label>
+<p class="hint" data-en="The electron's energy is E = e·(accelerating voltage): 100 V gives 100 eV.">L'energia dell'elettrone è E = e·(tensione di accelerazione): con 100 V sono 100 eV.</p>
+</div>
+</div>
+<div class="grp"><h3 data-en="Show">Mostra</h3>
+<div class="seg" id="view"><button data-v="amp" class="on" data-en="Amplitude |ψ|">Ampiezza |ψ|</button><button data-v="fase" data-en="Phase">Fase</button><button data-v="re">Re ψ</button></div>
+<label class="sl"><span class="ln"><span data-en="Speed of the simulation">Velocità della simulazione</span><output id="o_spd"></output></span><input type="range" id="spd" min="2" max="24" step="1" value="7"></label>
+<label class="ck"><input type="checkbox" id="capS" checked><span data-en="Explanations on the scene">Spiegazioni sulla scena</span></label>
+<label class="ck"><input type="checkbox" id="grf" checked><span data-en="Graph">Grafico</span></label>
+<label class="ck"><input type="checkbox" id="lab" checked><span data-en="Names of the parts">Nomi dei componenti</span></label>
+</div>
+<div class="grp"><h3 data-en="Measurements">Misure</h3>
+<div class="ro"><span data-en="De Broglie wavelength λ = h / mv">Lunghezza d'onda di de Broglie λ = h / mv</span><b id="rL" class="c-cy"></b></div>
+<div class="ro"><span data-en="Speed v">Velocità v</span><b id="rV"></b></div>
+<div class="ro" id="roDy"><span data-en="Fringe spacing ≈ λL / d">Distanza tra le frange ≈ λL / d</span><b id="rDy" class="c-yl"></b></div>
+<div class="ro hidden" id="roTt"><span data-en="Transmission, theory (plane wave)">Trasmissione, teoria (onda piana)</span><b id="rTt" class="c-yl"></b></div>
+<div class="ro hidden" id="roTm"><span data-en="Transmission of this wave packet">Trasmissione di questo pacchetto</span><b id="rTm" class="c-gr"></b></div>
+<div class="ro"><span id="lN"></span><b id="rN"></b></div>
+<p class="hint" data-en="Idealised slits on the atomic scale, so that the wave, the slits and the screen all fit in one view. The screen shows only the electrons that get through the wall.">Fenditure ideali su scala atomica, per far stare onda, fenditure e schermo nella stessa vista. Lo schermo mostra solo gli elettroni che superano la parete.</p>
+</div>
+<p class="hint" data-en="Drag to turn, wheel or pinch to zoom.">Trascina per ruotare, rotellina o due dita per lo zoom.</p>
+</aside></main>
+<div id="q" class="hidden"><div class="box"><h2 data-en="Can you…?">Riesci a…?</h2><ul>
+<li data-en="…predict where the next electron will land? And where a thousand of them will?">…prevedere dove arriverà il prossimo elettrone? E dove ne arriveranno mille?</li>
+<li data-en="…make the fringes closer together in two different ways? Check with Δy ≈ λL/d.">…avvicinare le frange tra loro in due modi diversi? Controlla con Δy ≈ λL/d.</li>
+<li data-en="…explain why, with two slits open, there are places where fewer electrons arrive than with one slit only?">…spiegare perché, con due fenditure aperte, ci sono punti in cui arrivano meno elettroni che con una sola?</li>
+<li data-en="…switch on the detector at the slits? What happens to the fringes, and why?">…accendere il rivelatore alle fenditure? Che cosa succede alle frange, e perché?</li>
+<li data-en="…see, in the phase view, how the wavelength changes when you raise the voltage?">…vedere, nella vista della fase, come cambia la lunghezza d'onda quando alzi la tensione?</li>
+<li data-en="…halve the transmission through the barrier by changing only its thickness? Is the dependence linear?">…dimezzare la trasmissione attraverso la barriera cambiando solo lo spessore? La dipendenza è lineare?</li>
+<li data-en="…find an energy above the barrier at which part of the wave is still reflected? Would a ball do that?">…trovare un'energia più alta della barriera per cui una parte dell'onda viene comunque riflessa? Una pallina lo farebbe?</li>
+</ul></div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/lines/LineSegmentsGeometry.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/lines/LineGeometry.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/lines/LineMaterial.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/lines/LineSegments2.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/lines/Line2.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/objects/Reflector.js"></script>
+<script>
+'use strict';
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+let LANG='it';try{if(localStorage.getItem('simLang')==='en')LANG='en';}catch(e){}
+const L=(it,en)=>LANG==='it'?it:en;
+const FONT='system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
+const THEMES={dark:{bg:'#1d1d1a',grid:'#292925',grid2:'#393832',ax:'#5e5c50',tx:'#f1efe6',mu:'#a5a291',panel:'rgba(34,34,30,.92)',gnd:'#34332c',wall:'#57554a',glass:'#bdb9a5',wire:'#a9a592',fg:'255,253,240',line:'200,226,150',base:[29,29,26],pos:[242,112,92],neg:[104,168,230],ramp:['#4a4840','#3a3932'],road:[58,57,50],slab:[52,50,44],cy:'#8fd6c4',pk:'#f2917c',yl:'#e9cf78',gr:'#c9ec62',or:'#f0a35e',pu:'#b9a8e6',rd:'#ef6b5b',bl:'#86aee6'},
+light:{bg:'#f6f4ee',grid:'#e8e5dc',grid2:'#d6d2c5',ax:'#a39f8e',tx:'#23231d',mu:'#6c695b',panel:'rgba(251,250,246,.94)',gnd:'#dcd8cc',wall:'#a8a493',glass:'#77735f',wire:'#7d796a',fg:'35,35,25',line:'95,125,20',base:[246,244,238],pos:[200,80,60],neg:[50,120,190],ramp:['#d8d4c6','#c8c3b2'],road:[180,176,162],slab:[210,206,194],cy:'#2f8f7a',pk:'#c4553f',yl:'#9a7410',gr:'#5f8a12',or:'#c26a1a',pu:'#6e55b8',rd:'#c53a2b',bl:'#2f64b0'}};
+const C=Object.assign({},THEMES.dark);const fa=a=>'rgba('+C.fg+','+a+')';
+function nf(x,d=1){if(!isFinite(x))return '–';let s=x.toFixed(d);if(+s===0)s=(0).toFixed(d);return LANG==='it'?s.replace('.',','):s;}
+const SUP={'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
+function sci(x,d=2){if(x===0||!isFinite(x))return nf(x,d);const a=Math.abs(x);if(a>=0.01&&a<10000)return nf(x,a>=100?1:d);let e=Math.floor(Math.log10(a)),m=x/10**e;if(Math.abs(+m.toFixed(d))>=10){m/=10;e++;}return nf(m,d)+'·10'+String(e).split('').map(ch=>SUP[ch]).join('');}
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));const TS=matchMedia('(pointer:coarse)').matches?1.6:1;
+function fit(cv){const d=window.devicePixelRatio||1,r=cv.getBoundingClientRect(),w=Math.max(60,Math.round(r.width)),h=Math.max(60,Math.round(r.height)),pw=Math.round(w*d),ph=Math.round(h*d);if(cv.width!==pw||cv.height!==ph){cv.width=pw;cv.height=ph;}const c=cv.getContext('2d');c.setTransform(d,0,0,d,0,0);cv.W=w;cv.H=h;return c;}
+function loop(fn){let t0=performance.now();function f(t){const dt=Math.min(0.05,Math.max(0,(t-t0)/1000));t0=t;fn(dt);requestAnimationFrame(f);}requestAnimationFrame(f);}
+function pointer(cv,h){cv.style.touchAction='none';const p=e=>{const r=cv.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};};let lt=0,lx=0,ly=0,syn=0,pid=null;
+ cv.addEventListener('pointerdown',e=>{if(pid!==null&&e.pointerType==='touch')return;pid=e.pointerId;try{cv.setPointerCapture(e.pointerId);}catch(_){}const q=p(e);h.down&&h.down(q,e);
+  if(e.pointerType!=='mouse'){const n=performance.now();if(n-lt<350&&Math.hypot(q.x-lx,q.y-ly)<32){lt=0;syn=n;h.dbl&&h.dbl(q,e);}else{lt=n;lx=q.x;ly=q.y;}}});
+ cv.addEventListener('pointermove',e=>{if(pid!==null&&e.pointerId!==pid)return;h.move&&h.move(p(e),e);});
+ const up=e=>{if(e.pointerId!==pid)return;pid=null;h.up&&h.up(p(e),e);};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+ cv.addEventListener('contextmenu',e=>e.preventDefault());
+ cv.addEventListener('dblclick',e=>{if(performance.now()-syn<700)return;h.dbl&&h.dbl(p(e),e);});}
+function rr(c,x,y,w,h,r){r=Math.min(r,Math.abs(w)/2,Math.abs(h)/2);c.beginPath();c.moveTo(x+r,y);c.lineTo(x+w-r,y);c.quadraticCurveTo(x+w,y,x+w,y+r);c.lineTo(x+w,y+h-r);c.quadraticCurveTo(x+w,y+h,x+w-r,y+h);c.lineTo(x+r,y+h);c.quadraticCurveTo(x,y+h,x,y+h-r);c.lineTo(x,y+r);c.quadraticCurveTo(x,y,x+r,y);c.closePath();}
+function arrow(c,x1,y1,x2,y2,col,w=3,dash){const dx=x2-x1,dy=y2-y1,l=Math.hypot(dx,dy);if(l<1.5)return;const ux=dx/l,uy=dy/l,hd=Math.min(l,6+w*2.4);c.save();c.strokeStyle=c.fillStyle=col;c.lineWidth=w;c.lineCap='round';if(dash)c.setLineDash(dash);c.beginPath();c.moveTo(x1,y1);c.lineTo(x2-ux*hd*.8,y2-uy*hd*.8);c.stroke();c.setLineDash([]);c.beginPath();c.moveTo(x2,y2);c.lineTo(x2-ux*hd-uy*hd*.5,y2-uy*hd+ux*hd*.5);c.lineTo(x2-ux*hd+uy*hd*.5,y2-uy*hd-ux*hd*.5);c.closePath();c.fill();c.restore();}
+function txt(c,s,x,y,col=C.tx,size=13,al='left',bold){c.font=(bold?'700 ':'')+size+'px '+FONT;c.fillStyle=col;c.textAlign=al;c.textBaseline='middle';c.fillText(s,x,y);}
+function bubble(c,x,y,lines,col=C.yl){c.save();c.font='700 14px '+FONT;let w=0;lines.forEach((s,i)=>{c.font=(i?'12px ':'700 14px ')+FONT;w=Math.max(w,c.measureText(s).width);});const h=lines.length*18+10;w+=20;x=clamp(x,6,c.canvas.W-w-6);y=clamp(y,6,c.canvas.H-h-6);c.fillStyle=C.panel;rr(c,x,y,w,h,9);c.fill();c.strokeStyle=col;c.lineWidth=1.2;c.stroke();lines.forEach((s,i)=>txt(c,s,x+10,y+14+i*18,i?C.mu:col,i?12:14,'left',!i));c.restore();}
+function nice(range,n){const r=range/Math.max(1,n),p=10**Math.floor(Math.log10(r)),m=r/p;return(m<1.5?1:m<3.5?2:m<7.5?5:10)*p;}
+function tick(v,s){const d=Math.max(0,-Math.floor(Math.log10(s)+1e-9));if(Math.abs(v)>=1e5||(Math.abs(v)<1e-3&&v!==0&&d>4))return sci(v,1);return nf(v,Math.min(d,4));}
+function chart(c,x,y,w,h,o){const ml=46,mb=28,mt=18,mr=12,px=x+ml,py=y+mt,pw=w-ml-mr,ph=h-mt-mb;let{xmin=0,xmax=1,ymin=0,ymax=1}=o;if(!(ymax-ymin>1e-12))ymax=ymin+1;if(!(xmax-xmin>1e-12))xmax=xmin+1;
+ const X=v=>px+(v-xmin)/(xmax-xmin)*pw,Y=v=>py+ph-(v-ymin)/(ymax-ymin)*ph;
+ c.save();c.fillStyle=C.panel;rr(c,x,y,w,h,10);c.fill();c.strokeStyle=C.grid2;c.lineWidth=1;c.stroke();
+ c.font='10.5px '+FONT;c.textBaseline='middle';
+ const sx=nice(xmax-xmin,pw/58),sy=nice(ymax-ymin,ph/(ph>320?46:30));
+ for(let v=Math.ceil(xmin/sx-1e-9)*sx;v<=xmax+sx*1e-6;v+=sx){const q=X(v);c.strokeStyle=Math.abs(v)<sx*1e-6?C.ax:C.grid;c.beginPath();c.moveTo(q,py);c.lineTo(q,py+ph);c.stroke();c.fillStyle=C.mu;c.textAlign='center';c.fillText(tick(Math.abs(v)<sx*1e-6?0:v,sx),q,py+ph+10);}
+ for(let v=Math.ceil(ymin/sy-1e-9)*sy;v<=ymax+sy*1e-6;v+=sy){const q=Y(v);c.strokeStyle=Math.abs(v)<sy*1e-6?C.ax:C.grid;c.beginPath();c.moveTo(px,q);c.lineTo(px+pw,q);c.stroke();c.fillStyle=C.mu;c.textAlign='right';c.fillText(tick(Math.abs(v)<sy*1e-6?0:v,sy),px-5,q);}
+ c.fillStyle=C.tx;c.font='600 11px '+FONT;c.textAlign='right';if(o.xl)c.fillText(o.xl,x+w-8,y+h-8);c.textAlign='left';if(o.yl)c.fillText(o.yl,x+8,y+9);
+ c.beginPath();c.rect(px,py,pw,ph);c.clip();
+ for(const s of o.series||[]){if(!s.pts.length)continue;c.strokeStyle=c.fillStyle=s.col;if(s.line!==false&&!s.dots){c.lineWidth=s.w||2.2;c.lineJoin='round';c.beginPath();s.pts.forEach((p,i)=>i?c.lineTo(X(p[0]),Y(p[1])):c.moveTo(X(p[0]),Y(p[1])));c.stroke();}
+  if(s.dots){for(const p of s.pts){c.beginPath();c.arc(X(p[0]),Y(p[1]),s.r||2.6,0,7);c.fill();}}
+  if(s.end){const p=s.pts[s.pts.length-1];c.beginPath();c.arc(X(p[0]),Y(p[1]),4.5,0,7);c.fill();}}
+ c.restore();return{X,Y,px,py,pw,ph};}
+/* --- controls --- */
+const P={},_upd=[];
+function _fire(id){if(typeof onParam==='function')onParam(id);}
+function slider(id,fmt){const el=$('#'+id),o=$('#o_'+id);const u=()=>{P[id]=+el.value;if(o)o.textContent=fmt?fmt(P[id]):P[id];};el.addEventListener('input',()=>{u();_fire(id);});_upd.push(u);u();}
+function setS(id,v){$('#'+id).value=v;refreshUI();}
+function check(id){const el=$('#'+id);const u=()=>{P[id]=el.checked;};el.addEventListener('change',()=>{u();_fire(id);});_upd.push(u);u();}
+function sel(id){const el=$('#'+id);const u=()=>{P[id]=el.value;};el.addEventListener('change',()=>{u();_fire(id);});_upd.push(u);u();}
+function seg(id){const el=$('#'+id);const set=v=>{P[id]=v;[...el.children].forEach(b=>b.classList.toggle('on',b.dataset.v===v));};el.addEventListener('click',e=>{const b=e.target.closest('button');if(b){set(b.dataset.v);_fire(id);}});const on=el.querySelector('.on');set(on?on.dataset.v:el.children[0].dataset.v);}
+function refreshUI(){_upd.forEach(u=>u());}
+function ro(id,s){const e=$('#'+id);if(e&&e.textContent!==s)e.textContent=s;}
+function applyLang(){$$('[data-en]').forEach(e=>{if(e.dataset.it===undefined)e.dataset.it=e.innerHTML;e.innerHTML=LANG==='it'?e.dataset.it:e.dataset.en;});document.documentElement.lang=LANG;$('#lang').textContent=LANG==='it'?'EN':'IT';document.title=$('h1').textContent;refreshUI();if(typeof onLang==='function')onLang();}
+function shade(rgb,f){return'rgb('+rgb.map(v=>clamp(v*f,0,255)|0)+')';}
+function cam3(cx,cy,S,az,el){const ca=Math.cos(az),sa=Math.sin(az),ce=Math.cos(el),se=Math.sin(el);return{S,ce,se,ca,sa,sx:sa<0?1:-1,p:(x,y,z)=>{const xr=x*ca+z*sa,zr=-x*sa+z*ca;return[cx+xr*S,cy-(y*ce-zr*se)*S];}};}
+function poly3(c,cam,pts,fill,stroke,al=1){c.save();c.globalAlpha=al;c.beginPath();pts.forEach((p,i)=>{const m=cam.p(p[0],p[1],p[2]);i?c.lineTo(m[0],m[1]):c.moveTo(m[0],m[1]);});c.closePath();if(fill){c.fillStyle=fill;c.fill();}if(stroke){c.strokeStyle=stroke;c.stroke();}c.restore();}
+function box3(c,cam,x0,x1,y0,y1,z0,z1,rgb,al=1,stroke){const xs=cam.sx>0?x1:x0;c.lineWidth=1;c.lineJoin='round';
+ poly3(c,cam,[[xs,y0,z0],[xs,y0,z1],[xs,y1,z1],[xs,y1,z0]],shade(rgb,.62),stroke,al);poly3(c,cam,[[x0,y0,z1],[x1,y0,z1],[x1,y1,z1],[x0,y1,z1]],shade(rgb,.84),stroke,al);poly3(c,cam,[[x0,y1,z0],[x1,y1,z0],[x1,y1,z1],[x0,y1,z1]],shade(rgb,1.1),stroke,al);}
+let LIGHT=false;function setTheme(l){LIGHT=l;Object.assign(C,THEMES[l?'light':'dark']);document.body.classList.toggle('light',l);$('#thm').textContent=l?'☾':'☀';try{localStorage.setItem('simTheme',l?'light':'dark');}catch(e){}if(typeof onTheme==='function')onTheme();}
+$('#thm').onclick=()=>setTheme(!LIGHT);
+$('#lang').onclick=()=>{LANG=LANG==='it'?'en':'it';try{localStorage.setItem('simLang',LANG);}catch(e){}applyLang();};
+$('#qbtn').onclick=()=>$('#q').classList.remove('hidden');
+$('#q').onclick=()=>$('#q').classList.add('hidden');
+try{if(localStorage.getItem('simTheme')==='light')setTheme(true);}catch(e){}
+
+
+/* sliding pill for the segmented controls: follows the button marked "on", wherever and however it changes */
+function segPlace(el){const t=el.querySelector(':scope>.thumb'),b=el.querySelector(':scope>button.on');if(!t)return;if(!b||!b.offsetWidth){t.style.opacity=0;return;}
+ t.style.opacity=1;t.style.width=b.offsetWidth+'px';t.style.transform='translateX('+b.offsetLeft+'px)';if(!el.classList.contains('ready'))requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('ready')));}
+function segThumbs(){$$('.seg').forEach(el=>{if(el.querySelector(':scope>.thumb'))return segPlace(el);const t=document.createElement('span');t.className='thumb';el.appendChild(t);
+ new MutationObserver(()=>segPlace(el)).observe(el,{subtree:true,attributes:true,attributeFilter:['class'],childList:true,characterData:true});
+ if(window.ResizeObserver)new ResizeObserver(()=>segPlace(el)).observe(el);segPlace(el);});}
+segThumbs();
+</script>
+<script>
+'use strict';
+/* Matter waves: the double slit one electron at a time, and the tunnel effect. The 3D scene is drawn in arbitrary units: one cell of the quantum grid is 2 units wide. */
+const cv=$('#cv'),gl=$('#gl');let W=0,H=0,c,clock=0,paused=false;
+/* ------------------------------------------------------------------ renderer, lights, bloom ------------------------------------------------------------------ */
+const V={ok:false,az:.6,el:.3,dist:700,tgt:new THREE.Vector3(),goal:null};
+let R3,scene,cam,root=null,HEMI,DL,RIM1,RIM2,ENV=null,composer=null,bloom=null,trails=[],labs=[],MD=null;const TEX={},UT={value:0};
+try{R3=new THREE.WebGLRenderer({canvas:gl,antialias:true});scene=new THREE.Scene();cam=new THREE.PerspectiveCamera(36,1,2,9000);
+ R3.shadowMap.enabled=true;R3.shadowMap.type=THREE.PCFSoftShadowMap;
+ if(THREE.RoomEnvironment){const pm=new THREE.PMREMGenerator(R3);ENV=pm.fromScene(new THREE.RoomEnvironment(),.04).texture;pm.dispose();}
+ HEMI=new THREE.HemisphereLight(0xcfe2ff,0x1a1612,.3);scene.add(HEMI);DL=new THREE.DirectionalLight(0xffe7c8,1);DL.position.set(-420,900,300);DL.castShadow=true;DL.shadow.mapSize.set(4096,4096);
+ Object.assign(DL.shadow.camera,{left:-700,right:700,top:700,bottom:-700,near:100,far:2400});DL.shadow.bias=-.0004;DL.shadow.normalBias=.4;DL.shadow.radius=3;scene.add(DL);
+ /* two rim lights, cool and warm, carve the edges of the machines out of the dark */
+ RIM1=new THREE.DirectionalLight(0x7fd8e6,.55);RIM1.position.set(500,300,-900);scene.add(RIM1);RIM2=new THREE.DirectionalLight(0xffb070,.3);RIM2.position.set(900,200,500);scene.add(RIM2);
+ /* bloom through a multisampled target, so the edges stay antialiased (WebGL2) */
+ if(THREE.EffectComposer&&THREE.UnrealBloomPass&&R3.capabilities.isWebGL2&&THREE.WebGLMultisampleRenderTarget){const rt=new THREE.WebGLMultisampleRenderTarget(256,256,{format:THREE.RGBAFormat});rt.samples=4;
+  composer=new THREE.EffectComposer(R3,rt);composer.addPass(new THREE.RenderPass(scene,cam));bloom=new THREE.UnrealBloomPass(new THREE.Vector2(256,256),.95,.55,1.0);composer.addPass(bloom);}
+ V.ok=true;}catch(e){V.ok=false;}
+const metal=(color,rough,o)=>new THREE.MeshStandardMaterial(Object.assign({color,metalness:1,roughness:rough,envMap:ENV},o||{}));
+const paint=(color,rough,o)=>new THREE.MeshStandardMaterial(Object.assign({color,roughness:rough==null?.5:rough,envMap:ENV,envMapIntensity:.4},o||{}));
+const glassMat=op=>new THREE.MeshPhysicalMaterial({color:0xffffff,metalness:0,roughness:.03,transparent:true,opacity:op||.12,clearcoat:1,clearcoatRoughness:.04,envMap:ENV,envMapIntensity:1.2,depthWrite:false,side:THREE.DoubleSide});
+const ghost=(color,op)=>new THREE.MeshStandardMaterial({color,roughness:.5,transparent:true,opacity:op||.13,depthWrite:false});
+const hdr=(r,g,b,o)=>{const m=new THREE.MeshBasicMaterial(o||{});m.color.setRGB(r,g,b);return m;};
+function mesh(geo,mat,x,y,z,par){const o=new THREE.Mesh(geo,mat);o.position.set(x||0,y||0,z||0);(par||root).add(o);return o;}
+const ns=o=>{o.userData.ns=1;return o;};
+/* a ring with a rectangular cross-section, around the y axis */
+function ringGeo(r0,r1,w,seg){const p=[[r0,-w/2],[r1,-w/2],[r1,w/2],[r0,w/2],[r0,-w/2]].map(a=>new THREE.Vector2(a[0],a[1]));return new THREE.LatheGeometry(p,seg||96);}
+/* a tube along a list of points */
+function tube(pts,r,mat,par){const cu=new THREE.CatmullRomCurve3(pts.map(p=>new THREE.Vector3(p[0],p[1],p[2])),false,'centripetal');return mesh(new THREE.TubeGeometry(cu,Math.max(24,pts.length*16),r,12,false),mat,0,0,0,par);}
+/* a cylinder from point a to point b */
+function rod(a,b,r,mat,par,seg){const A=new THREE.Vector3(...a),B=new THREE.Vector3(...b),d=B.clone().sub(A),o=mesh(new THREE.CylinderGeometry(r,r,d.length(),seg||16),mat,(a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2,par);o.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());return o;}
+/* ------------------------------------------------------------------ textures drawn in code ------------------------------------------------------------------ */
+function ctex(w,h,draw,rep,key){const k=key||('t'+draw.name+w+'x'+h);if(TEX[k])return TEX[k];const cv_=document.createElement('canvas');cv_.width=w;cv_.height=h;draw(cv_.getContext('2d'),w,h);
+ const t=new THREE.CanvasTexture(cv_);t.anisotropy=R3.capabilities.getMaxAnisotropy();if(rep)t.wrapS=t.wrapT=THREE.RepeatWrapping;return TEX[k]=t;}
+let s_=11;const rnd=()=>(s_=(s_*16807)%2147483647)/2147483647;
+function noise(x,w,h,a){const im=x.getImageData(0,0,w,h),d=im.data;for(let i=0;i<d.length;i+=4){const n=(rnd()-.5)*a;d[i]+=n;d[i+1]+=n;d[i+2]+=n;}x.putImageData(im,0,0);}
+function texVoidD(x,w,h){const g=x.createRadialGradient(w*.5,h*.34,10,w*.5,h*.5,w*.8);g.addColorStop(0,'#1d2832');g.addColorStop(.32,'#111820');g.addColorStop(.68,'#07090d');g.addColorStop(1,'#020304');x.fillStyle=g;x.fillRect(0,0,w,h);
+ for(let i=0;i<7;i++){const cx=w*(.15+rnd()*.7),cy=h*(.1+rnd()*.35),r=w*(.15+rnd()*.25),gg=x.createRadialGradient(cx,cy,0,cx,cy,r);gg.addColorStop(0,i%2?'rgba(90,160,170,.07)':'rgba(190,140,90,.045)');gg.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=gg;x.fillRect(0,0,w,h);}
+ noise(x,w,h,5);}
+function texVoidL(x,w,h){const g=x.createRadialGradient(w*.5,h*.34,10,w*.5,h*.5,w*.82);g.addColorStop(0,'#ffffff');g.addColorStop(.42,'#f2f1ec');g.addColorStop(1,'#d3d1c7');x.fillStyle=g;x.fillRect(0,0,w,h);noise(x,w,h,3);}
+/* ------------------------------------------------------------------ the ethereal space: a dark void, a polished floor, shafts of light, floating dust ------------------------------------------------------------------ */
+const FLOOR_SHADER={uniforms:{color:{value:null},tDiffuse:{value:null},textureMatrix:{value:null},uRef:{value:.5},uR0:{value:500},uR1:{value:1900},uLine:{value:new THREE.Color()},uGrid:{value:.5},uBlur:{value:.0015}},
+ vertexShader:'uniform mat4 textureMatrix;varying vec4 vUv;varying vec3 vW;void main(){vUv=textureMatrix*vec4(position,1.0);vec4 w=modelMatrix*vec4(position,1.0);vW=w.xyz;gl_Position=projectionMatrix*viewMatrix*w;}',
+ fragmentShader:`uniform vec3 color,uLine;uniform sampler2D tDiffuse;uniform float uRef,uR0,uR1,uGrid,uBlur;varying vec4 vUv;varying vec3 vW;
+  float grid(float s){vec2 q=vW.xz/s;vec2 g=abs(fract(q-0.5)-0.5)/fwidth(q);return 1.0-min(min(g.x,g.y),1.0);}
+  void main(){vec2 uv=vUv.xy/vUv.w;vec3 r=vec3(0.0);for(int i=-2;i<=2;i++)for(int j=-2;j<=2;j++)r+=texture2D(tDiffuse,uv+vec2(float(i),float(j))*uBlur).rgb;r/=25.0;
+   float d=length(vW.xz),fade=1.0-smoothstep(uR0,uR1,d),gl=max(grid(50.0)*0.4,grid(250.0))*(1.0-smoothstep(uR0*0.4,uR1*0.7,d));
+   vec3 c=color+r*uRef;c=mix(c,uLine,gl*uGrid);gl_FragColor=vec4(c,fade);}`};
+const SHAFT_V='varying float vY;varying vec3 vN,vV;void main(){vY=uv.y;vec4 w=modelMatrix*vec4(position,1.0);vN=normalize(mat3(modelMatrix)*normal);vV=normalize(cameraPosition-w.xyz);gl_Position=projectionMatrix*viewMatrix*w;}',
+ SHAFT_F='uniform vec3 uC;uniform float uA,uT;varying float vY;varying vec3 vN,vV;void main(){float e=pow(abs(dot(normalize(vN),normalize(vV))),2.4);float h=pow(vY,1.4)*smoothstep(0.0,0.4,vY);float f=0.88+0.12*sin(uT*0.5+vY*5.0);gl_FragColor=vec4(uC*uA*e*h*f,1.0);}';
+function shaft(x,z,top,len,r0,r1,col,a){const m=new THREE.ShaderMaterial({uniforms:{uC:{value:new THREE.Color(col)},uA:{value:a},uT:UT},vertexShader:SHAFT_V,fragmentShader:SHAFT_F,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide});
+ const o=mesh(new THREE.CylinderGeometry(r0,r1,len,64,1,true),m,x,top-len/2,z);o.userData.ns=1;o.renderOrder=5;return o;}
+function dust(FL,n,rad,h,col,size){const g=new THREE.BufferGeometry(),p=new Float32Array(n*3),ar=new Float32Array(n);for(let i=0;i<n;i++){const a=rnd()*6.2832,r=Math.sqrt(rnd())*rad;p[i*3]=Math.cos(a)*r;p[i*3+1]=FL+rnd()*h;p[i*3+2]=Math.sin(a)*r;ar[i]=rnd();}
+ g.setAttribute('position',new THREE.BufferAttribute(p,3));g.setAttribute('aR',new THREE.BufferAttribute(ar,1));
+ const m=new THREE.ShaderMaterial({uniforms:{uT:UT,uC:{value:new THREE.Color(col)},uS:{value:size},uH:{value:h},uF:{value:FL}},transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
+  vertexShader:'uniform float uT,uS,uH,uF;attribute float aR;varying float vA;void main(){vec3 p=position;p.y=uF+mod(p.y-uF+uT*(3.0+aR*9.0),uH);p.x+=sin(uT*0.21+aR*40.0)*14.0;p.z+=cos(uT*0.17+aR*31.0)*14.0;vec4 mv=modelViewMatrix*vec4(p,1.0);gl_PointSize=uS*(0.5+aR)*(500.0/-mv.z);gl_Position=projectionMatrix*mv;vA=(0.3+0.7*fract(aR*7.31))*(0.55+0.45*sin(uT*1.1+aR*60.0));}',
+  fragmentShader:'uniform vec3 uC;varying float vA;void main(){float a=smoothstep(0.5,0.0,length(gl_PointCoord-0.5));gl_FragColor=vec4(uC*a*a*vA,1.0);}'});
+ const o=new THREE.Points(g,m);o.frustumCulled=false;o.userData.ns=1;o.renderOrder=6;root.add(o);return o;}
+function etherEnv(FL,dark,o){o=o||{};scene.background=ctex(1024,1024,dark?texVoidD:texVoidL);const R0=o.r0||520,R1=o.r1||2000;
+ const fm=THREE.Reflector?null:new THREE.ShaderMaterial({uniforms:THREE.UniformsUtils.clone(FLOOR_SHADER.uniforms),vertexShader:FLOOR_SHADER.vertexShader,fragmentShader:FLOOR_SHADER.fragmentShader,transparent:true,extensions:{derivatives:true}});
+ let fl;if(THREE.Reflector){fl=new THREE.Reflector(new THREE.PlaneGeometry(4600,4600),{textureWidth:1024,textureHeight:1024,clipBias:.003,color:dark?0x0a0d11:0xe7e5de,shader:FLOOR_SHADER});fl.material.transparent=true;fl.material.extensions.derivatives=true;}
+ else{fm.uniforms.color.value=new THREE.Color(dark?0x0a0d11:0xe7e5de);fm.uniforms.uRef.value=0;fm.uniforms.tDiffuse.value=new THREE.DataTexture(new Uint8Array([0,0,0,255]),1,1);fm.uniforms.textureMatrix.value=new THREE.Matrix4();fl=new THREE.Mesh(new THREE.PlaneGeometry(4600,4600),fm);}
+ const u=fl.material.uniforms;u.uRef.value=THREE.Reflector?(dark?.62:.2):0;u.uR0.value=R0;u.uR1.value=R1;u.uLine.value.set(dark?0x3f7a80:0xa29d8b);u.uGrid.value=dark?.32:.4;u.uBlur.value=.0014;
+ fl.rotation.x=-Math.PI/2;fl.position.y=FL;fl.renderOrder=-2;fl.userData.ns=1;root.add(fl);
+ const sh=mesh(new THREE.PlaneGeometry(2400,2400),new THREE.ShadowMaterial({opacity:dark?.62:.24}),0,FL+.4,0);sh.rotation.x=-Math.PI/2;sh.receiveShadow=true;sh.userData.ns=1;sh.renderOrder=-1;
+ /* tall shafts of light from above, and specks of dust floating in them */
+ const sc=o.shaft||1,sa=dark?1:.35;for(const[x,z,r0,r1,col,a]of o.shafts||[[-140,-60,90,260,0xfff0d8,.07],[260,180,60,180,0xa8e4ee,.05],[-520,320,50,150,0xffd9a8,.04]])shaft(x*sc,z*sc,FL+2400*sc,2400*sc,r0*sc,r1*sc,col,a*sa);
+ dust(FL,dark?2600:900,1500*sc,900*sc,dark?0xffe6c4:0x8a7c62,dark?7:5);}
+/* glowing flashes where a particle hits something */
+let sparks=[];
+function spark(x,y,z,col,size){const m=new THREE.Mesh(new THREE.SphereGeometry(1,16,12),hdr(col[0]*2.2,col[1]*2.2,col[2]*2.2,{transparent:true}));m.position.set(x,y,z);m.userData.ns=1;root.add(m);sparks.push({m,t:0,s:size||1.2});}
+function stepSparks(dt){for(const s of sparks){s.t+=dt;const k=Math.max(0,1-s.t/.9);s.m.scale.setScalar(s.s*(1+2*s.t));s.m.material.opacity=k;}sparks=sparks.filter(s=>{if(s.t<.9)return true;root.remove(s.m);s.m.geometry.dispose();return false;});}
+/* smooth camera moves */
+const ease=u=>u<.5?4*u*u*u:1-Math.pow(-2*u+2,3)/2,wrapA=a=>Math.atan2(Math.sin(a),Math.cos(a));
+function camTo(cv_,dur){V.goal={f:{t:V.tgt.clone(),d:V.dist,a:V.az,e:V.el},to:{t:new THREE.Vector3(cv_[0],cv_[1],cv_[2]),d:cv_[3],a:cv_[4],e:cv_[5]},k:0,dur:dur||1.6};}
+const pv=new THREE.Vector3();const toScr=(x,y,z)=>{pv.set(x,y,z).project(cam);return[(pv.x+1)/2*W,(1-pv.y)/2*H,pv.z<1];};
+/* a label is drawn only if it does not cover one already drawn in this frame (the most important ones come first) */
+let RECTS=[];
+function label(p,t,col,big){const q=toScr(...p);if(!q[2]||q[0]<-80||q[0]>W+80||q[1]<0||q[1]>H)return;c.save();const fs=big?20:12;c.font='600 '+fs+'px '+FONT;const w=c.measureText(t).width+(big?20:14),hh=big?30:22;
+ const R_=[q[0]-w/2-3,q[1]-hh/2-3,q[0]+w/2+3,q[1]+hh/2+3];if(RECTS.some(r=>R_[0]<r[2]&&R_[2]>r[0]&&R_[1]<r[3]&&R_[3]>r[1])){c.restore();return;}RECTS.push(R_);
+ c.fillStyle=LIGHT?'rgba(251,250,246,.86)':'rgba(16,18,20,.72)';rr(c,q[0]-w/2,q[1]-hh/2,w,hh,hh/2);c.fill();c.strokeStyle=col;c.globalAlpha=.75;c.lineWidth=1;c.stroke();c.globalAlpha=1;txt(c,t,q[0],q[1],LIGHT&&!big?'#23231d':col,fs,'center',1);c.restore();}
+function wrapText(s,w,font){c.font=font;const out=[];let line='';for(const word of s.split(' ')){const t=line?line+' '+word:word;if(c.measureText(t).width>w&&line){out.push(line);line=word;}else line=t;}if(line)out.push(line);return out;}
+/* ================================================================== the quantum solver ==================================================================
+   The time-dependent Schrödinger equation i ∂ψ/∂t = −½∇²ψ + Vψ on a grid of NX × NY cells (units: ħ = m = 1, length = one cell).
+   Visscher's staggered leapfrog: the real part lives at whole time steps, the imaginary part half a step later.
+   The wall is a region where ψ = 0; the edges of the grid absorb the wave, so nothing comes back.
+   One cell is 12,5 pm: with that, the electron's wavelength and energy on the sliders are the real ones. */
+const NX=360,NY=256,S=2,AB=24,X0=78,XB=150,WT=4,XS=NX-AB-2,SIGX=12,SIGY=36,DT=.3,CELL=.0125;
+const HBAR=1.054571817e-34,ME=9.1093837015e-31,QE=1.602176634e-19;
+const TAU=ME*(CELL*1e-9)**2/HBAR,EU=HBAR*HBAR/(ME*(CELL*1e-9)**2)/QE;/* one time unit in seconds, one energy unit in eV */
+const R=new Float32Array(NX*NY),I=new Float32Array(NX*NY),A=new Float32Array(NX*NY),Vp=new Float32Array(NX*NY),Pd=new Float64Array(NY),hist=new Float32Array(NY),TEXD=new Float32Array(NX*NY*4);
+seg('mode');seg('nsl');seg('view');
+slider('U',v=>nf(v,0)+' V');slider('rain',v=>v?nf(v,0)+' / s':L('spenta','off'));slider('d',v=>nf(v*CELL,2)+' nm');slider('a',v=>nf(v*CELL*1000,0)+' pm');
+slider('V0',v=>nf(v,0)+' eV');slider('w',v=>nf(v*CELL*1000,v%2?1:0)+' pm');slider('spd',v=>'×'+nf(v/12,2));
+['auto','det','grf','lab','capS'].forEach(check);
+const lamNm=()=>1.226426/Math.sqrt(P.U),k0=()=>2*Math.PI*CELL/lamNm(),nS=()=>+P.nsl,slitY=k=>NY/2+(k-(nS()-1)/2)*P.d;
+const FX=new Float32Array(NX),FY=new Float32Array(NY);
+const st={hx:XS,hy:NY/2,last:'',t:0,tEnd:0,tArr:0,phase:'idle',wait:0,slit:-1,norm0:1,Tm:0,n:0,nT:0,nR:0,acc:0,lg:0,flash:0,seen:false};
+let cacheAll=null,cacheS=[],cacheT=null;
+function openAt(y,only){const n=nS();for(let k=0;k<n;k++){if(only>=0&&k!==only)continue;if(Math.abs(y+.5-slitY(k))<P.a/2)return true;}return false;}
+function setup(){const tun=P.mode==='tun',only=st.slit,v0=P.V0/EU;
+ for(let y=0,i=0;y<NY;y++){const op=!tun&&openAt(y,only);for(let x=0;x<NX;x++,i++){const dd=Math.min(x,y,NX-1-x,NY-1-y);let a=1;if(dd<AB){const u=1-dd/AB;a=1-.06*u*u;}
+  let v=0;if(x>=XB){if(tun){if(x<XB+P.w)v=v0;}else if(x<XB+WT&&!op)a=0;}A[i]=a;Vp[i]=v;}}}
+/* a new electron leaves the source: a Gaussian wave packet with momentum ħk towards the wall */
+function launch(){if(P.mode==='bal'){R.fill(0);I.fill(0);st.phase='idle';st.t=0;return;}if(root)spark(GUNX+20,16,0,[.6,1.8,1.9],4);st.slit=(P.mode==='fen'&&P.det)?Math.floor(Math.random()*nS()):-1;setup();const k=k0(),E=k*k/2;let n0=0;
+ for(let y=0,i=0;y<NY;y++){const gy=Math.exp(-((y+.5-NY/2)**2)/(4*SIGY*SIGY));for(let x=0;x<NX;x++,i++){const g=A[i]>0?gy*Math.exp(-((x-X0)**2)/(4*SIGX*SIGX)):0;R[i]=g*Math.cos(k*x);I[i]=g*Math.sin(k*x-E*DT/2);n0+=g*g;}}
+ st.norm0=n0;st.t=0;st.Tm=0;st.seen=false;st.lg=0;Pd.fill(0);st.tArr=(XB-X0)/k;st.tEnd=(XS-X0+64)/k;st.phase='fly';}
+function step(n){const N=NX,dt=DT;for(let s=0;s<n;s++){
+  for(let y=1;y<NY-1;y++){let i=y*N+1;for(let x=1;x<N-1;x++,i++){const a=A[i];if(a===0)continue;R[i]=(R[i]+dt*(-.5*(I[i-1]+I[i+1]+I[i-N]+I[i+N]-4*I[i])+Vp[i]*I[i]))*a;}}
+  for(let y=1;y<NY-1;y++){let i=y*N+1;for(let x=1;x<N-1;x++,i++){const a=A[i];if(a===0)continue;I[i]=(I[i]-dt*(-.5*(R[i-1]+R[i+1]+R[i-N]+R[i+N]-4*R[i])+Vp[i]*R[i]))*a;}}
+  /* what crosses the plane of the screen adds up to the probability of landing at each place */
+  for(let y=0,i=XS;y<NY;y++,i+=N)Pd[y]+=R[i]*R[i]+I[i]*I[i];
+  st.t+=dt;}}
+function mk(src){const p=new Float32Array(NY),cm=new Float32Array(NY);let s=0;for(let y=0;y<NY;y++)s+=src[y];if(!(s>0))return null;let a=0;for(let y=0;y<NY;y++){p[y]=src[y]/s;a+=p[y];cm[y]=a;}return{p,c:cm};}
+function pickY(d){const u=Math.random()*d.c[NY-1];let lo=0,hi=NY-1;while(lo<hi){const m=(lo+hi)>>1;if(d.c[m]<u)lo=m+1;else hi=m;}return lo+Math.random();}
+/* with the detector on, each slit gives its own pattern; the slits are identical, so one pattern shifted sideways gives the others */
+function getS(k){if(cacheS[k])return cacheS[k];for(let j=0;j<nS();j++)if(cacheS[j]&&!cacheS[j].sh){const sh=Math.round((k-j)*P.d),src=new Float32Array(NY);for(let y=0;y<NY;y++){const q=y-sh;src[y]=q>=0&&q<NY?cacheS[j].p[q]:0;}const d=mk(src);if(d)d.sh=1;return cacheS[k]=d;}return null;}
+function refP(){if(!P.det)return cacheAll&&cacheAll.p;const n=nS(),out=new Float32Array(NY);let m=0;for(let k=0;k<n;k++){const d=getS(k);if(!d)continue;m++;for(let y=0;y<NY;y++)out[y]+=d.p[y];}return m?out:null;}
+/* the screen: every electron leaves one dot */
+const SCW=NY*4,SCH=360,SCRX=(XS-NX/2)*S,SCRY0=-1,SCRH=150,GUNX=-(NX/2)*S+52,FL=-130;
+const scv=document.createElement('canvas');scv.width=SCW;scv.height=SCH;const sx=scv.getContext('2d');let STEX=null,tex=null,wave=null,WG=null,lamps=[];
+function clearScreen(){sx.globalCompositeOperation='source-over';const g=sx.createLinearGradient(0,0,0,SCH);g.addColorStop(0,'#070b0d');g.addColorStop(1,'#030506');sx.fillStyle=g;sx.fillRect(0,0,SCW,SCH);hist.fill(0);st.n=st.nT=st.nR=0;if(STEX)STEX.needsUpdate=true;}
+function hit(y,big,warm){const v=Math.random(),X=y*4,Y=6+v*(SCH-12);sx.globalCompositeOperation='lighter';sx.fillStyle=warm?'rgba(255,165,70,.7)':big?'rgba(205,255,240,.98)':'rgba(110,235,198,.7)';sx.beginPath();sx.arc(X,Y,big?3.8:2.2,0,7);sx.fill();STEX.needsUpdate=true;if(big){st.hx=XS;st.hy=y;st.last='T';}
+ hist[clamp(y|0,0,NY-1)]++;if(big&&root)spark(SCRX-1,SCRY0+(1-Y/SCH)*SCRH,(y-NY/2)*S,[.6,1.8,1.5],9);}
+/* the tunnel effect: the electron is found whole, on one side or on the other */
+function one(big){if(!cacheT)return;st.n++;if(Math.random()<cacheT.T){st.nT++;if(cacheT.d)hit(pickY(cacheT.d),big);}else{st.nR++;if(big){st.hx=X0-30;st.hy=NY/2;st.last='R';}if(big&&root)spark(GUNX+30,16,(Math.random()-.5)*60,[1.8,.7,.35],5);}}
+function finish(){const d=mk(Pd);if(P.mode==='fen'){if(d){if(st.slit<0)cacheAll=d;else cacheS[st.slit]=d;st.n++;hit(pickY(d),true);}}else{cacheT={T:clamp(st.Tm,0,1),d};one(true);}st.phase='col';st.wait=.75;}
+function rain(dt){if(!(P.rain>0))return;st.acc+=P.rain*dt;let n=Math.floor(st.acc);st.acc-=n;if(P.mode==='tun'){while(n-->0)one(false);return;}
+ while(n-->0){const d=P.det?getS(Math.floor(Math.random()*nS())):cacheAll;if(!d)return;st.n++;hit(pickY(d),false);}}
+/* classical balls, for comparison: each one goes through one slit or the other, in a straight line */
+let balls_=[],BM=null,bars=null,bacc=0;const GX=(GUNX+18)/S+NX/2,M4=new THREE.Matrix4();
+function ballStep(dt){bacc+=Math.max(P.rain,30)*.6*dt;const half=((nS()-1)*P.d+70)/2,vb=150;
+ while(bacc>=1){bacc--;const ty=NY/2+(Math.random()*2-1)*half,dx=XB-GX,dy=ty-NY/2,l=Math.hypot(dx,dy);balls_.push({x:GX,y:NY/2,vx:vb*dx/l,vy:vb*dy/l,p:0});}
+ for(const b of balls_){const x1=b.x+b.vx*dt;if(!b.p&&x1>=XB){if(openAt(Math.floor(b.y),-1)){b.p=1;b.vy+=(Math.random()+Math.random()+Math.random()-1.5)*.09*vb;}else b.dead=1;}
+  b.x=x1;b.y+=b.vy*dt;if(b.x>=XS){b.dead=1;if(b.y>1&&b.y<NY-1){st.n++;hit(b.y,false,true);}}}
+ balls_=balls_.filter(b=>!b.dead);}
+function reset(){balls_=[];cacheAll=null;cacheS=[];cacheT=null;st.acc=0;clearScreen();launch();}
+function sim(dt){if(P.mode==='bal'){ballStep(dt);return;}if(st.phase==='fly'){step(P.spd);if(!st.seen&&st.slit>=0&&st.t>=st.tArr){st.seen=true;st.flash=1;}if(st.t>=st.tEnd)finish();}
+ else if(st.phase==='col'){/* the measurement: the wave is gone, the electron is where it was found */const k=dt*1.1e-3,g=Math.pow(.3,dt/.3);for(let x=0;x<NX;x++)FX[x]=Math.exp(-k*(x-st.hx)**2)*g;for(let y=0;y<NY;y++)FY[y]=Math.exp(-k*(y-st.hy)**2);for(let y=0,i=0;y<NY;y++){const fy=FY[y];for(let x=0;x<NX;x++,i++){const f=FX[x]*fy;R[i]*=f;I[i]*=f;}}st.wait-=dt;if(st.wait<=0){R.fill(0);I.fill(0);if(P.auto)launch();else st.phase='idle';}}
+ else if(P.auto)launch();
+ rain(dt);}
+function Tth(){const E=P.U/EU,V0=P.V0/EU,w=P.w;if(Math.abs(V0-E)<1e-9)return 1/(1+E*w*w/2);if(E<V0){const s=Math.sinh(Math.sqrt(2*(V0-E))*w);return 1/(1+V0*V0*s*s/(4*E*(V0-E)));}const s=Math.sin(Math.sqrt(2*(E-V0))*w);return 1/(1+V0*V0*s*s/(4*E*(E-V0)));}
+/* ================================================================== the wave as a glowing surface ================================================================== */
+const WAVE_V=`uniform sampler2D uPsi;uniform float uGain,uH,uMode;uniform vec2 uSize,uN;varying vec2 vT;
+void main(){vT=(uv*(uN-1.0)+0.5)/uN;vec4 t=texture2D(uPsi,vT);float sg=sqrt(uGain);float h=uMode>1.5?clamp(t.x*sg,-1.3,1.3)*0.5:min(length(t.xy)*sg,1.3);
+ vec3 p=vec3((uv.x-0.5)*uSize.x,h*uH+(uMode>1.5?40.0:0.0),(uv.y-0.5)*uSize.y);gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.0);}`;
+const WAVE_F=`uniform sampler2D uPsi;uniform float uGain,uMode,uClip,uLight,uH;uniform vec2 uN,uSize;varying vec2 vT;
+vec3 hue(float h){return clamp(abs(fract(h+vec3(0.0,0.6667,0.3333))*6.0-3.0)-1.0,0.0,1.0);}
+float hgt(vec2 q){vec4 t=texture2D(uPsi,q);return uMode>1.5?t.x*sqrt(uGain)*0.5:length(t.xy)*sqrt(uGain);}
+void main(){if(vT.x>uClip)discard;vec4 t=texture2D(uPsi,vT);float sg=sqrt(uGain),m=min(length(t.xy)*sg,1.3),re=clamp(t.x*sg,-1.3,1.3);
+ vec2 e=1.0/uN;float k=uH*uN.x/(2.0*uSize.x);
+ vec3 n=normalize(vec3(-(hgt(vT+vec2(e.x,0.0))-hgt(vT-vec2(e.x,0.0)))*k,1.0,-(hgt(vT+vec2(0.0,e.y))-hgt(vT-vec2(0.0,e.y)))*k));
+ float diff=0.4+0.6*clamp(dot(n,normalize(vec3(-0.45,0.75,0.5))),0.0,1.0);
+ vec3 col;float b=m;
+ if(uMode<0.5){col=mix(vec3(0.06,0.22,0.95),vec3(0.15,0.95,1.0),smoothstep(0.0,0.5,m));col=mix(col,vec3(1.0,0.95,0.78),smoothstep(0.5,1.05,m));}
+ else if(uMode<1.5){col=hue(atan(t.y,t.x)/6.2832);}
+ else{b=abs(re);col=re>0.0?vec3(1.0,0.62,0.22):vec3(0.2,0.7,1.0);}
+ float al=smoothstep(0.012,0.16,b);vec2 g=abs(fract(vT*uN/8.0)-0.5);float ln=1.0-smoothstep(0.0,0.07,min(g.x,g.y));
+ vec3 c=col*(0.18+1.3*b)*diff+col*ln*0.45;
+ if(uLight>0.5){c=col*(0.3+0.55*diff)*(1.0-0.25*ln);al=min(1.0,al*1.3)*0.92;}
+ gl_FragColor=vec4(c,al);}`;
+if(V.ok){STEX=new THREE.CanvasTexture(scv);tex=new THREE.DataTexture(TEXD,NX,NY,THREE.RGBAFormat,THREE.FloatType);
+ const lin=!!R3.extensions.get('OES_texture_float_linear');tex.minFilter=tex.magFilter=lin?THREE.LinearFilter:THREE.NearestFilter;tex.generateMipmaps=false;
+ wave=new THREE.ShaderMaterial({uniforms:{uPsi:{value:tex},uGain:{value:1},uH:{value:70},uMode:{value:0},uClip:{value:(XS+.5)/NX},uLight:{value:0},uSize:{value:new THREE.Vector2(NX*S,NY*S)},uN:{value:new THREE.Vector2(NX,NY)}},
+  vertexShader:WAVE_V,fragmentShader:WAVE_F,transparent:true,depthWrite:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending});}
+function upload(){let mx=0,nr=0;const xr=XB+(P.mode==='tun'?P.w:WT);for(let y=0,i=0,j=0;y<NY;y++)for(let x=0;x<NX;x++,i++,j+=4){const r=R[i],q=I[i],p=r*r+q*q;TEXD[j]=r;TEXD[j+1]=q;if(p>mx)mx=p;if(x>=xr)nr+=p;}
+ if(st.phase==='fly'){if(nr/st.norm0>st.Tm)st.Tm=nr/st.norm0;/* the picture brightens by itself as the wave thins out */st.lg+=(-Math.log(Math.max(mx,2.5e-3))-st.lg)*.07;}
+ wave.uniforms.uGain.value=Math.exp(st.lg);tex.needsUpdate=true;}
+/* ================================================================== the scene ================================================================== */
+function clear(){BM=null;bars=null;if(root){scene.remove(root);root.traverse(o=>{if(o.geometry)o.geometry.dispose();});}sparks=[];WG=null;lamps=[];}
+function wall(){if(!root)return;if(WG){root.remove(WG);WG.traverse(o=>{if(o.geometry)o.geometry.dispose();});}WG=new THREE.Group();root.add(WG);lamps=[];const dark=!LIGHT;
+ if(P.mode==='tun'){/* the barrier: a slab as tall as its potential */const w=P.w*S,h=14+P.V0*.3,x=(XB+P.w/2-NX/2)*S;
+  const b=mesh(new THREE.BoxGeometry(w,h,NY*S),new THREE.MeshBasicMaterial({color:0xff8a3a,transparent:true,opacity:dark?.2:.34,depthWrite:false,side:THREE.DoubleSide}),x,h/2-1.4,0,WG);b.userData.ns=1;b.renderOrder=3;
+  const e=new THREE.LineSegments(new THREE.EdgesGeometry(b.geometry),new THREE.LineBasicMaterial({color:dark?0xffb070:0xb85a14}));e.position.copy(b.position);WG.add(e);return;}
+ const xw=(XB+WT/2-NX/2)*S,mat=metal(0x47505a,.4),HW=46,segs=[];let y0=0;
+ for(let y=0;y<=NY;y++){if(y===NY||openAt(y,-1)){if(y>y0)segs.push([y0,y]);y0=y+1;}}
+ for(const[a,b]of segs){const o=mesh(new THREE.BoxGeometry(WT*S,HW,(b-a)*S),mat,xw,HW/2-1.4,((a+b)/2-NY/2)*S,WG);o.castShadow=o.receiveShadow=true;}
+ const cap=mesh(new THREE.BoxGeometry(WT*S+3,5,NY*S),mat,xw,HW+1.1,0,WG);cap.castShadow=true;
+ for(let k=0;k<nS();k++){const z=(slitY(k)-NY/2)*S;mesh(new THREE.CylinderGeometry(.9,.9,7,8),mat,xw,HW+7,z,WG);const l=mesh(new THREE.SphereGeometry(3.4,20,14),hdr(.5,.15,.1),xw,HW+12,z,WG);l.userData.ns=1;lamps.push(l);}}
+function build(){if(!V.ok)return;clear();root=new THREE.Group();scene.add(root);const dark=!LIGHT;
+ R3.toneMapping=dark?THREE.NoToneMapping:THREE.ACESFilmicToneMapping;R3.toneMappingExposure=1.1;if(bloom)bloom.enabled=dark;
+ if(dark){HEMI.intensity=.32;HEMI.color.set(0xcfe2ff);HEMI.groundColor.set(0x14110e);DL.intensity=1;DL.color.set(0xffe7c8);RIM1.intensity=.6;RIM2.intensity=.32;}
+ else{HEMI.intensity=.75;HEMI.color.set(0xffffff);HEMI.groundColor.set(0xb5ad9c);DL.intensity=.9;DL.color.set(0xfff4e4);RIM1.intensity=.25;RIM2.intensity=.15;}
+ etherEnv(FL,dark,{r0:560,r1:1900});
+ /* a plinth and a dark polished plate: the wave moves just above it */
+ mesh(new THREE.BoxGeometry(NX*S-36,-FL-8,NY*S-36),paint(dark?0x161a1f:0x9a968b,.7),0,(FL-7.4)/2,0);
+ mesh(new THREE.BoxGeometry(NX*S+24,6,NY*S+24),new THREE.MeshStandardMaterial({color:dark?0x0a0e12:0x30353b,metalness:.25,roughness:.62,envMap:ENV,envMapIntensity:.35}),0,-4.4,0);
+ const wm=new THREE.Mesh(new THREE.PlaneGeometry(1,1,NX-1,NY-1),wave);wm.frustumCulled=false;wm.userData.ns=1;wm.renderOrder=4;root.add(wm);
+ wave.blending=dark?THREE.AdditiveBlending:THREE.NormalBlending;wave.uniforms.uLight.value=dark?0:1;wave.needsUpdate=true;
+ /* the electron source */
+ const gm=metal(0x9aa0a8,.3),gd=paint(0x20252b,.5);const body=mesh(new THREE.CylinderGeometry(15,15,52,36),gm,GUNX-26,16,0);body.rotation.z=Math.PI/2;
+ for(const dx of[-44,-8]){const r=mesh(new THREE.CylinderGeometry(16.5,16.5,5,36),gd,GUNX+dx,16,0);r.rotation.z=Math.PI/2;}
+ const noz=mesh(new THREE.CylinderGeometry(5.5,12,18,28),gm,GUNX+9,16,0);noz.rotation.z=-Math.PI/2;
+ const em=mesh(new THREE.CircleGeometry(4.4,24),hdr(.5,1.7,1.9),GUNX+18.2,16,0);em.rotation.y=Math.PI/2;em.userData.ns=1;
+ mesh(new THREE.BoxGeometry(30,4,34),gd,GUNX-26,.6,0);
+ /* the detector screen */
+ mesh(new THREE.BoxGeometry(6,SCRH+14,NY*S+14),metal(0x2b3138,.4),SCRX+4.4,SCRY0+SCRH/2,0);
+ const sm=mesh(new THREE.PlaneGeometry(NY*S,SCRH),new THREE.MeshBasicMaterial({map:STEX,toneMapped:false}),SCRX+1,SCRY0+SCRH/2,0);sm.rotation.y=-Math.PI/2;sm.userData.ns=1;
+ /* a histogram that grows above the screen, and the classical balls */
+ bars=new THREE.InstancedMesh(new THREE.BoxGeometry(3,1,6.4),hdr(.35,1.5,1.2),NY/4);bars.userData.ns=1;bars.frustumCulled=false;root.add(bars);
+ BM=new THREE.InstancedMesh(new THREE.SphereGeometry(2.6,12,8),hdr(1.9,.9,.3),400);BM.userData.ns=1;BM.frustumCulled=false;BM.count=0;root.add(BM);
+ wall();
+ root.traverse(o=>{if(!o.isMesh||o.userData.ns||o.isInstancedMesh)return;const mt=o.material;if(mt.isShaderMaterial||mt.isMeshBasicMaterial||mt.transparent)return;o.castShadow=true;o.receiveShadow=true;});}
+/* ================================================================== guided tour ================================================================== */
+const setV=(id,v)=>{const e=$('#'+id);if(+e.value!==v){e.value=v;e.dispatchEvent(new Event('input'));}};
+const setC=(id,v)=>{const e=$('#'+id);if(e.checked!==v){e.checked=v;e.dispatchEvent(new Event('change'));}};
+const pick=(id,v)=>{if(P[id]!==v)$('#'+id+' [data-v="'+v+'"]').click();};
+const HOME=[10,14,0,960,-.5,.5];let TOUR=-1;
+const TOURS=[
+ {c:[10,14,0,980,-.5,.5],on(){pick('mode','fen');pick('nsl','2');setC('det',false);pick('view','amp');setV('rain',0);setV('U',100);},
+  t:["L'esperimento più bello della fisica","The most beautiful experiment in physics"],
+  b:["Una sorgente lancia elettroni, uno alla volta, contro una parete con due fenditure sottilissime. Più in là, uno schermo registra dove arrivano. Sembra semplice. Secondo Feynman contiene «l'unico mistero» della meccanica quantistica.",
+     "A source fires electrons, one at a time, at a wall with two very narrow slits. Further on, a screen records where they land. It looks simple. According to Feynman it holds “the only mystery” of quantum mechanics."]},
+ {c:[90,14,0,800,-.3,.82],on(){pick('mode','bal');pick('nsl','2');setV('rain',220);},
+  t:["Prima prova: palline","First try: little balls"],
+  b:["Cominciamo con oggetti normali. Ogni pallina passa da una fenditura oppure dall'altra e prosegue dritta. Sullo schermo si formano due strisce, una dietro ogni fenditura: guarda l'istogramma che cresce sopra lo schermo. Tieni a mente questa forma.",
+     "Let us start with ordinary objects. Each ball goes through one slit or the other and carries straight on. On the screen two bands form, one behind each slit: watch the histogram growing above the screen. Keep this shape in mind."]},
+ {c:[-190,14,0,540,-.95,.42],on(){pick('mode','fen');setV('rain',0);pick('view','fase');},
+  t:["In volo, l'elettrone è un'onda","In flight, the electron is a wave"],
+  b:["Finché nessuno lo osserva, l'elettrone è descritto da un'onda ψ. I colori mostrano la fase: da una cresta alla successiva c'è una lunghezza d'onda λ = h/mv, come scoprì de Broglie nel 1924. Qui λ è circa 120 picometri, più o meno la dimensione di un atomo.",
+     "As long as nobody observes it, the electron is described by a wave ψ. The colours show the phase: from one crest to the next there is one wavelength λ = h/mv, as de Broglie found in 1924. Here λ is about 120 picometres, roughly the size of an atom."]},
+ {c:[70,14,0,780,-.12,.98],on(){pick('mode','fen');pick('view','amp');pick('nsl','1');setV('rain',150);},
+  t:["Una sola fenditura","One slit only"],
+  b:["Con una fenditura aperta l'onda esce e si allarga a ventaglio: è la diffrazione. Sullo schermo gli elettroni formano una macchia larga e uniforme, più fitta al centro. Fin qui, niente di strano.",
+     "With one slit open the wave comes out and fans out: this is diffraction. On the screen the electrons make one broad, even patch, denser in the middle. Nothing strange so far."]},
+ {c:[90,14,0,780,-.28,.86],on(){pick('nsl','2');setV('rain',0);},
+  t:["Due fenditure: l'onda interferisce con sé stessa","Two slits: the wave interferes with itself"],
+  b:["Ora l'onda di un solo elettrone passa da entrambe le fenditure. Le due parti si sovrappongono: dove le creste coincidono si rinforzano, dove una cresta incontra un ventre si cancellano. Guarda i raggi luminosi che puntano verso lo schermo, separati da strisce buie.",
+     "Now the wave of a single electron goes through both slits. The two parts overlap: where crests meet they reinforce, where a crest meets a trough they cancel. Look at the bright rays heading for the screen, with dark bands between them."]},
+ {c:[230,56,0,600,-1.12,.2],on(){setV('rain',180);},
+  t:["…ma arriva come una particella","…but it arrives as a particle"],
+  b:["Sullo schermo non arriva mai un pezzo d'onda: ogni elettrone lascia un solo punto, in un posto che nessuno può prevedere. L'onda dà soltanto la probabilità, |ψ|². Eppure, punto dopo punto, compaiono le frange: nelle strisce buie non arriva quasi nessuno.",
+     "A piece of wave never reaches the screen: each electron leaves a single dot, in a place nobody can predict. The wave gives only the probability, |ψ|². And yet, dot after dot, the fringes appear: almost nobody lands in the dark bands."]},
+ {c:[-40,34,0,640,-.62,.6],on(){setC('det',true);setV('rain',250);},
+  t:["Chi guarda cambia il risultato","Looking changes the result"],
+  b:["Accendiamo un rivelatore che dice da quale fenditura passa ogni elettrone (la lucina rossa). Adesso l'onda esce da una fenditura sola, e le frange spariscono: restano due macchie sovrapposte. Sapere da dove è passato distrugge l'interferenza.",
+     "We switch on a detector that tells which slit each electron goes through (the little red light). Now the wave comes out of one slit only, and the fringes vanish: two overlapping patches remain. Knowing which way it went destroys the interference."]},
+ {c:[60,14,0,900,-.02,1.12],on(){setC('det',false);setV('rain',250);},
+  t:["La lunghezza d'onda si può misurare","The wavelength can be measured"],
+  b:["Niente a che vedere con le due strisce delle palline. Le frange distano circa Δy = λL/d. Prova tu: alza la tensione di accelerazione. L'elettrone è più veloce, λ = h/mv si accorcia e le frange si stringono. Allontana le fenditure: si stringono ancora. È così che si misura la lunghezza d'onda della materia.",
+     "Nothing like the two bands of the balls. The fringes are about Δy = λL/d apart. Try it: raise the accelerating voltage. The electron is faster, λ = h/mv gets shorter and the fringes close up. Move the slits apart: they close up again. This is how the wavelength of matter is measured."]},
+ {c:[-60,20,0,700,-.38,.4],on(){pick('mode','tun');pick('view','re');setV('rain',40);setV('U',100);setV('V0',120);setV('w',4);},
+  t:["Attraversare i muri: l'effetto tunnel","Walking through walls: the tunnel effect"],
+  b:["Ultima sorpresa. La barriera arancione è più alta dell'energia dell'elettrone: una pallina rimbalzerebbe sempre. L'onda invece entra nella barriera, si smorza, e un po' ne esce dall'altra parte. Ogni tanto l'elettrone viene trovato oltre il muro. Così brillano le stelle.",
+     "One last surprise. The orange barrier is higher than the electron's energy: a ball would always bounce back. The wave instead enters the barrier, fades, and a little comes out on the other side. Every so often the electron is found beyond the wall. This is how stars shine."]}];
+function tourShow(){const on=TOUR>=0;$('#tourNav').classList.toggle('hidden',!on);$('#tour').classList.toggle('hidden',on);if(on){const s=TOURS[TOUR];s.on();camTo(s.c,2.2);$('#tNext').textContent=TOUR===TOURS.length-1?L('Fine ✓','Done ✓'):L('Avanti ▶','Next ▶');}}
+$('#tour').onclick=()=>{TOUR=0;tourShow();};$('#tPrev').onclick=()=>{if(TOUR>0){TOUR--;tourShow();}};
+$('#tNext').onclick=()=>{if(TOUR<TOURS.length-1){TOUR++;tourShow();}else{TOUR=-1;tourShow();camTo(HOME,2);}};$('#tEnd').onclick=()=>{TOUR=-1;tourShow();};
+function tourCard(){if(TOUR<0)return;const s=TOURS[TOUR],w=Math.min(450,W-24),x=12,y=12,lines=wrapText(L(...s.b),w-32,'13.5px '+FONT),h=62+lines.length*19;
+ c.save();c.fillStyle=LIGHT?'rgba(251,250,246,.93)':'rgba(18,20,22,.86)';rr(c,x,y,w,h,16);c.fill();c.strokeStyle=C.yl;c.lineWidth=1.2;c.stroke();
+ txt(c,(TOUR+1)+' / '+TOURS.length,x+w-16,y+22,C.mu,12,'right');c.font='700 15.5px '+FONT;const tl=wrapText(L(...s.t),w-80,'700 15.5px '+FONT)[0];txt(c,tl,x+16,y+24,C.yl,15.5,'left',1);lines.forEach((l,i)=>txt(c,l,x+16,y+52+i*19,C.tx,13.5));c.restore();}
+/* ================================================================== controls, camera, main loop ================================================================== */
+const EXPL={bal:["Per confronto, lancia palline classiche contro le stesse fenditure. Ogni pallina passa da una fenditura oppure dall'altra e prosegue dritta: sullo schermo si formano tante strisce quante sono le fenditure, senza frange. Ricorda questo risultato, poi passa agli elettroni.",
+ "For comparison, throw classical balls at the same slits. Each ball goes through one slit or the other and carries straight on: the screen shows as many bands as there are slits, with no fringes. Remember this result, then move on to electrons."],fen:["Un elettrone alla volta parte dalla sorgente. Finché nessuno lo osserva non è una pallina: è un'onda ψ che si allarga, attraversa le fenditure e interferisce con sé stessa. Qui l'equazione di Schrödinger viene risolta davvero, istante per istante. Sullo schermo però l'elettrone arriva in un punto solo, a caso: dove |ψ|² è grande è più probabile. Punto dopo punto compaiono le frange.",
+ "One electron at a time leaves the source. As long as nobody observes it, it is not a little ball: it is a wave ψ that spreads, goes through the slits and interferes with itself. Here the Schrödinger equation is really being solved, instant by instant. On the screen, though, the electron lands at a single point, at random: where |ψ|² is large it is more likely. Dot after dot the fringes appear."],
+ tun:["Un elettrone di energia E incontra una barriera di potenziale più alta di E. Una pallina tornerebbe sempre indietro; l'onda invece penetra nella barriera, dove si smorza in modo esponenziale, e una parte esce dall'altro lato. L'elettrone non si divide: a ogni lancio viene trovato o di qua o di là, con probabilità data da |ψ|². È l'effetto tunnel: fa brillare il Sole e funzionare il microscopio a effetto tunnel e le memorie flash.",
+ "An electron of energy E meets a potential barrier higher than E. A ball would always come back; the wave instead gets into the barrier, where it dies away exponentially, and part of it comes out on the other side. The electron does not split: at each launch it is found either on this side or on that one, with a probability given by |ψ|². This is the tunnel effect: it makes the Sun shine and makes scanning tunnelling microscopes and flash memories work."]};
+function onParam(id){if(id==='mode'){const f=P.mode!=='tun';$('#gF').classList.toggle('hidden',!f);$('#gT').classList.toggle('hidden',f);$('#roDy').classList.toggle('hidden',P.mode!=='fen');$('#detL').classList.toggle('hidden',P.mode!=='fen');$('#roTt').classList.toggle('hidden',f);$('#roTm').classList.toggle('hidden',f);onLang();segThumbs();wall();reset();return;}
+ if(['U','nsl','d','a','det','V0','w'].includes(id)){if(id!=='U')wall();reset();}
+ if(id==='view'&&wave)wave.uniforms.uMode.value={amp:0,fase:1,re:2}[P.view];}
+function onLang(){$('#expl').textContent=L(...EXPL[P.mode]);$('#lN').textContent=P.mode==='bal'?L('Palline sullo schermo','Balls on the screen'):P.mode==='fen'?L('Elettroni sullo schermo','Electrons on the screen'):L('Trasmessi / riflessi','Transmitted / reflected');$('#pause').textContent=paused?L('Riprendi','Resume'):L('Pausa','Pause');tourShow_();}
+function tourShow_(){if(TOUR>=0)$('#tNext').textContent=TOUR===TOURS.length-1?L('Fine ✓','Done ✓'):L('Avanti ▶','Next ▶');}
+function onTheme(){if(V.ok&&root)build();}
+$('#go').onclick=()=>{paused=false;onLang();$('#pause').classList.remove('pri');launch();};
+$('#pause').onclick=()=>{paused=!paused;$('#pause').classList.toggle('pri',paused);onLang();};
+$('#clr').onclick=clearScreen;
+const pts_=new Map();let pinch=0,last=null;cv.style.touchAction='none';
+cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);pts_.set(e.pointerId,[e.clientX,e.clientY]);last=[e.clientX,e.clientY];V.goal=null;if(pts_.size===2){const a=[...pts_.values()];pinch=Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1]);}});
+cv.addEventListener('pointermove',e=>{if(!pts_.has(e.pointerId))return;pts_.set(e.pointerId,[e.clientX,e.clientY]);
+ if(pts_.size===2){const a=[...pts_.values()],d=Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1]);if(pinch)V.dist=clamp(V.dist*pinch/d,180,2600);pinch=d;return;}
+ const dx=e.clientX-last[0],dy=e.clientY-last[1];last=[e.clientX,e.clientY];V.az-=dx*.006;V.el=clamp(V.el+dy*.0045,.03,1.5);});
+const up=e=>{if(!pts_.has(e.pointerId))return;pts_.delete(e.pointerId);if(pts_.size<2)pinch=0;};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+cv.addEventListener('wheel',e=>{e.preventDefault();V.goal=null;V.dist=clamp(V.dist*(e.deltaY>0?1.08:.93),180,2600);},{passive:false});
+function overlay(){if(P.grf){const w=Math.min(340,W-24),h=176,x=12,y=H-h-12;
+  if(P.mode!=='tun'){const B=4,bal=P.mode==='bal',xn=q=>(q-NY/2)*CELL,s1=[],th=[],d=bal?null:refP();let hm=0;const hs=[];for(let b=0;b<NY/B;b++){let s=0;for(let k=0;k<B;k++)s+=hist[b*B+k];hs.push(s);if(s>hm)hm=s;}
+   if(hm>0)hs.forEach((s,b)=>s1.push([xn(b*B+B/2),s/hm]));if(d){let pm=0;for(let q=0;q<NY;q++)if(d[q]>pm)pm=d[q];for(let q=0;q<NY;q++)th.push([xn(q+.5),d[q]/pm]);}
+   chart(c,x,y,w,h,{xmin:xn(AB),xmax:xn(NY-AB),ymin:0,ymax:1.15,xl:L('posizione sullo schermo (nm)','position on the screen (nm)'),yl:bal?L('palline contate','balls counted'):L('|ψ|² previsto (linea) · elettroni contati (punti)','predicted |ψ|² (line) · electrons counted (dots)'),series:[{pts:th,col:C.cy,w:2},{pts:s1,col:bal?C.or:C.yl,dots:true,r:2.3}]});}
+  else{const hh=96,yy0=y+h-hh,tot=st.nT+st.nR,fT=tot?st.nT/tot:0,bx=x+104,bw=w-104-58;c.save();c.fillStyle=C.panel;rr(c,x,yy0,w,hh,10);c.fill();c.strokeStyle=C.grid2;c.lineWidth=1;c.stroke();
+   [['Trasmessi','Transmitted',fT,C.cy,st.nT],['Riflessi','Reflected',tot?1-fT:0,C.pk,st.nR]].forEach((r,i)=>{const yy=yy0+30+i*30;txt(c,L(r[0],r[1]),x+14,yy,C.tx,12.5);c.fillStyle=C.grid2;rr(c,bx,yy-6,bw,12,6);c.fill();if(r[2]>0){c.fillStyle=r[3];rr(c,bx,yy-6,Math.max(12,bw*r[2]),12,6);c.fill();}txt(c,String(r[4]),x+w-14,yy,C.tx,12.5,'right',1);});
+   const tt=cacheT?cacheT.T:Tth(),tx_=bx+bw*tt;c.strokeStyle=C.yl;c.lineWidth=2;c.beginPath();c.moveTo(tx_,yy0+18);c.lineTo(tx_,yy0+42);c.stroke();txt(c,L('previsto: ','predicted: ')+nf(tt*100,1)+' %',x+14,yy0+82,C.yl,11.5);c.restore();}}
+ if(P.capS&&TOUR<0){const s=caption(),f='600 14px '+FONT,mw=Math.min(W-150,560),ls=wrapText(s,mw-28,f);c.save();c.font=f;let w=0;for(const l of ls)w=Math.max(w,c.measureText(l).width);w+=30;const h=ls.length*20+14,x=(W-w)/2,y=12;
+  c.fillStyle=LIGHT?'rgba(251,250,246,.92)':'rgba(16,18,20,.8)';rr(c,x,y,w,h,Math.min(18,h/2));c.fill();c.strokeStyle=C.yl;c.globalAlpha=.6;c.lineWidth=1;c.stroke();c.globalAlpha=1;ls.forEach((l,i)=>txt(c,l,W/2,y+17+i*20,C.tx,14,'center',1));c.restore();}
+ tourCard();}
+/* one line that says what is happening right now */
+function caption(){const m=P.mode;if(m==='bal')return L('Palline classiche: ognuna passa da una sola fenditura e va dritta. Nessuna frangia.','Classical balls: each goes through one slit only, in a straight line. No fringes.');
+ if(st.phase==='col')return m==='fen'?L("Rivelato! L'onda sparisce: l'elettrone è arrivato in un punto solo.","Detected! The wave is gone: the electron arrived at a single point."):st.last==='T'?L("Trovato oltre la barriera: ha fatto l'effetto tunnel!","Found beyond the barrier: it tunnelled through!"):L("Trovato dalla parte della sorgente: è stato riflesso.","Found on the source side: it was reflected.");
+ if(st.phase!=='fly')return L('Premi «Lancia» per far partire un elettrone.','Press “Launch” to send an electron.');
+ const after=st.t>st.tArr+8/k0();if(m==='tun')return after?L("L'onda si divide: una parte torna indietro, una parte attraversa la barriera.","The wave splits: part goes back, part gets through the barrier."):L("Un solo elettrone, descritto da un'onda, va verso la barriera.","A single electron, described by a wave, heads for the barrier.");
+ if(!after)return L("Un solo elettrone in volo. Finché nessuno lo osserva è un'onda di probabilità.","A single electron in flight. As long as nobody observes it, it is a wave of probability.");
+ if(nS()===1)return L("L'onda esce dalla fenditura e si allarga: diffrazione.","The wave comes out of the slit and spreads: diffraction.");
+ if(P.det)return L("Il rivelatore ha visto l'elettrone in una fenditura: l'onda riparte solo da lì.","The detector saw the electron at one slit: the wave carries on from there only.");
+ return L("L'onda dello stesso elettrone passa da tutte le fenditure e interferisce con sé stessa.","The wave of the same electron goes through all the slits and interferes with itself.");}
+function readouts(){const lam=lamNm();ro('rL',nf(lam*1000,0)+' pm');ro('rV',sci(5.93097e5*Math.sqrt(P.U),2)+' m/s');
+ if(P.mode!=='tun'){ro('rDy',nS()>1&&P.mode==='fen'?nf(lam*(XS-XB-WT)/P.d,2)+' nm':'–');ro('rN',String(st.n));}
+ else{ro('rTt',nf(Tth()*100,1)+' %');ro('rTm',cacheT?nf(cacheT.T*100,1)+' %':'…');ro('rN',st.nT+' / '+st.nR);}
+ ro('cap',TOUR>=0?'':'t = '+nf(st.t*TAU*1e18,0)+' as');}
+let lastT=performance.now();
+function frame(now){requestAnimationFrame(frame);const dt=Math.min(.05,(now-lastT)/1000);lastT=now;clock+=dt;UT.value=clock;c=fit(cv);W=cv.W;H=cv.H;c.clearRect(0,0,W,H);
+ if(!V.ok){c.fillStyle=C.bg;c.fillRect(0,0,W,H);txt(c,L('Questa simulazione richiede WebGL.','This simulation needs WebGL.'),W/2,H/2,C.tx,14,'center');return;}
+ const dpr=Math.min(window.devicePixelRatio||1,2);if(gl.width!==Math.round(W*dpr)||gl.height!==Math.round(H*dpr)){R3.setPixelRatio(dpr);R3.setSize(W,H,false);if(composer){composer.setPixelRatio(dpr);composer.setSize(W,H);}cam.aspect=W/H;cam.updateProjectionMatrix();}
+ if(!paused)sim(dt);upload();st.flash*=Math.exp(-dt*3.2);
+ if(bars){let hm=0;const nb=NY/4,hs=[];for(let b=0;b<nb;b++){const s=hist[b*4]+hist[b*4+1]+hist[b*4+2]+hist[b*4+3];hs.push(s);if(s>hm)hm=s;}const bal=P.mode==='bal';bars.material.color.setRGB(bal?1.7:.35,bal?.8:1.5,bal?.3:1.2);bars.visible=hm>0&&P.mode!=='tun';
+  for(let b=0;b<nb;b++){const hh=Math.max(.02,hm?hs[b]/hm*64:0);M4.makeScale(1,hh,1);M4.setPosition(SCRX+4.4,SCRY0+SCRH+8+hh/2,(b*4+2-NY/2)*S);bars.setMatrixAt(b,M4);}bars.instanceMatrix.needsUpdate=true;}
+ if(BM){const bal=P.mode==='bal';BM.count=bal?Math.min(400,balls_.length):0;for(let k=0;k<BM.count;k++){const b=balls_[k];M4.makeTranslation((b.x-NX/2)*S,16,(b.y-NY/2)*S);BM.setMatrixAt(k,M4);}BM.instanceMatrix.needsUpdate=true;}
+ lamps.forEach((l,k)=>{l.visible=P.det&&P.mode==='fen';const on=k===st.slit?st.flash:0;l.scale.setScalar(1+1.5*on);l.material.color.setRGB(.5+2.6*on,.15+.9*on,.1+.3*on);});stepSparks(dt);
+ if(V.goal){const g=V.goal;g.k+=dt/g.dur;const u=ease(Math.min(1,g.k));V.tgt.lerpVectors(g.f.t,g.to.t,u);V.dist=g.f.d+(g.to.d-g.f.d)*u;V.az=g.f.a+wrapA(g.to.a-g.f.a)*u;V.el=g.f.e+(g.to.e-g.f.e)*u;if(g.k>=1)V.goal=null;}
+ const ce=Math.cos(V.el),D=V.dist*Math.max(1,1.2/(W/H));cam.position.set(V.tgt.x+Math.sin(V.az)*ce*D,V.tgt.y+Math.sin(V.el)*D,V.tgt.z+Math.cos(V.az)*ce*D);cam.lookAt(V.tgt);
+ if(composer&&bloom&&bloom.enabled)composer.render();else R3.render(scene,cam);
+ RECTS=[];if(P.lab){const tun=P.mode==='tun';label([GUNX-26,48,0],L('Sorgente di elettroni','Electron source'),C.cy);
+  label([(XB-NX/2)*S,tun?34+P.V0*.3:82,0],tun?L('Barriera di potenziale','Potential barrier'):nS()>1?L('Parete con le fenditure','Wall with the slits'):L('Parete con la fenditura','Wall with the slit'),tun?C.or:C.yl);
+  label([SCRX,SCRY0+SCRH+(P.mode==='tun'?18:84),0],L('Schermo rivelatore','Detector screen'),C.gr);}
+ overlay();readouts();}
+if(!V.ok)$('#expl').textContent=L('Questa simulazione richiede WebGL.','This simulation needs WebGL.');
+build();applyLang();onParam('mode');
+V.tgt.set(HOME[0],HOME[1],HOME[2]);V.dist=1900;V.az=-1.5;V.el=1.05;camTo(HOME,3.6);
+requestAnimationFrame(frame);
+</script>
+<script src="rotate.js"></script>
+</body></html>
